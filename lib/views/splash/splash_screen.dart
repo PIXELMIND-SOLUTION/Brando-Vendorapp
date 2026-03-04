@@ -819,7 +819,9 @@ class _RegisterModalState extends State<RegisterModal>
 
             _RedButton(
               label: 'Register',
-              onTap: () => Navigator.pop(context),
+              onTap: (){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>NavbarScreen()));
+              },
             ),
             const SizedBox(height: 4),
           ],

@@ -65,6 +65,8 @@ flutter:
     - assets\splash.png
     - assets\carouselimage.png
     - assets\hostelimage.png
+    - assets\profile.png
+    - assets\qrimage.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
