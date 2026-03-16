@@ -1,10 +1,12 @@
-
-
 import 'dart:async';
+import 'dart:io';
+import 'package:brando_vendor/helper/shared_preference.dart';
+import 'package:brando_vendor/provider/auth/auth_provider.dart';
 import 'package:brando_vendor/views/navbar/navbar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -30,77 +32,189 @@ class _SplashScreenState extends State<SplashScreen>
   late Animation<double> _buttonScale, _fabScale, _fabOpacity;
   late Animation<double> _floatY, _pulse;
 
+  // @override
+  // void initState() {
+  //   super.initState();
+
+
+
+  //     WidgetsBinding.instance.addPostFrameCallback((_) async {
+  //   final loggedIn = await SharedPreferenceHelper.isLoggedIn();
+  //   if (loggedIn && mounted) {
+  //     Navigator.pushReplacement(
+  //       context,
+  //       MaterialPageRoute(builder: (_) => const NavbarScreen()),
+  //     );
+  //     return; 
+  //   }
+  //   _masterController.forward();
+  // });
+
+  //   _masterController = AnimationController(
+  //       vsync: this, duration: const Duration(milliseconds: 2200));
+  //   _floatController = AnimationController(
+  //       vsync: this, duration: const Duration(milliseconds: 3000))
+  //     ..repeat(reverse: true);
+  //   _pulseController = AnimationController(
+  //       vsync: this, duration: const Duration(milliseconds: 1500))
+  //     ..repeat(reverse: true);
+
+  //   Animation<double> interval(double s, double e,
+  //           {Curve curve = Curves.easeOut}) =>
+  //       CurvedAnimation(
+  //           parent: _masterController,
+  //           curve: Interval(s, e, curve: curve));
+
+  //   _topRightOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.0, 0.4));
+  //   _topRightScale = Tween<double>(begin: 0.5, end: 1.0)
+  //       .animate(interval(0.0, 0.5, curve: Curves.elasticOut));
+  //   _topRightSlide =
+  //       Tween<Offset>(begin: const Offset(0.4, -0.4), end: Offset.zero)
+  //           .animate(interval(0.0, 0.45));
+
+  //   _centerOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.15, 0.55));
+  //   _centerScale = Tween<double>(begin: 0.4, end: 1.0)
+  //       .animate(interval(0.15, 0.65, curve: Curves.elasticOut));
+  //   _centerSlide =
+  //       Tween<Offset>(begin: const Offset(-0.3, 0.3), end: Offset.zero)
+  //           .animate(interval(0.15, 0.55));
+
+  //   _bottomLeftOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.3, 0.65));
+  //   _bottomLeftScale = Tween<double>(begin: 0.5, end: 1.0)
+  //       .animate(interval(0.3, 0.75, curve: Curves.elasticOut));
+  //   _bottomLeftSlide =
+  //       Tween<Offset>(begin: const Offset(-0.4, 0.3), end: Offset.zero)
+  //           .animate(interval(0.3, 0.65));
+
+  //   _fabOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.5, 0.75));
+  //   _fabScale = Tween<double>(begin: 0.0, end: 1.0)
+  //       .animate(interval(0.5, 0.8, curve: Curves.elasticOut));
+
+  //   _titleOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.55, 0.8));
+  //   _titleSlide =
+  //       Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+  //           .animate(interval(0.55, 0.8));
+  //   _subtitleOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.65, 0.88));
+  //   _subtitleSlide =
+  //       Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+  //           .animate(interval(0.65, 0.88));
+
+  //   _buttonOpacity =
+  //       Tween<double>(begin: 0, end: 1).animate(interval(0.78, 1.0));
+  //   _buttonScale = Tween<double>(begin: 0.8, end: 1.0)
+  //       .animate(interval(0.78, 1.0, curve: Curves.elasticOut));
+
+  //   _floatY = Tween<double>(begin: -8, end: 8).animate(
+  //       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut));
+  //   _pulse = Tween<double>(begin: 1.0, end: 1.06).animate(
+  //       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+
+  //   _masterController.forward();
+  // }
+
+
+
+
+
+
+
+
+
+
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    _masterController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 2200));
-    _floatController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 3000))
-      ..repeat(reverse: true);
-    _pulseController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1500))
-      ..repeat(reverse: true);
+  // 1. Initialize controllers
+  _masterController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 2200));
+  _floatController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 3000))
+    ..repeat(reverse: true);
+  _pulseController = AnimationController(
+      vsync: this, duration: const Duration(milliseconds: 1500))
+    ..repeat(reverse: true);
 
-    Animation<double> _interval(double s, double e,
-            {Curve curve = Curves.easeOut}) =>
-        CurvedAnimation(
-            parent: _masterController,
-            curve: Interval(s, e, curve: curve));
+  // 2. Helper
+  Animation<double> interval(double s, double e,
+          {Curve curve = Curves.easeOut}) =>
+      CurvedAnimation(
+          parent: _masterController,
+          curve: Interval(s, e, curve: curve));
 
-    _topRightOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.0, 0.4));
-    _topRightScale = Tween<double>(begin: 0.5, end: 1.0)
-        .animate(_interval(0.0, 0.5, curve: Curves.elasticOut));
-    _topRightSlide =
-        Tween<Offset>(begin: const Offset(0.4, -0.4), end: Offset.zero)
-            .animate(_interval(0.0, 0.45));
+  // 3. ALL animation assignments
+  _topRightOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.0, 0.4));
+  _topRightScale = Tween<double>(begin: 0.5, end: 1.0)
+      .animate(interval(0.0, 0.5, curve: Curves.elasticOut));
+  _topRightSlide =
+      Tween<Offset>(begin: const Offset(0.4, -0.4), end: Offset.zero)
+          .animate(interval(0.0, 0.45));
 
-    _centerOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.15, 0.55));
-    _centerScale = Tween<double>(begin: 0.4, end: 1.0)
-        .animate(_interval(0.15, 0.65, curve: Curves.elasticOut));
-    _centerSlide =
-        Tween<Offset>(begin: const Offset(-0.3, 0.3), end: Offset.zero)
-            .animate(_interval(0.15, 0.55));
+  _centerOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.15, 0.55));
+  _centerScale = Tween<double>(begin: 0.4, end: 1.0)
+      .animate(interval(0.15, 0.65, curve: Curves.elasticOut));
+  _centerSlide =
+      Tween<Offset>(begin: const Offset(-0.3, 0.3), end: Offset.zero)
+          .animate(interval(0.15, 0.55));
 
-    _bottomLeftOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.3, 0.65));
-    _bottomLeftScale = Tween<double>(begin: 0.5, end: 1.0)
-        .animate(_interval(0.3, 0.75, curve: Curves.elasticOut));
-    _bottomLeftSlide =
-        Tween<Offset>(begin: const Offset(-0.4, 0.3), end: Offset.zero)
-            .animate(_interval(0.3, 0.65));
+  _bottomLeftOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.3, 0.65));
+  _bottomLeftScale = Tween<double>(begin: 0.5, end: 1.0)
+      .animate(interval(0.3, 0.75, curve: Curves.elasticOut));
+  _bottomLeftSlide =
+      Tween<Offset>(begin: const Offset(-0.4, 0.3), end: Offset.zero)
+          .animate(interval(0.3, 0.65));
 
-    _fabOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.5, 0.75));
-    _fabScale = Tween<double>(begin: 0.0, end: 1.0)
-        .animate(_interval(0.5, 0.8, curve: Curves.elasticOut));
+  _fabOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.5, 0.75));
+  _fabScale = Tween<double>(begin: 0.0, end: 1.0)
+      .animate(interval(0.5, 0.8, curve: Curves.elasticOut));
 
-    _titleOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.55, 0.8));
-    _titleSlide =
-        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
-            .animate(_interval(0.55, 0.8));
-    _subtitleOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.65, 0.88));
-    _subtitleSlide =
-        Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
-            .animate(_interval(0.65, 0.88));
+  _titleOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.55, 0.8));
+  _titleSlide =
+      Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
+          .animate(interval(0.55, 0.8));
+  _subtitleOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.65, 0.88));
+  _subtitleSlide =
+      Tween<Offset>(begin: const Offset(0, 0.4), end: Offset.zero)
+          .animate(interval(0.65, 0.88));
 
-    _buttonOpacity =
-        Tween<double>(begin: 0, end: 1).animate(_interval(0.78, 1.0));
-    _buttonScale = Tween<double>(begin: 0.8, end: 1.0)
-        .animate(_interval(0.78, 1.0, curve: Curves.elasticOut));
+  _buttonOpacity =
+      Tween<double>(begin: 0, end: 1).animate(interval(0.78, 1.0));
+  _buttonScale = Tween<double>(begin: 0.8, end: 1.0)
+      .animate(interval(0.78, 1.0, curve: Curves.elasticOut));
 
-    _floatY = Tween<double>(begin: -8, end: 8).animate(
-        CurvedAnimation(parent: _floatController, curve: Curves.easeInOut));
-    _pulse = Tween<double>(begin: 1.0, end: 1.06).animate(
-        CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
+  _floatY = Tween<double>(begin: -8, end: 8).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut));
+  _pulse = Tween<double>(begin: 1.0, end: 1.06).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut));
 
-    _masterController.forward();
-  }
+  // 4. Start animation
+  _masterController.forward();
+
+  // 5. After splash completes → check login → navigate if logged in
+  _masterController.addStatusListener((status) async {
+    if (status == AnimationStatus.completed) {
+      final loggedIn = await SharedPreferenceHelper.isLoggedIn();
+      if (loggedIn && mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const NavbarScreen()),
+        );
+      }
+    }
+  });
+}
 
   @override
   void dispose() {
@@ -147,7 +261,6 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        // ── TOP-RIGHT small oval (partially off-screen) ──
                         Positioned(
                           top: -size.height * 0.01,
                           right: -size.width * 0.06,
@@ -159,11 +272,8 @@ class _SplashScreenState extends State<SplashScreen>
                             height: size.height * 0.22,
                             borderRadius: BorderRadius.circular(999),
                             floatFactor: 0.5,
-                            // showRing: false,
                           ),
                         ),
-
-                        // ── BOTTOM-LEFT small oval (partially off-screen) ──
                         Positioned(
                           bottom: -size.height * 0.02,
                           left: -size.width * 0.06,
@@ -175,11 +285,8 @@ class _SplashScreenState extends State<SplashScreen>
                             height: size.height * 0.19,
                             borderRadius: BorderRadius.circular(999),
                             floatFactor: 0.7,
-                            // showRing: false,
                           ),
                         ),
-
-                        // ── CENTER large oval with red ring ──
                         Positioned(
                           top: size.height * 0.03,
                           left: 0,
@@ -201,7 +308,6 @@ class _SplashScreenState extends State<SplashScreen>
                                         height: size.height * 0.42,
                                         child: Stack(
                                           children: [
-                                            // Red ring (slightly larger, behind)
                                             Positioned(
                                               top: size.height * 0.01,
                                               left: -6,
@@ -209,13 +315,17 @@ class _SplashScreenState extends State<SplashScreen>
                                               bottom: -size.height * 0.025,
                                               child: AnimatedBuilder(
                                                 animation: _pulseController,
-                                                builder: (_, __) => Transform.scale(
+                                                builder: (_, __) =>
+                                                    Transform.scale(
                                                   scale: _pulse.value,
                                                   child: Container(
                                                     decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(999),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              999),
                                                       border: Border.all(
-                                                        color: const Color(0xFFE53935),
+                                                        color: const Color(
+                                                            0xFFE53935),
                                                         width: 2.5,
                                                       ),
                                                     ),
@@ -223,22 +333,27 @@ class _SplashScreenState extends State<SplashScreen>
                                                 ),
                                               ),
                                             ),
-                                            // Image blob
                                             ClipRRect(
-                                              borderRadius: BorderRadius.circular(999),
+                                              borderRadius:
+                                                  BorderRadius.circular(999),
                                               child: Image.asset(
                                                 'assets/splash.png',
                                                 width: size.width * 0.62,
                                                 height: size.height * 0.42,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) => Container(
+                                                errorBuilder: (_, __, ___) =>
+                                                    Container(
                                                   width: size.width * 0.62,
                                                   height: size.height * 0.42,
                                                   decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(999),
-                                                    gradient: const LinearGradient(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            999),
+                                                    gradient:
+                                                        const LinearGradient(
                                                       begin: Alignment.topLeft,
-                                                      end: Alignment.bottomRight,
+                                                      end:
+                                                          Alignment.bottomRight,
                                                       colors: [
                                                         Color(0xFFFFCDD2),
                                                         Color(0xFFEF9A9A),
@@ -263,8 +378,6 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ),
                         ),
-
-                        // ── FAB (overlapping bottom-right of center blob) ──
                         Positioned(
                           bottom: size.height * 0.04,
                           right: size.width * 0.14,
@@ -300,7 +413,7 @@ class _SplashScreenState extends State<SplashScreen>
                             ),
                           ),
                         ),
-                        ],
+                      ],
                     ),
                   ),
                 ),
@@ -331,8 +444,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 TextSpan(text: 'Redefining Your\n'),
                                 TextSpan(
                                   text: 'Hostel Booking ',
-                                  style:
-                                      TextStyle(color: Color(0xFFE53935)),
+                                  style: TextStyle(color: Color(0xFFE53935)),
                                 ),
                                 TextSpan(text: 'Experience'),
                               ],
@@ -456,7 +568,6 @@ class _GetOTPModalState extends State<GetOTPModal>
   final _mobileController = TextEditingController();
   final _otpController = TextEditingController();
   bool _otpSent = false;
-  bool _loading = false;
   int _resendSeconds = 0;
   Timer? _timer;
   late AnimationController _otpAnimCtrl;
@@ -470,10 +581,9 @@ class _GetOTPModalState extends State<GetOTPModal>
         vsync: this, duration: const Duration(milliseconds: 400));
     _otpOpacity = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(parent: _otpAnimCtrl, curve: Curves.easeOut));
-    _otpSlide =
-        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
-            .animate(CurvedAnimation(
-                parent: _otpAnimCtrl, curve: Curves.easeOut));
+    _otpSlide = Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _otpAnimCtrl, curve: Curves.easeOut));
   }
 
   @override
@@ -496,18 +606,45 @@ class _GetOTPModalState extends State<GetOTPModal>
     });
   }
 
-  void _sendOTP() {
+  Future<void> _sendOTP() async {
     if (_mobileController.text.length < 10) return;
-    setState(() => _loading = true);
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _otpSent = true;
-      });
+    final provider = context.read<VendorProvider>();
+    final success = await provider.login(_mobileController.text.trim());
+    if (!mounted) return;
+    if (success) {
+      setState(() => _otpSent = true);
       _otpAnimCtrl.forward();
       _startResendTimer();
-    });
+    } else {
+      _showError(provider.errorMessage);
+    }
+  }
+
+  Future<void> _verifyOTP() async {
+    if (_otpController.text.isEmpty) return;
+    final provider = context.read<VendorProvider>();
+    final success = await provider.verifyOtp(_otpController.text.trim());
+    if (!mounted) return;
+    if (success) {
+      Navigator.of(context).pop();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const NavbarScreen()),
+      );
+    } else {
+      _showError(provider.errorMessage);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFE53935),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   void _showRegisterModal() {
@@ -523,148 +660,141 @@ class _GetOTPModalState extends State<GetOTPModal>
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding:
-          EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: const Color(0xFFE0E0E0),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    return Consumer<VendorProvider>(
+      builder: (context, provider, _) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          const SizedBox(height: 20),
-
-          // Title
-          RichText(
-            text: const TextSpan(
-              style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A),
-                  letterSpacing: -0.3),
-              children: [
-                TextSpan(text: 'Find Your '),
-                TextSpan(
-                    text: 'Perfect',
-                    style: TextStyle(color: Color(0xFFE53935))),
-                TextSpan(text: ' Stay'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Mobile field
-          _OutlinedField(
-            controller: _mobileController,
-            hint: 'Mobile Number',
-            keyboardType: TextInputType.phone,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-              LengthLimitingTextInputFormatter(10),
-            ],
-            onChanged: (_) => setState(() {}),
-          ),
-
-          // OTP field (animated)
-          if (_otpSent) ...[
-            const SizedBox(height: 12),
-            AnimatedBuilder(
-              animation: _otpAnimCtrl,
-              builder: (_, child) => Opacity(
-                opacity: _otpOpacity.value,
-                child: SlideTransition(position: _otpSlide, child: child),
-              ),
-              child: Column(
-                children: [
-                  _OutlinedField(
-                    controller: _otpController,
-                    hint: 'Enter OTP',
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(6),
-                    ],
+          padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE0E0E0),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: _resendSeconds == 0 ? _sendOTP : null,
-                      child: Text(
-                        _resendSeconds > 0
-                            ? 'Resend ${_resendSeconds.toString().padLeft(2, '0')}:00'
-                            : 'Resend OTP',
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: _resendSeconds > 0
-                              ? const Color(0xFF9E9E9E)
-                              : const Color(0xFFE53935),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
-
-          const SizedBox(height: 20),
-
-          // Primary button
-          _RedButton(
-            label: _otpSent ? 'Login' : (_loading ? 'Sending...' : 'Get OTP'),
-            onTap: _otpSent ? () {
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>NavbarScreen()));
-            } : (_loading ? null : _sendOTP),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Sign Up link
-          Center(
-            child: GestureDetector(
-              onTap: _showRegisterModal,
-              child: RichText(
+              const SizedBox(height: 20),
+              RichText(
                 text: const TextSpan(
-                  style: TextStyle(fontSize: 14, color: Color(0xFF757575)),
+                  style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF1A1A1A),
+                      letterSpacing: -0.3),
                   children: [
-                    TextSpan(text: "Don't have an account? "),
+                    TextSpan(text: 'Find Your '),
                     TextSpan(
-                      text: 'Sign Up',
-                      style: TextStyle(
-                        color: Color(0xFFE53935),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                        text: 'Perfect',
+                        style: TextStyle(color: Color(0xFFE53935))),
+                    TextSpan(text: ' Stay'),
                   ],
                 ),
               ),
-            ),
+              const SizedBox(height: 20),
+              _OutlinedField(
+                controller: _mobileController,
+                hint: 'Mobile Number',
+                keyboardType: TextInputType.phone,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(10),
+                ],
+                onChanged: (_) => setState(() {}),
+                enabled: !_otpSent,
+              ),
+              if (_otpSent) ...[
+                const SizedBox(height: 12),
+                AnimatedBuilder(
+                  animation: _otpAnimCtrl,
+                  builder: (_, child) => Opacity(
+                    opacity: _otpOpacity.value,
+                    child:
+                        SlideTransition(position: _otpSlide, child: child),
+                  ),
+                  child: Column(
+                    children: [
+                      _OutlinedField(
+                        controller: _otpController,
+                        hint: 'Enter OTP',
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: GestureDetector(
+                          onTap: _resendSeconds == 0 ? _sendOTP : null,
+                          child: Text(
+                            _resendSeconds > 0
+                                ? 'Resend ${_resendSeconds.toString().padLeft(2, '0')}:00'
+                                : 'Resend OTP',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: _resendSeconds > 0
+                                  ? const Color(0xFF9E9E9E)
+                                  : const Color(0xFFE53935),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              const SizedBox(height: 20),
+              _RedButton(
+                label: _otpSent
+                    ? 'Login'
+                    : (provider.isLoading ? 'Sending...' : 'Get OTP'),
+                onTap: provider.isLoading
+                    ? null
+                    : (_otpSent ? _verifyOTP : _sendOTP),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: GestureDetector(
+                  onTap: _showRegisterModal,
+                  child: RichText(
+                    text: const TextSpan(
+                      style:
+                          TextStyle(fontSize: 14, color: Color(0xFF757575)),
+                      children: [
+                        TextSpan(text: "Don't have an account? "),
+                        TextSpan(
+                          text: 'Sign Up',
+                          style: TextStyle(
+                            color: Color(0xFFE53935),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+            ],
           ),
-          const SizedBox(height: 4),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-// ─────────────────────────────────────────────
-//  REGISTER MODAL
-// ─────────────────────────────────────────────
+
 
 class RegisterModal extends StatefulWidget {
   const RegisterModal({super.key});
@@ -678,7 +808,7 @@ class _RegisterModalState extends State<RegisterModal>
   final _hostelController = TextEditingController();
   final _mobileController = TextEditingController();
   final _emailController = TextEditingController();
-  String? _imageName;
+  File? _pickedImage;
 
   late AnimationController _animCtrl;
   late Animation<double> _opacity;
@@ -691,10 +821,9 @@ class _RegisterModalState extends State<RegisterModal>
         vsync: this, duration: const Duration(milliseconds: 500));
     _opacity = Tween<double>(begin: 0, end: 1).animate(
         CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
-    _slide =
-        Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
-            .animate(CurvedAnimation(
-                parent: _animCtrl, curve: Curves.easeOut));
+    _slide = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut));
     _animCtrl.forward();
   }
 
@@ -707,6 +836,63 @@ class _RegisterModalState extends State<RegisterModal>
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      setState(() => _pickedImage = File(picked.path));
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFE53935),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  /// After successful registration → close this modal and open GetOTPModal
+  /// with the mobile number pre-filled.
+  void _openLoginModalWithMobile(String mobile) {
+    Navigator.pop(context); // close RegisterModal
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => GetOTPModal(),
+    );
+  }
+
+  Future<void> _register() async {
+    final name = _hostelController.text.trim();
+    final mobile = _mobileController.text.trim();
+    final email = _emailController.text.trim();
+
+    if (name.isEmpty || mobile.length < 10 || _pickedImage == null) {
+      _showError('Please fill all required fields and pick an image.');
+      return;
+    }
+
+    final provider = context.read<VendorProvider>();
+    final success = await provider.registerVendor(
+      name: name,
+      mobileNumber: mobile,
+      email: email,
+      hostelImage: _pickedImage!,
+    );
+
+    if (!mounted) return;
+    if (success) {
+      _openLoginModalWithMobile(mobile);
+    } else {
+      _showError(provider.errorMessage);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
@@ -716,116 +902,115 @@ class _RegisterModalState extends State<RegisterModal>
         opacity: _opacity.value,
         child: SlideTransition(position: _slide, child: child),
       ),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-        ),
-        padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE0E0E0),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+      child: Consumer<VendorProvider>(
+        builder: (context, provider, _) {
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            const SizedBox(height: 20),
-
-            RichText(
-              text: const TextSpan(
-                style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
-                    letterSpacing: -0.3),
-                children: [
-                  TextSpan(text: 'Find Your '),
-                  TextSpan(
-                      text: 'Perfect',
-                      style: TextStyle(color: Color(0xFFE53935))),
-                  TextSpan(text: ' Stay'),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            _OutlinedField(
-              controller: _hostelController,
-              hint: 'Hostel Name',
-            ),
-            const SizedBox(height: 12),
-            _OutlinedField(
-              controller: _mobileController,
-              hint: 'Mobile Number',
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-            ),
-            const SizedBox(height: 12),
-            _OutlinedField(
-              controller: _emailController,
-              hint: 'Email ( Optional )',
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 12),
-
-            // Upload image field
-            GestureDetector(
-              onTap: () {
-                setState(() => _imageName = 'hostel_image.jpg');
-              },
-              child: Container(
-                height: 52,
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFE53935)),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _imageName ?? 'Upload Hostel Image',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: _imageName != null
-                              ? const Color(0xFF1A1A1A)
-                              : const Color(0xFF9E9E9E),
-                        ),
-                      ),
+            padding: EdgeInsets.fromLTRB(24, 20, 24, 24 + bottom),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE0E0E0),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    Icon(
-                      _imageName != null
-                          ? Icons.check_circle_outline
-                          : Icons.upload_outlined,
-                      color: const Color(0xFFE53935),
-                      size: 20,
-                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: -0.3),
+                    children: [
+                      TextSpan(text: 'Create Your '),
+                      TextSpan(
+                          text: 'Account',
+                          style: TextStyle(color: Color(0xFFE53935))),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                _OutlinedField(
+                  controller: _hostelController,
+                  hint: 'Hostel Name',
+                ),
+                const SizedBox(height: 12),
+                _OutlinedField(
+                  controller: _mobileController,
+                  hint: 'Mobile Number',
+                  keyboardType: TextInputType.phone,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
                   ],
                 ),
-              ),
-            ),
+                const SizedBox(height: 12),
+                _OutlinedField(
+                  controller: _emailController,
+                  hint: 'Email ( Optional )',
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 12),
 
-            const SizedBox(height: 20),
+                // Image picker
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE53935)),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _pickedImage != null
+                                ? _pickedImage!.path.split('/').last
+                                : 'Upload Hostel Image',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _pickedImage != null
+                                  ? const Color(0xFF1A1A1A)
+                                  : const Color(0xFF9E9E9E),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          _pickedImage != null
+                              ? Icons.check_circle_outline
+                              : Icons.upload_outlined,
+                          color: const Color(0xFFE53935),
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-            _RedButton(
-              label: 'Register',
-              onTap: (){
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>NavbarScreen()));
-              },
+                const SizedBox(height: 20),
+                _RedButton(
+                  label: provider.isLoading ? 'Registering...' : 'Register',
+                  onTap: provider.isLoading ? null : _register,
+                ),
+                const SizedBox(height: 4),
+              ],
             ),
-            const SizedBox(height: 4),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -841,6 +1026,7 @@ class _OutlinedField extends StatelessWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final ValueChanged<String>? onChanged;
+  final bool enabled;
 
   const _OutlinedField({
     required this.controller,
@@ -848,6 +1034,7 @@ class _OutlinedField extends StatelessWidget {
     this.keyboardType,
     this.inputFormatters,
     this.onChanged,
+    this.enabled = true,
   });
 
   @override
@@ -857,12 +1044,15 @@ class _OutlinedField extends StatelessWidget {
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
       onChanged: onChanged,
+      enabled: enabled,
       style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        filled: !enabled,
+        fillColor: enabled ? null : const Color(0xFFF5F5F5),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE53935)),
@@ -870,6 +1060,10 @@ class _OutlinedField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
           borderSide: const BorderSide(color: Color(0xFFE53935), width: 1.8),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
         ),
       ),
     );

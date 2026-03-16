@@ -1,10 +1,59 @@
+import 'package:brando_vendor/provider/auth/auth_provider.dart';
 import 'package:brando_vendor/views/details/bank/bank_detail.dart';
 import 'package:brando_vendor/views/history/history_screen.dart';
 import 'package:brando_vendor/views/profile/edit_profile.dart';
+import 'package:brando_vendor/views/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
+
+  void _confirmLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Logout',
+          style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+        ),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: Color(0xFF757575), fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: Color(0xFF757575), fontWeight: FontWeight.w500),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await context.read<VendorProvider>().logout();
+              if (context.mounted) {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const SplashScreen()),
+                  (route) => false, 
+                );
+              }
+            },
+            child: const Text(
+              'Logout',
+              style: TextStyle(
+                color: Color(0xFFE53935),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,61 +66,45 @@ class ProfileScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 10),
-
-              /// Title
               const Center(
                 child: Text(
                   "Discover",
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ),
-
               const SizedBox(height: 20),
-
               const Divider(),
-
               const SizedBox(height: 10),
-
-              /// Account Label
               const Text(
                 "Account",
                 style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-
               const SizedBox(height: 12),
-
-              /// Menu Items
               GestureDetector(
-                onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>EditProfile()));
-                },
-                child: _buildTile(Icons.person_outline, "Personal information")),
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => EditProfile())),
+                child: _buildTile(Icons.person_outline, "Personal information"),
+              ),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => HistoryScreen()),
-                  );
-                },
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => HistoryScreen())),
                 child: _buildTile(Icons.history, "History"),
               ),
               _buildTile(Icons.help_outline, "Need Help?"),
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => BankDetail()),
-                  );
-                },
+                onTap: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => BankDetail())),
                 child: _buildTile(Icons.phone_outlined, "Bank Details"),
               ),
               _buildTile(Icons.description_outlined, "Terms & Conditions"),
               _buildTile(Icons.privacy_tip_outlined, "Privacy Policy"),
-
               const SizedBox(height: 8),
 
-              /// Logout
-              _buildTile(Icons.logout, "Logout", isLogout: true),
+              /// Logout with confirmation
+              GestureDetector(
+                onTap: () => _confirmLogout(context),
+                child: _buildTile(Icons.logout, "Logout", isLogout: true),
+              ),
             ],
           ),
         ),
@@ -79,11 +112,8 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildTile(
-    IconData icon,
-    String title, {
-    bool isLogout = false,
-  }) {
+  static Widget _buildTile(IconData icon, String title,
+      {bool isLogout = false}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -92,7 +122,8 @@ class ProfileScreen extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: Icon(icon, color: isLogout ? Colors.red : Colors.grey),
         title: Text(
           title,
@@ -102,11 +133,8 @@ class ProfileScreen extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: Icon(
-          Icons.arrow_forward_ios,
-          size: 16,
-          color: isLogout ? Colors.red : Colors.grey,
-        ),
+        trailing: Icon(Icons.arrow_forward_ios,
+            size: 16, color: isLogout ? Colors.red : Colors.grey),
       ),
     );
   }
