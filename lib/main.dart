@@ -1,5 +1,6 @@
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
 import 'package:brando_vendor/provider/auth/profile_provider.dart';
+import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
 import 'package:brando_vendor/views/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
@@ -21,6 +22,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => VendorProvider()),
 
         ChangeNotifierProvider(create: (_) => VendorProfileProvider()),
+
+        ChangeNotifierProvider(create: (_) => HostelProvider()),
       ],
       child: MaterialApp(
         title: 'BRANDO VENDOR',
