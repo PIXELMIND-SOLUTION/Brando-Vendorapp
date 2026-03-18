@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-// ─────────────────────────────────────────────
-//  DATA MODEL
-// ─────────────────────────────────────────────
 class TenantModel {
   final String date;
   final String name;
@@ -32,9 +29,7 @@ class TenantModel {
   });
 }
 
-// ─────────────────────────────────────────────
-//  HISTORY SCREEN
-// ─────────────────────────────────────────────
+
 class HistoryScreen extends StatelessWidget {
   const HistoryScreen({super.key});
 

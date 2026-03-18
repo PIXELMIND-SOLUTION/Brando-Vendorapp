@@ -5,7 +5,6 @@ import 'package:brando_vendor/model/vendor_model.dart';
 import 'package:http/http.dart' as http;
 
 class VendorService {
-  // Register Vendor (multipart form-data)
   Future<VendorModel?> registerVendor({
     required String name,
     required String mobileNumber,

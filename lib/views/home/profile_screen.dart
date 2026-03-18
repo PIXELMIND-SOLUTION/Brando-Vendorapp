@@ -1,4 +1,5 @@
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
+import 'package:brando_vendor/views/deleteaccount/delete_account.dart';
 import 'package:brando_vendor/views/details/bank/bank_detail.dart';
 import 'package:brando_vendor/views/history/history_screen.dart';
 import 'package:brando_vendor/views/profile/edit_profile.dart';
@@ -14,12 +15,13 @@ class ProfileScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text(
           'Logout',
           style: TextStyle(
-              fontWeight: FontWeight.w700, color: Color(0xFF1A1A1A)),
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1A1A1A),
+          ),
         ),
         content: const Text(
           'Are you sure you want to logout?',
@@ -31,8 +33,9 @@ class ProfileScreen extends StatelessWidget {
             child: const Text(
               'Cancel',
               style: TextStyle(
-                  color: Color(0xFF757575),
-                  fontWeight: FontWeight.w500),
+                color: Color(0xFF757575),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           TextButton(
@@ -42,8 +45,7 @@ class ProfileScreen extends StatelessWidget {
               if (context.mounted) {
                 Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(
-                      builder: (_) => const SplashScreen()),
+                  MaterialPageRoute(builder: (_) => const SplashScreen()),
                   (route) => false,
                 );
               }
@@ -68,14 +70,14 @@ class ProfileScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: ListView( // ✅ FIXED HERE
+          child: ListView(
+            // ✅ FIXED HERE
             children: [
               const SizedBox(height: 10),
               const Center(
                 child: Text(
                   "Discover",
-                  style: TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(height: 20),
@@ -83,26 +85,23 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 10),
               const Text(
                 "Account",
-                style:
-                    TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
               const SizedBox(height: 12),
 
               GestureDetector(
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => EditProfile())),
-                child: _buildTile(
-                    Icons.person_outline,
-                    "Personal information"),
+                  context,
+                  MaterialPageRoute(builder: (_) => EditProfile()),
+                ),
+                child: _buildTile(Icons.person_outline, "Personal information"),
               ),
 
               GestureDetector(
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => HistoryScreen())),
+                  context,
+                  MaterialPageRoute(builder: (_) => HistoryScreen()),
+                ),
                 child: _buildTile(Icons.history, "History"),
               ),
 
@@ -110,35 +109,33 @@ class ProfileScreen extends StatelessWidget {
 
               GestureDetector(
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) => BankDetail())),
-                child:
-                    _buildTile(Icons.account_balance, "Bank Details"),
+                  context,
+                  MaterialPageRoute(builder: (_) => BankDetail()),
+                ),
+                child: _buildTile(Icons.account_balance, "Bank Details"),
               ),
 
               GestureDetector(
                 onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (_) =>
-                            RecordingDetails())),
-                child: _buildTile(
-                    Icons.image_outlined,
-                    "Recording & Images"),
+                  context,
+                  MaterialPageRoute(builder: (_) => RecordingDetails()),
+                ),
+                child: _buildTile(Icons.image_outlined, "Recording & Images"),
               ),
 
-              _buildTile(Icons.description_outlined,
-                  "Terms & Conditions"),
-              _buildTile(Icons.privacy_tip_outlined,
-                  "Privacy Policy"),
+              _buildTile(Icons.description_outlined, "Terms & Conditions"),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context)=>DeleteAccount()));
+                },
+                child: _buildTile(Icons.delete, "Delete Account")),
+              _buildTile(Icons.privacy_tip_outlined, "Privacy Policy"),
 
               const SizedBox(height: 8),
 
               GestureDetector(
                 onTap: () => _confirmLogout(context),
-                child:
-                    _buildTile(Icons.logout, "Logout", isLogout: true),
+                child: _buildTile(Icons.logout, "Logout", isLogout: true),
               ),
 
               const SizedBox(height: 20), // extra bottom space
@@ -149,8 +146,11 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
-  static Widget _buildTile(IconData icon, String title,
-      {bool isLogout = false}) {
+  static Widget _buildTile(
+    IconData icon,
+    String title, {
+    bool isLogout = false,
+  }) {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -159,10 +159,8 @@ class ProfileScreen extends StatelessWidget {
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        leading:
-            Icon(icon, color: isLogout ? Colors.red : Colors.grey),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: Icon(icon, color: isLogout ? Colors.red : Colors.grey),
         title: Text(
           title,
           style: TextStyle(
@@ -171,9 +169,11 @@ class ProfileScreen extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        trailing: Icon(Icons.arrow_forward_ios,
-            size: 16,
-            color: isLogout ? Colors.red : Colors.grey),
+        trailing: Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: isLogout ? Colors.red : Colors.grey,
+        ),
       ),
     );
   }
