@@ -10,4 +10,5 @@ class ApiConstant {
   static const String adminBase = 'http://31.97.206.144:2003/api/Admin';
   static const String createHostel = '$adminBase/createHostel';
   static String updateHostel(String hostelId) => '$adminBase/hostel/$hostelId';
+  static String deletehostel(String hostelId)=>'$adminBase/hostel/$hostelId';
 static String gethostelbyvendor(String vendorId) => '$adminBase/hostels/vendor/$vendorId';}

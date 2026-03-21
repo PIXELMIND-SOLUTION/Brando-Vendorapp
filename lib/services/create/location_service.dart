@@ -1,6 +1,3 @@
-// ─────────────────────────────────────────────
-//  location_service.dart
-// ─────────────────────────────────────────────
 
 import 'package:geolocator/geolocator.dart';
 
@@ -14,7 +11,6 @@ class LocationService {
       );
     }
 
-    // 2. Check / request permission
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -30,7 +26,6 @@ class LocationService {
       );
     }
 
-    // 3. Fetch position
     return Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,

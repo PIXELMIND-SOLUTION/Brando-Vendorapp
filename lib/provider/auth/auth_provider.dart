@@ -13,6 +13,7 @@ class VendorProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.idle;
   String _errorMessage = '';
   String _successMessage = '';
+  
 
   VendorModel? _vendorData;
   String? _loginToken;
@@ -55,6 +56,7 @@ class VendorProvider extends ChangeNotifier {
       return false;
     }
   }
+  
 
   // Login - Request OTP
   Future<bool> login(String mobileNumber) async {

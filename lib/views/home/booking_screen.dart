@@ -11,18 +11,16 @@ class BookingScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+        automaticallyImplyLeading: false,
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back, color: Colors.black),
+        //   onPressed: () {
+        //     Navigator.pop(context);
+        //   },
+        // ),
         title: const Text(
           "Qr code Generator",
-          style: TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
         ),
       ),
       body: Column(
@@ -66,9 +64,7 @@ class BookingScreen extends StatelessWidget {
                   TextSpan(
                     text:
                         "After scan the qr code Data will be reflect in List screen",
-                    style: TextStyle(
-                      color: Colors.black54,
-                    ),
+                    style: TextStyle(color: Colors.black54),
                   ),
                 ],
               ),
@@ -91,7 +87,12 @@ class BookingScreen extends StatelessWidget {
                   ),
                 ),
                 onPressed: () {
-                  
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: Colors.green,
+                      content: Text('QR Downloaded Successfully...!'),
+                    ),
+                  );
                 },
                 child: const Text(
                   "Download",

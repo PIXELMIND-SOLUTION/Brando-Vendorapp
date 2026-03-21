@@ -1,16 +1,12 @@
-// // ─────────────────────────────────────────────
-// //  hostel_model.dart
-// // ─────────────────────────────────────────────
+// import 'dart:convert';
 
 // class SharingOption {
 //   final String shareType;
-//   final String? type; // "AC" | "Non-AC" | null (when both are present via acMonthlyPrice/nonAcMonthlyPrice)
+//   final String? type;
 
-//   // Single-type hostel fields
 //   final double? monthlyPrice;
 //   final double? dailyPrice;
 
-//   // Both-type hostel fields (sharings has acMonthlyPrice + nonAcMonthlyPrice)
 //   final double? acMonthlyPrice;
 //   final double? acDailyPrice;
 //   final double? nonAcMonthlyPrice;
@@ -54,7 +50,7 @@
 //   }
 // }
 
-// // ── Rooms wrapper (used in createHostel response) ──────────────────────────
+// // ── Rooms wrapper ──────────────────────────────────────────────────────────
 // class HostelRooms {
 //   final List<SharingOption> ac;
 //   final List<SharingOption> nonAc;
@@ -86,16 +82,9 @@
 //   final double monthlyAdvance;
 //   final double latitude;
 //   final double longitude;
-
-//   /// e.g. ["AC", "Non-AC"]  –– present in createHostel response
 //   final List<String> type;
-
-//   /// Flat sharings list –– present in getByVendor response
 //   final List<SharingOption> sharings;
-
-//   /// Structured rooms –– present in createHostel response
 //   final HostelRooms? rooms;
-
 //   final List<String> images;
 //   final DateTime? createdAt;
 
@@ -153,7 +142,8 @@
 //         'latitude': latitude,
 //         'longitude': longitude,
 //         if (type.isNotEmpty) 'type': type,
-//         if (sharings.isNotEmpty) 'sharings': sharings.map((e) => e.toJson()).toList(),
+//         if (sharings.isNotEmpty)
+//           'sharings': sharings.map((e) => e.toJson()).toList(),
 //         if (rooms != null) 'rooms': rooms!.toJson(),
 //         'images': images,
 //         if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
@@ -196,7 +186,7 @@
 //   }
 // }
 
-// // ── Request model for create / update ────────────────────────────────────
+// // ── Request model ──────────────────────────────────────────────────────────
 // class HostelRequest {
 //   final String? categoryId;
 //   final String? vendorId;
@@ -206,11 +196,7 @@
 //   final double monthlyAdvance;
 //   final double latitude;
 //   final double longitude;
-
-//   /// Flat list combining AC + Non-AC sharings (as sent to the API)
 //   final List<SharingOption> sharings;
-
-//   /// Local file paths for multipart upload
 //   final List<String> imagePaths;
 
 //   const HostelRequest({
@@ -226,7 +212,6 @@
 //     this.imagePaths = const [],
 //   });
 
-//   /// Fields sent as form-data (non-file)
 //   Map<String, String> toFormFields() {
 //     return {
 //       if (categoryId != null) 'categoryId': categoryId!,
@@ -242,7 +227,7 @@
 //   }
 // }
 
-// // ── Response wrappers ─────────────────────────────────────────────────────
+// // ── Response wrappers ──────────────────────────────────────────────────────
 // class CreateHostelResponse {
 //   final bool success;
 //   final String message;
@@ -283,7 +268,7 @@
 //   }
 // }
 
-// // ── Private helpers ───────────────────────────────────────────────────────
+// // ── Private helpers ────────────────────────────────────────────────────────
 // double? _toDouble(dynamic value) {
 //   if (value == null) return null;
 //   if (value is double) return value;
@@ -320,20 +305,28 @@
 //   return [];
 // }
 
+// // ✅ Fixed: uses jsonEncode — includes all price fields, no trailing comma bugs
 // String _sharingListToJsonString(List<SharingOption> sharings) {
-//   final buffer = StringBuffer('[');
-//   for (int i = 0; i < sharings.length; i++) {
-//     final s = sharings[i];
-//     buffer.write('{');
-//     if (s.type != null) buffer.write('"type":"${s.type}",');
-//     buffer.write('"shareType":"${s.shareType}",');
-//     if (s.monthlyPrice != null) buffer.write('"monthlyPrice":${s.monthlyPrice},');
-//     if (s.dailyPrice != null) buffer.write('"dailyPrice":${s.dailyPrice}');
-//     buffer.write('}');
-//     if (i < sharings.length - 1) buffer.write(',');
-//   }
-//   buffer.write(']');
-//   return buffer.toString();
+//   final list = sharings.map((s) {
+//     final map = <String, dynamic>{};
+
+//     if (s.type != null) map['type'] = s.type;
+//     map['shareType'] = s.shareType;
+
+//     // Single-type fields
+//     if (s.monthlyPrice != null) map['monthlyPrice'] = s.monthlyPrice;
+//     if (s.dailyPrice != null) map['dailyPrice'] = s.dailyPrice;
+
+//     // Both-type fields (AC + Non-AC prices on the same sharing)
+//     if (s.acMonthlyPrice != null) map['acMonthlyPrice'] = s.acMonthlyPrice;
+//     if (s.acDailyPrice != null) map['acDailyPrice'] = s.acDailyPrice;
+//     if (s.nonAcMonthlyPrice != null) map['nonAcMonthlyPrice'] = s.nonAcMonthlyPrice;
+//     if (s.nonAcDailyPrice != null) map['nonAcDailyPrice'] = s.nonAcDailyPrice;
+
+//     return map;
+//   }).toList();
+
+//   return jsonEncode(list);
 // }
 
 
@@ -349,17 +342,7 @@
 
 
 
-
-
-
-
-
-
 import 'dart:convert';
-
-// ─────────────────────────────────────────────
-//  hostel_model.dart
-// ─────────────────────────────────────────────
 
 class SharingOption {
   final String shareType;
@@ -557,6 +540,8 @@ class HostelRequest {
   final double monthlyAdvance;
   final double latitude;
   final double longitude;
+  // FIX: Added isAc field — this drives what type is sent to the API
+  final bool isAc;
   final List<SharingOption> sharings;
   final List<String> imagePaths;
 
@@ -569,11 +554,16 @@ class HostelRequest {
     required this.monthlyAdvance,
     required this.latitude,
     required this.longitude,
+    required this.isAc, // FIX: required
     required this.sharings,
     this.imagePaths = const [],
   });
 
   Map<String, String> toFormFields() {
+    // FIX: Build the type string and send it as a JSON array string,
+    // exactly the same way sharings is sent.
+    final typeValue = isAc ? 'AC' : 'Non-AC';
+
     return {
       if (categoryId != null) 'categoryId': categoryId!,
       if (vendorId != null) 'vendorId': vendorId!,
@@ -583,6 +573,8 @@ class HostelRequest {
       'monthlyAdvance': monthlyAdvance.toString(),
       'latitude': latitude.toString(),
       'longitude': longitude.toString(),
+      // FIX: Send type as a JSON array string e.g. '["AC"]' or '["Non-AC"]'
+      'type': jsonEncode([typeValue]),
       'sharings': _sharingListToJsonString(sharings),
     };
   }
@@ -666,7 +658,6 @@ List<Hostel> _parseHostelList(dynamic value) {
   return [];
 }
 
-// ✅ Fixed: uses jsonEncode — includes all price fields, no trailing comma bugs
 String _sharingListToJsonString(List<SharingOption> sharings) {
   final list = sharings.map((s) {
     final map = <String, dynamic>{};
@@ -674,11 +665,9 @@ String _sharingListToJsonString(List<SharingOption> sharings) {
     if (s.type != null) map['type'] = s.type;
     map['shareType'] = s.shareType;
 
-    // Single-type fields
     if (s.monthlyPrice != null) map['monthlyPrice'] = s.monthlyPrice;
     if (s.dailyPrice != null) map['dailyPrice'] = s.dailyPrice;
 
-    // Both-type fields (AC + Non-AC prices on the same sharing)
     if (s.acMonthlyPrice != null) map['acMonthlyPrice'] = s.acMonthlyPrice;
     if (s.acDailyPrice != null) map['acDailyPrice'] = s.acDailyPrice;
     if (s.nonAcMonthlyPrice != null) map['nonAcMonthlyPrice'] = s.nonAcMonthlyPrice;
