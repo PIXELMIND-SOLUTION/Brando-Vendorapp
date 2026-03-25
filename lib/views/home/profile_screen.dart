@@ -1,4 +1,5 @@
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
+import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
 import 'package:brando_vendor/views/deleteaccount/delete_account.dart';
 import 'package:brando_vendor/views/details/bank/bank_detail.dart';
 import 'package:brando_vendor/views/history/history_screen.dart';
@@ -39,10 +40,23 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           TextButton(
+            // onPressed: () async {
+            //   Navigator.pop(ctx);
+            //   await context.read<VendorProvider>().logout();
+            //   if (context.mounted) {
+            //     Navigator.pushAndRemoveUntil(
+            //       context,
+            //       MaterialPageRoute(builder: (_) => const SplashScreen()),
+            //       (route) => false,
+            //     );
+            //   }
+            // },
             onPressed: () async {
               Navigator.pop(ctx);
               await context.read<VendorProvider>().logout();
               if (context.mounted) {
+                // ✅ Reset navbar index to Home before navigating
+                context.read<BottomNavbarProvider>().setIndex(0);
                 Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (_) => const SplashScreen()),
@@ -126,9 +140,13 @@ class ProfileScreen extends StatelessWidget {
               _buildTile(Icons.description_outlined, "Terms & Conditions"),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>DeleteAccount()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => DeleteAccount()),
+                  );
                 },
-                child: _buildTile(Icons.delete, "Delete Account")),
+                child: _buildTile(Icons.delete, "Delete Account"),
+              ),
               _buildTile(Icons.privacy_tip_outlined, "Privacy Policy"),
 
               const SizedBox(height: 8),

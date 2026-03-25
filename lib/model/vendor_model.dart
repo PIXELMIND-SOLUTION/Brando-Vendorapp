@@ -40,6 +40,7 @@ class LoginResponseModel {
   final String mobileNumber;
   final String token;
   final String otp;
+  final bool isExists;  
 
   LoginResponseModel({
     required this.success,
@@ -47,6 +48,7 @@ class LoginResponseModel {
     required this.mobileNumber,
     required this.token,
     required this.otp,
+    required this.isExists,
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
@@ -56,6 +58,7 @@ class LoginResponseModel {
       mobileNumber: json['mobileNumber'] ?? '',
       token: json['token'] ?? '',
       otp: json['otp'] ?? '',
+      isExists: json['isExists'] ?? false, 
     );
   }
 }

@@ -13,6 +13,10 @@ class VendorProvider extends ChangeNotifier {
   AuthStatus _status = AuthStatus.idle;
   String _errorMessage = '';
   String _successMessage = '';
+
+  bool? _isVendorExists;
+
+bool? get isVendorExists => _isVendorExists;  
   
 
   VendorModel? _vendorData;
@@ -59,27 +63,59 @@ class VendorProvider extends ChangeNotifier {
   
 
   // Login - Request OTP
-  Future<bool> login(String mobileNumber) async {
-    _setLoading();
-    try {
-      final response = await _service.login(mobileNumber);
+  // Future<bool> login(String mobileNumber) async {
+  //   _setLoading();
+  //   try {
+  //     final response = await _service.login(mobileNumber);
 
-      if (response != null) {
-        _loginToken = response.token;
-        _mobileNumber = response.mobileNumber;
-        await SharedPreferenceHelper.saveMobileNumber(mobileNumber);
-        await SharedPreferenceHelper.saveToken(response.token);
-        _setSuccess(response.message);
-        return true;
-      } else {
-        _setError('Login failed. Please try again.');
+  //     if (response != null) {
+  //       _loginToken = response.token;
+  //       _mobileNumber = response.mobileNumber;
+  //       await SharedPreferenceHelper.saveMobileNumber(mobileNumber);
+  //       await SharedPreferenceHelper.saveToken(response.token);
+  //       _setSuccess(response.message);
+  //       return true;
+  //     } else {
+  //       _setError('Login failed. Please try again.');
+  //       return false;
+  //     }
+  //   } catch (e) {
+  //     _setError(e.toString());
+  //     return false;
+  //   }
+  // }
+
+
+  Future<bool> login(String mobileNumber) async {
+  _setLoading();
+  try {
+    final response = await _service.login(mobileNumber);
+
+    if (response != null) {
+      _isVendorExists = response.isExists;  // ADD THIS
+
+      if (!response.isExists) {
+        // Vendor not registered — stop here, redirect to registration
+        _setError(response.message); // "Vendor not registered"
         return false;
       }
-    } catch (e) {
-      _setError(e.toString());
+
+      // Vendor exists — proceed with OTP flow
+      _loginToken = response.token;
+      _mobileNumber = response.mobileNumber;
+      await SharedPreferenceHelper.saveMobileNumber(mobileNumber);
+      await SharedPreferenceHelper.saveToken(response.token);
+      _setSuccess(response.message);
+      return true;
+    } else {
+      _setError('Login failed. Please try again.');
       return false;
     }
+  } catch (e) {
+    _setError(e.toString());
+    return false;
   }
+}
 
   // Verify OTP
   Future<bool> verifyOtp(String otp) async {
