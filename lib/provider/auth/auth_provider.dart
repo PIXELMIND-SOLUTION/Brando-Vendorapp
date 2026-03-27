@@ -20,6 +20,7 @@ bool? get isVendorExists => _isVendorExists;
   
 
   VendorModel? _vendorData;
+  
   String? _loginToken;
   String? _mobileNumber;
 

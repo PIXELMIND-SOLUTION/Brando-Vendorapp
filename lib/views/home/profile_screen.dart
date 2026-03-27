@@ -1,8 +1,10 @@
+import 'package:brando_vendor/help/need_help_screen.dart';
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
+import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
 import 'package:brando_vendor/views/deleteaccount/delete_account.dart';
 import 'package:brando_vendor/views/details/bank/bank_detail.dart';
-import 'package:brando_vendor/views/history/history_screen.dart';
+import 'package:brando_vendor/views/home/menu_screen.dart';
 import 'package:brando_vendor/views/profile/edit_profile.dart';
 import 'package:brando_vendor/views/recordings/recording_details.dart';
 import 'package:brando_vendor/views/splash/splash_screen.dart';
@@ -111,15 +113,39 @@ class ProfileScreen extends StatelessWidget {
                 child: _buildTile(Icons.person_outline, "Personal information"),
               ),
 
+              // GestureDetector(
+              //   onTap: () => Navigator.push(
+              //     context,
+              //     MaterialPageRoute(builder: (_) => MenuScreen(hostelId: '69c614eda370f4b126c482b9',)),
+              //   ),
+              //   child: _buildTile(Icons.history, "History"),
+              // ),
               GestureDetector(
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => HistoryScreen()),
-                ),
+                onTap: () {
+                  final hostelId =
+                      context.read<HostelProvider>().hostels.isNotEmpty
+                      ? context.read<HostelProvider>().hostels.first.id
+                      : '';
+                  if (hostelId.isEmpty) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => MenuScreen(hostelId: hostelId),
+                    ),
+                  );
+                },
                 child: _buildTile(Icons.history, "History"),
               ),
 
-              _buildTile(Icons.help_outline, "Need Help?"),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => NeedHelpScreen()),
+                  );
+                },
+                child: _buildTile(Icons.help_outline, "Need Help?"),
+              ),
 
               GestureDetector(
                 onTap: () => Navigator.push(

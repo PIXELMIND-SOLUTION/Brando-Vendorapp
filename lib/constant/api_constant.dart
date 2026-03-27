@@ -1,23 +1,3 @@
-// class ApiConstant {
-//   static const String baseUrl = 'http://31.97.206.144:2003/api/vendors';
-//   static const String register = '$baseUrl/register';
-//   static const String login = '$baseUrl/login';
-//   static const String verifyOtp = '$baseUrl/verify-otp';
-//   static const String profile = '$baseUrl/profile';
-//   static const String updateProfile = '$baseUrl/update-profile';
-
-//   // Admin endpoints
-//   static const String adminBase = 'http://31.97.206.144:2003/api/Admin';
-//   static const String createHostel = '$adminBase/createHostel';
-//   static String updateHostel(String hostelId) => '$adminBase/hostel/$hostelId';
-//   static String deletehostel(String hostelId) => '$adminBase/hostel/$hostelId';
-//   static String gethostelbyvendor(String vendorId) =>
-//       '$adminBase/hostels/vendor/$vendorId';
-
-// static const String cameraurl='http://31.97.206.144:2003/api/cameras';
-
-// }
-
 class ApiConstant {
   static const String baseUrl = 'http://31.97.206.144:2003/api/vendors';
   static const String register = '$baseUrl/register';
@@ -33,6 +13,19 @@ class ApiConstant {
   static String deletehostel(String hostelId) => '$adminBase/hostel/$hostelId';
   static String gethostelbyvendor(String vendorId) =>
       '$adminBase/hostels/vendor/$vendorId';
+
+  static String formdetails(String hostelId) =>
+      '$adminBase/submissions/hostel/$hostelId';
+
+  //  Submission CRUD
+  static String updateSubmission(String submissionId) =>
+      '$adminBase/submission/$submissionId';
+
+  static String transferRoom(String submissionId) =>
+      '$adminBase/submission/$submissionId/room';
+
+  static String deleteSubmission(String submissionId) =>
+      '$adminBase/submission/$submissionId';
 
   // Camera endpoints
   static const String cameraBase = 'http://31.97.206.144:2003/api/cameras';

@@ -5801,7 +5801,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _successMessage = '';
   bool _showDailyPrice = false;
 
-
   @override
   void initState() {
     super.initState();
@@ -7914,10 +7913,15 @@ class _HifiHostelCard extends StatelessWidget {
       final message = Uri.encodeComponent(
         'Hello, I am interested in your hostel.',
       );
-      final url = Uri.parse('https://wa.me/$phoneNumber?text=$message');
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
+      final nativeUri = Uri.parse(
+        'whatsapp://send?phone=$phoneNumber&text=$message',
+      );
+      if (await canLaunchUrl(nativeUri)) {
+        await launchUrl(nativeUri);
+        return;
       }
+      final webUri = Uri.parse('https://wa.me/$phoneNumber?text=$message');
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
     }
 
     final isAc = _hostelIsAc(hostel);

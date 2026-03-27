@@ -1,82 +1,41 @@
+
+
+import 'package:brando_vendor/model/form_details_model.dart';
+import 'package:brando_vendor/provider/form/form_details_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class TenantModel {
-  final String date;
-  final String name;
-  final String phone;
-  final String mobileNumber;
-  final String emergencyNo;
-  final String email;
-  final String advance;
-  final String roomNo;
-  final String joiningDate;
-  final String tenure;
-  final String acNonAc;
 
-  const TenantModel({
-    required this.date,
-    required this.name,
-    required this.phone,
-    required this.mobileNumber,
-    required this.emergencyNo,
-    required this.email,
-    required this.advance,
-    required this.roomNo,
-    required this.joiningDate,
-    required this.tenure,
-    required this.acNonAc,
-  });
-}
-
-
-class HistoryScreen extends StatelessWidget {
+// ─────────────────────────────────────────────
+//  HISTORY SCREEN
+// ─────────────────────────────────────────────
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
-  final List<TenantModel> historyItems = const [
-    TenantModel(
-      date: '12/2/2026',
-      name: 'Narasimha varma',
-      phone: '+919098909890',
-      mobileNumber: '9098909890',
-      emergencyNo: '9098909890',
-      email: 'Narasimha Varma',
-      advance: '1,000/-',
-      roomNo: '101',
-      joiningDate: '13/12/2025',
-      tenure: 'Monthly',
-      acNonAc: 'AC',
-    ),
-    TenantModel(
-      date: '12/2/2026',
-      name: 'Narasimha varma',
-      phone: '+919098909890',
-      mobileNumber: '9098909890',
-      emergencyNo: '9098909890',
-      email: 'Narasimha Varma',
-      advance: '1,000/-',
-      roomNo: '101',
-      joiningDate: '13/12/2025',
-      tenure: 'Monthly',
-      acNonAc: 'AC',
-    ),
-    TenantModel(
-      date: '12/2/2026',
-      name: 'Narasimha varma',
-      phone: '+919098909890',
-      mobileNumber: '9098909890',
-      emergencyNo: '9098909890',
-      email: 'Narasimha Varma',
-      advance: '1,000/-',
-      roomNo: '101',
-      joiningDate: '13/12/2025',
-      tenure: 'Monthly',
-      acNonAc: 'AC',
-    ),
-  ];
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<FormDetailsProvider>();
+      final hostelId = provider.formDetailsResponse?.hostelId ?? '';
+      print('Fetching history for hostelId: $hostelId'); 
+      if (hostelId.isNotEmpty) {
+        provider.fetchFormDetails(hostelId);
+      }
+
+      print('hostelllllllllll iddddddddd $hostelId');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -114,61 +73,140 @@ class HistoryScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          // Table Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Row(
-              children: const [
-                SizedBox(
-                  width: 90,
-                  child: Text(
-                    'Date',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black),
+      body: Consumer<FormDetailsProvider>(
+        builder: (context, provider, _) {
+          // ── Loading ──
+          if (provider.isLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFE53935)),
+            );
+          }
+
+          // ── Error ──
+          if (provider.hasError) {
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error_outline,
+                      color: Color(0xFFE53935), size: 48),
+                  const SizedBox(height: 12),
+                  Text(
+                    provider.errorMessage,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: Colors.black54, fontSize: 14),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    'Name',
-                    style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // retry using hostelId from the model
+                      final hostelId =
+                          provider.formDetailsResponse?.hostelId ?? '';
+                      if (hostelId.isNotEmpty) {
+                        provider.fetchFormDetails(hostelId);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFE53935),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    child: const Text('Retry'),
                   ),
-                ),
-                Text(
-                  'Icons',
-                  style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                      color: Colors.black),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1, color: Color(0xFFEEEEEE)),
-          // Group Label
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Text(
-              '101',
-              style: const TextStyle(
-                color: Color(0xFFF80500),
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
+                ],
               ),
-            ),
-          ),
-          // History Rows
-          ...historyItems
-              .map((item) => _HistoryRow(item: item))
-              .toList(),
-        ],
+            );
+          }
+
+          // ── Empty ──
+          if (provider.submissions.isEmpty) {
+            return const Center(
+              child: Text(
+                'No history found.',
+                style: TextStyle(color: Colors.black54, fontSize: 15),
+              ),
+            );
+          }
+
+          // ── Group submissions by roomNo ──
+          final Map<String, List<Submission>> grouped = {};
+          for (final s in provider.submissions) {
+            final room = s.stayDetails.roomNo;
+            grouped.putIfAbsent(room, () => []).add(s);
+          }
+
+          // ── Success ──
+          return Column(
+            children: [
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
+              // Table Header
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 10),
+                child: Row(
+                  children: const [
+                    SizedBox(
+                      width: 90,
+                      child: Text(
+                        'Date',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.black),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        'Name',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.black),
+                      ),
+                    ),
+                    Text(
+                      'Icons',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Colors.black),
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
+              // Grouped Rows
+              Expanded(
+                child: ListView(
+                  children: grouped.entries.map((entry) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Room No Group Label
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            entry.key,
+                            style: const TextStyle(
+                              color: Color(0xFFF80500),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                        ...entry.value
+                            .map((s) => _HistoryRow(submission: s))
+                            .toList(),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -178,17 +216,22 @@ class HistoryScreen extends StatelessWidget {
 //  HISTORY ROW
 // ─────────────────────────────────────────────
 class _HistoryRow extends StatelessWidget {
-  final TenantModel item;
-  const _HistoryRow({required this.item});
+  final Submission submission;
+  const _HistoryRow({required this.submission});
+
+  String _formatDate(DateTime dt) =>
+      '${dt.day}/${dt.month}/${dt.year}';
 
   Future<void> _makeCall(BuildContext context) async {
-    final Uri callUri = Uri(scheme: 'tel', path: item.phone);
+    final Uri callUri =
+        Uri(scheme: 'tel', path: submission.guest.mobile);
     if (await canLaunchUrl(callUri)) {
       await launchUrl(callUri);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Could not launch call to ${item.phone}'),
+          content: Text(
+              'Could not launch call to ${submission.guest.mobile}'),
           backgroundColor: const Color(0xFFE53935),
         ),
       );
@@ -199,21 +242,24 @@ class _HistoryRow extends StatelessWidget {
     showDialog(
       context: context,
       barrierColor: Colors.black26,
-      builder: (_) => TransferPopup(tenantName: item.name),
+      builder: (_) =>
+          TransferPopup(tenantName: submission.guest.name),
     );
   }
 
   void _navigateToView(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => TenantViewScreen(tenant: item)),
+      MaterialPageRoute(
+          builder: (_) => TenantViewScreen(submission: submission)),
     );
   }
 
   void _navigateToEdit(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => TenantEditScreen(tenant: item)),
+      MaterialPageRoute(
+          builder: (_) => TenantEditScreen(submission: submission)),
     );
   }
 
@@ -221,7 +267,8 @@ class _HistoryRow extends StatelessWidget {
     showDialog(
       context: context,
       barrierColor: Colors.black38,
-      builder: (_) => DeleteConfirmationDialog(tenantName: item.name),
+      builder: (_) =>
+          DeleteConfirmationDialog(tenantName: submission.guest.name),
     );
   }
 
@@ -231,54 +278,57 @@ class _HistoryRow extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16, vertical: 10),
           child: Row(
             children: [
               SizedBox(
                 width: 90,
-                child: Text(item.date,
-                    style: const TextStyle(
-                        fontSize: 13, color: Colors.black87)),
+                child: Text(
+                  _formatDate(submission.submittedAt),
+                  style: const TextStyle(
+                      fontSize: 13, color: Colors.black87),
+                ),
               ),
               Expanded(
                 child: Text(
-                  item.name,
-                  style: const TextStyle(fontSize: 13, color: Colors.black87),
+                  submission.guest.name,
+                  style: const TextStyle(
+                      fontSize: 13, color: Colors.black87),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Call
                   GestureDetector(
                     onTap: () => _makeCall(context),
-                    child: const Icon(Icons.phone, size: 18, color: Colors.black),
+                    child: const Icon(Icons.phone,
+                        size: 18, color: Colors.black),
                   ),
                   const SizedBox(width: 6),
-                  // Share → Transfer popup
                   GestureDetector(
                     onTap: () => _showTransferPopup(context),
-                    child: const Icon(Icons.share, size: 18, color: Colors.black),
+                    child: const Icon(Icons.share,
+                        size: 18, color: Colors.black),
                   ),
                   const SizedBox(width: 6),
-                  // View
                   GestureDetector(
                     onTap: () => _navigateToView(context),
                     child: const Icon(Icons.visibility,
                         size: 18, color: Color(0xFF970BFB)),
                   ),
                   const SizedBox(width: 6),
-                  // Edit
                   GestureDetector(
                     onTap: () => _navigateToEdit(context),
-                    child: const Icon(Icons.edit, size: 18, color: Color(0xFF174AE2)),
+                    child: const Icon(Icons.edit,
+                        size: 18, color: Color(0xFF174AE2)),
                   ),
                   const SizedBox(width: 6),
-                  // Delete
                   GestureDetector(
                     onTap: () => _showDeleteConfirmation(context),
-                    child: const Icon(Icons.delete, size: 18, color: iconColor),
+                    child: const Icon(Icons.delete,
+                        size: 18, color: iconColor),
                   ),
                 ],
               ),
@@ -296,82 +346,79 @@ class _HistoryRow extends StatelessWidget {
 // ─────────────────────────────────────────────
 class DeleteConfirmationDialog extends StatelessWidget {
   final String tenantName;
-  const DeleteConfirmationDialog({super.key, required this.tenantName});
+  const DeleteConfirmationDialog(
+      {super.key, required this.tenantName});
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16)),
+      insetPadding:
+          const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Trash icon
             Container(
               width: 64,
               height: 64,
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFFEBEE),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.delete_outline,
-                color: Color(0xFFE53935),
-                size: 32,
-              ),
+              child: const Icon(Icons.delete_outline,
+                  color: Color(0xFFE53935), size: 32),
             ),
             const SizedBox(height: 16),
             const Text(
               'Are you sure?',
               style: TextStyle(
-                color: Colors.black,
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-              ),
+                  color: Colors.black,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18),
             ),
             const SizedBox(height: 8),
             Text(
               'Do you want to delete $tenantName?\nThis action cannot be undone.',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 13.5,
-                height: 1.5,
-              ),
+                  color: Colors.black54,
+                  fontSize: 13.5,
+                  height: 1.5),
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                // Cancel button
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(context),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.black87,
-                      side: const BorderSide(color: Color(0xFFDDDDDD)),
+                      side: const BorderSide(
+                          color: Color(0xFFDDDDDD)),
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 13),
                     ),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
+                    child: const Text('Cancel',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ),
                 const SizedBox(width: 12),
-                // Delete button
                 Expanded(
                   child: ElevatedButton(
                     onPressed: () {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('$tenantName deleted successfully'),
+                          content: Text(
+                              '$tenantName deleted successfully'),
                           backgroundColor: const Color(0xFFE53935),
                         ),
                       );
@@ -381,14 +428,14 @@ class DeleteConfirmationDialog extends StatelessWidget {
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10)),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 13),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Delete',
-                      style: TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
-                    ),
+                    child: const Text('Delete',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600)),
                   ),
                 ),
               ],
@@ -401,7 +448,7 @@ class DeleteConfirmationDialog extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  TRANSFER POPUP  (Image 1)
+//  TRANSFER POPUP
 // ─────────────────────────────────────────────
 class TransferPopup extends StatefulWidget {
   final String tenantName;
@@ -412,35 +459,45 @@ class TransferPopup extends StatefulWidget {
 }
 
 class _TransferPopupState extends State<TransferPopup> {
-  int? _selected; // null = none, 0 = 201, 1 = 202
+  int? _selected;
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16)),
       insetPadding:
           const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
       child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 24, vertical: 28),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const Text(
               'Transfer',
               style: TextStyle(
-                color: Color(0xFFF80500),
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-              ),
+                  color: Color(0xFFF80500),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20),
             ),
             const SizedBox(height: 24),
             Row(
               children: [
-                Expanded(child: _RoomButton(label: '201', selected: _selected == 0, onTap: () => setState(() => _selected = 0))),
+                Expanded(
+                    child: _RoomButton(
+                        label: '201',
+                        selected: _selected == 0,
+                        onTap: () =>
+                            setState(() => _selected = 0))),
                 const SizedBox(width: 12),
-                Expanded(child: _RoomButton(label: '202', selected: _selected == 1, onTap: () => setState(() => _selected = 1))),
+                Expanded(
+                    child: _RoomButton(
+                        label: '202',
+                        selected: _selected == 1,
+                        onTap: () =>
+                            setState(() => _selected = 1))),
               ],
             ),
             const SizedBox(height: 32),
@@ -471,7 +528,8 @@ class _TransferPopupState extends State<TransferPopup> {
                 ),
                 child: const Text('Update',
                     style: TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600)),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
               ),
             ),
           ],
@@ -499,8 +557,9 @@ class _RoomButton extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         height: 48,
         decoration: BoxDecoration(
-          color:
-              selected ? const Color(0xFFF80500) : const Color(0xFFF5F5F5),
+          color: selected
+              ? const Color(0xFFF80500)
+              : const Color(0xFFF5F5F5),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: selected
@@ -523,14 +582,21 @@ class _RoomButton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-//  TENANT VIEW SCREEN  (Image 2)
+//  TENANT VIEW SCREEN
 // ─────────────────────────────────────────────
 class TenantViewScreen extends StatelessWidget {
-  final TenantModel tenant;
-  const TenantViewScreen({super.key, required this.tenant});
+  final Submission submission;
+  const TenantViewScreen({super.key, required this.submission});
+
+  String _formatDate(DateTime dt) =>
+      '${dt.day}/${dt.month}/${dt.year}';
 
   @override
   Widget build(BuildContext context) {
+    final guest = submission.guest;
+    final stay = submission.stayDetails;
+    final docs = submission.documents;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -539,70 +605,68 @@ class TenantViewScreen extends StatelessWidget {
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Text(
-          tenant.name,
+          guest.name,
           style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 20),
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 20, vertical: 12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Divider(height: 1, color: Color(0xFFEEEEEE)),
             const SizedBox(height: 16),
-            // Details section
-            const Text(
-              'Details',
-              style: TextStyle(
-                color: Color(0xFFE53935),
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-            ),
+            const Text('Details',
+                style: TextStyle(
+                    color: Color(0xFFE53935),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16)),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Name', value: tenant.name),
-            _DetailRow(label: 'Mobile Number', value: tenant.mobileNumber),
-            _DetailRow(label: 'Emergency No', value: tenant.emergencyNo),
-            _DetailRow(label: 'Email', value: tenant.email),
-            _DetailRow(label: 'Advance', value: tenant.advance),
-            _DetailRow(label: 'Room No', value: tenant.roomNo),
-            _DetailRow(label: 'Joining Date', value: tenant.joiningDate),
-            _DetailRow(label: 'Tenure', value: tenant.tenure),
-            _DetailRow(label: 'Ac / Non-ac', value: tenant.acNonAc),
+            _DetailRow(label: 'Name', value: guest.name),
+            _DetailRow(
+                label: 'Mobile Number', value: guest.mobile),
+            _DetailRow(
+                label: 'Emergency No',
+                value: guest.emergencyNumber),
+            _DetailRow(label: 'Email', value: guest.email),
+            _DetailRow(
+                label: 'Advance', value: '${stay.advance}/-'),
+            _DetailRow(label: 'Room No', value: stay.roomNo),
+            _DetailRow(
+                label: 'Joining Date',
+                value: _formatDate(stay.joiningDate)),
+            _DetailRow(label: 'Tenure', value: stay.tenure),
+            _DetailRow(
+                label: 'Ac / Non-ac', value: stay.roomType),
             const SizedBox(height: 24),
-            // Documents section
-            const Text(
-              'Documents',
-              style: TextStyle(
-                color: Color(0xFFE53935),
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-            ),
+            const Text('Documents',
+                style: TextStyle(
+                    color: Color(0xFFE53935),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16)),
             const SizedBox(height: 12),
             Row(
               children: [
-                _DocumentPlaceholder(),
+                _DocumentImage(
+                    url: docs.aadhar, label: 'Aadhar'),
                 const SizedBox(width: 12),
-                _DocumentPlaceholder(),
+                _DocumentImage(
+                    url: docs.idCard, label: 'ID Card'),
                 const SizedBox(width: 12),
-                _DocumentPlaceholder(),
+                _DocumentImage(
+                    url: docs.profileImage, label: 'Photo'),
               ],
             ),
             const SizedBox(height: 24),
-            // Payment History section
-            const Text(
-              'Payment History',
-              style: TextStyle(
-                color: Color(0xFFE53935),
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-              ),
-            ),
+            const Text('Payment History',
+                style: TextStyle(
+                    color: Color(0xFFE53935),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16)),
             const SizedBox(height: 80),
           ],
         ),
@@ -615,7 +679,7 @@ class TenantViewScreen extends StatelessWidget {
           child: ElevatedButton(
             onPressed: () async {
               final Uri callUri =
-                  Uri(scheme: 'tel', path: tenant.phone);
+                  Uri(scheme: 'tel', path: guest.mobile);
               if (await canLaunchUrl(callUri)) {
                 await launchUrl(callUri);
               }
@@ -651,22 +715,19 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(
-              label,
-              style: const TextStyle(
-                  fontSize: 13.5,
-                  color: Colors.black87,
-                  fontWeight: FontWeight.w500),
-            ),
+            child: Text(label,
+                style: const TextStyle(
+                    fontSize: 13.5,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500)),
           ),
           const Text(': ',
-              style: TextStyle(fontSize: 13.5, color: Colors.black87)),
+              style: TextStyle(
+                  fontSize: 13.5, color: Colors.black87)),
           Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                  fontSize: 13.5, color: Colors.black87),
-            ),
+            child: Text(value,
+                style: const TextStyle(
+                    fontSize: 13.5, color: Colors.black87)),
           ),
         ],
       ),
@@ -674,9 +735,37 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _DocumentPlaceholder extends StatelessWidget {
+class _DocumentImage extends StatelessWidget {
+  final String url;
+  final String label;
+  const _DocumentImage(
+      {required this.url, required this.label});
+
   @override
   Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: url.isNotEmpty
+              ? Image.network(
+                  url,
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _placeholder(),
+                )
+              : _placeholder(),
+        ),
+        const SizedBox(height: 4),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 10, color: Colors.black54)),
+      ],
+    );
+  }
+
+  Widget _placeholder() {
     return Container(
       width: 72,
       height: 72,
@@ -684,19 +773,22 @@ class _DocumentPlaceholder extends StatelessWidget {
         color: const Color(0xFFF0F0F0),
         borderRadius: BorderRadius.circular(8),
       ),
+      child: const Icon(Icons.image_not_supported,
+          color: Colors.black38, size: 28),
     );
   }
 }
 
 // ─────────────────────────────────────────────
-//  TENANT EDIT SCREEN  (Image 3)
+//  TENANT EDIT SCREEN
 // ─────────────────────────────────────────────
 class TenantEditScreen extends StatefulWidget {
-  final TenantModel tenant;
-  const TenantEditScreen({super.key, required this.tenant});
+  final Submission submission;
+  const TenantEditScreen({super.key, required this.submission});
 
   @override
-  State<TenantEditScreen> createState() => _TenantEditScreenState();
+  State<TenantEditScreen> createState() =>
+      _TenantEditScreenState();
 }
 
 class _TenantEditScreenState extends State<TenantEditScreen> {
@@ -710,25 +802,25 @@ class _TenantEditScreenState extends State<TenantEditScreen> {
   late TextEditingController _feeCtrl;
   late TextEditingController _advanceCtrl;
 
+  String _formatDate(DateTime dt) =>
+      '${dt.day}/${dt.month}/${dt.year}';
+
   @override
   void initState() {
     super.initState();
-    _nameCtrl =
-        TextEditingController(text: widget.tenant.name);
-    _mobileCtrl =
-        TextEditingController(text: widget.tenant.mobileNumber);
-    _emailCtrl =
-        TextEditingController(text: widget.tenant.email);
-    _roomCtrl =
-        TextEditingController(text: widget.tenant.roomNo);
+    final g = widget.submission.guest;
+    final s = widget.submission.stayDetails;
+    _nameCtrl = TextEditingController(text: g.name);
+    _mobileCtrl = TextEditingController(text: g.mobile);
+    _emailCtrl = TextEditingController(text: g.email);
+    _roomCtrl = TextEditingController(text: s.roomNo);
     _joiningDateCtrl =
-        TextEditingController(text: widget.tenant.joiningDate);
-    _tenureCtrl =
-        TextEditingController(text: widget.tenant.tenure);
-    _acCtrl = TextEditingController(text: widget.tenant.acNonAc);
+        TextEditingController(text: _formatDate(s.joiningDate));
+    _tenureCtrl = TextEditingController(text: s.tenure);
+    _acCtrl = TextEditingController(text: s.roomType);
     _feeCtrl = TextEditingController(text: '');
     _advanceCtrl =
-        TextEditingController(text: widget.tenant.advance);
+        TextEditingController(text: s.advance.toString());
   }
 
   @override
@@ -755,17 +847,16 @@ class _TenantEditScreenState extends State<TenantEditScreen> {
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Text(
-          widget.tenant.name,
+          widget.submission.guest.name,
           style: const TextStyle(
-            color: Colors.black,
-            fontWeight: FontWeight.w600,
-            fontSize: 20,
-          ),
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 20),
         ),
       ),
       body: SingleChildScrollView(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+            horizontal: 20, vertical: 16),
         child: Column(
           children: [
             _EditField(controller: _nameCtrl, hint: 'Name'),
@@ -783,7 +874,8 @@ class _TenantEditScreenState extends State<TenantEditScreen> {
                 controller: _joiningDateCtrl,
                 hint: 'Joining Date'),
             const SizedBox(height: 12),
-            _EditField(controller: _tenureCtrl, hint: 'Monthly'),
+            _EditField(
+                controller: _tenureCtrl, hint: 'Monthly'),
             const SizedBox(height: 12),
             _EditField(controller: _acCtrl, hint: 'Ac'),
             const SizedBox(height: 12),
@@ -805,7 +897,8 @@ class _TenantEditScreenState extends State<TenantEditScreen> {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Details updated successfully'),
+                      content:
+                          Text('Details updated successfully'),
                       backgroundColor: Color(0xFFE53935),
                     ),
                   );
@@ -847,7 +940,8 @@ class _EditField extends StatelessWidget {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
-      style: const TextStyle(fontSize: 14, color: Colors.black87),
+      style:
+          const TextStyle(fontSize: 14, color: Colors.black87),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: const TextStyle(
@@ -856,13 +950,13 @@ class _EditField extends StatelessWidget {
             horizontal: 16, vertical: 14),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: Color(0xFFE53935), width: 1),
+          borderSide: const BorderSide(
+              color: Color(0xFFE53935), width: 1),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide:
-              const BorderSide(color: Color(0xFFE53935), width: 1.5),
+          borderSide: const BorderSide(
+              color: Color(0xFFE53935), width: 1.5),
         ),
       ),
     );
