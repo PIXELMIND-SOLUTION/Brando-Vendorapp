@@ -4,6 +4,7 @@ import 'package:brando_vendor/provider/camera/camera_provider.dart';
 import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/form/form_details_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
+import 'package:brando_vendor/provider/stream/stream_provider.dart';
 import 'package:brando_vendor/views/splash/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CameraProvider()),
 
         ChangeNotifierProvider(create: (_) => FormDetailsProvider()),
+
+
+                ChangeNotifierProvider(create: (_) =>StreamCameraProvider()),
+
       ],
       child: MaterialApp(
         title: 'BRANDO VENDOR',

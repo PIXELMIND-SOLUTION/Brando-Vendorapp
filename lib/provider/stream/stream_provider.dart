@@ -1,171 +1,227 @@
+
+import 'dart:async';
+import 'package:brando_vendor/model/camera_model.dart';
 import 'package:brando_vendor/model/streaming_model.dart';
 import 'package:brando_vendor/services/streaming/stream_service.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
-enum StreamingStatus { idle, loading, streaming, stopped, error }
 
-class CameraStreamingProvider extends ChangeNotifier {
-  final CameraStreamingService _service = CameraStreamingService();
+enum StreamStatus { idle, loading, streaming, stopped, error }
 
-  // ── State ────────────────────────────────────────────────────────────────────
+class StreamCameraProvider extends ChangeNotifier {
+  final StreamService _streamService;
 
-  StreamingStatus _streamingStatus = StreamingStatus.idle;
-  StreamingStatus get streamingStatus => _streamingStatus;
+  StreamCameraProvider({StreamService? streamService})
+      : _streamService = streamService ?? StreamService();
 
-  StartStreamingResponseModel? _startStreamingResponse;
-  StartStreamingResponseModel? get startStreamingResponse =>
-      _startStreamingResponse;
-
-  StopStreamingResponseModel? _stopStreamingResponse;
-  StopStreamingResponseModel? get stopStreamingResponse =>
-      _stopStreamingResponse;
-
+  // ── State ──────────────────────────────────────────────────────────────────
   LiveStreamModel? _liveStream;
+  StreamStatus _status = StreamStatus.idle;
+  String _errorMessage = '';
+  bool _isLoadingToggle = false;
+  Timer? _pollingTimer;
+
+  /// Map of cameraId → LiveStreamModel for multi-camera home screen display
+  final Map<String, LiveStreamModel> _cameraStreamMap = {};
+
+  // ── Getters ────────────────────────────────────────────────────────────────
   LiveStreamModel? get liveStream => _liveStream;
+  StreamStatus get status => _status;
+  String get errorMessage => _errorMessage;
+  bool get isLoadingToggle => _isLoadingToggle;
+  bool get isLoading => _status == StreamStatus.loading;
+  bool get isStreaming => _liveStream?.isStreaming ?? false;
+  bool get hasUnknownUser =>
+      _liveStream?.unknownUserDetection.hasUnknownUser ?? false;
+  String get resolvedStreamUrl => _liveStream?.resolvedStreamUrl ?? '';
 
-  UnknownVisitorsResponseModel? _unknownVisitorsResponse;
-  UnknownVisitorsResponseModel? get unknownVisitorsResponse =>
-      _unknownVisitorsResponse;
+  /// Returns the cached stream data for a specific camera
+  LiveStreamModel? getStreamForCamera(String cameraId) =>
+      _cameraStreamMap[cameraId];
 
-  bool _isLoadingVisitors = false;
-  bool get isLoadingVisitors => _isLoadingVisitors;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  bool get isStreaming => _streamingStatus == StreamingStatus.streaming;
-  bool get isLoading => _streamingStatus == StreamingStatus.loading;
-  bool get hasError => _streamingStatus == StreamingStatus.error;
-
-  // ── Start Streaming ──────────────────────────────────────────────────────────
-
-  Future<void> startStreaming({
+  // ── Fetch All Camera Streams (for HomeScreen) ──────────────────────────────
+  /// Fetches stream data for all cameras of a hostel in parallel and caches by cameraId.
+  Future<void> fetchAllCameraStreams({
     required String hostelId,
-    required String cameraId,
-    String? token,
+    required List<CameraModel> cameras,
+    required String token,
   }) async {
-    _setStreamingStatus(StreamingStatus.loading);
-    _clearError();
-
-    try {
-      final response = await _service.startStreaming(
-        hostelId: hostelId,
-        cameraId: cameraId,
-        token: token,
-      );
-
-      _startStreamingResponse = response;
-      _setStreamingStatus(StreamingStatus.streaming);
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
-
-  // ── Stop Streaming ───────────────────────────────────────────────────────────
-
-  Future<void> stopStreaming({
-    required String hostelId,
-    required String cameraId,
-    String? token,
-  }) async {
-    _setStreamingStatus(StreamingStatus.loading);
-    _clearError();
-
-    try {
-      final response = await _service.stopStreaming(
-        hostelId: hostelId,
-        cameraId: cameraId,
-        token: token,
-      );
-
-      _stopStreamingResponse = response;
-      _startStreamingResponse = null;
-      _liveStream = null;
-      _setStreamingStatus(StreamingStatus.stopped);
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
-
-  // ── Get Live Stream ──────────────────────────────────────────────────────────
-
-  Future<void> getLiveStream({
-    required String hostelId,
-    required String cameraId,
-    String? token,
-  }) async {
-    _setStreamingStatus(StreamingStatus.loading);
-    _clearError();
-
-    try {
-      final response = await _service.getLiveStream(
-        hostelId: hostelId,
-        cameraId: cameraId,
-        token: token,
-      );
-
-      _liveStream = response;
-      _setStreamingStatus(StreamingStatus.streaming);
-    } catch (e) {
-      _setError(e.toString());
-    }
-  }
-
-  // ── Get Unknown Visitors ─────────────────────────────────────────────────────
-
-  Future<void> getUnknownVisitors({
-    required String hostelId,
-    String? token,
-  }) async {
-    _isLoadingVisitors = true;
-    _clearError();
+    _status = StreamStatus.loading;
     notifyListeners();
 
     try {
-      final response = await _service.getUnknownVisitors(
+      // Fetch all in parallel
+      final results = await Future.wait(
+        cameras.map(
+          (cam) => _streamService
+              .getLiveStream(
+                hostelId: hostelId,
+                cameraId: cam.cameraId,
+                token: token,
+              )
+              .then((stream) => MapEntry(cam.cameraId, stream))
+              .catchError((_) => MapEntry(cam.cameraId, null)),
+        ),
+      );
+
+      for (final entry in results) {
+        if (entry.value != null) {
+          _cameraStreamMap[entry.key] = entry.value!;
+        }
+      }
+
+      // Set the first camera's stream as the primary liveStream
+      if (_cameraStreamMap.isNotEmpty) {
+        _liveStream = _cameraStreamMap.values.first;
+        _status = _liveStream!.isStreaming
+            ? StreamStatus.streaming
+            : StreamStatus.stopped;
+      } else {
+        _status = StreamStatus.idle;
+      }
+    } catch (e) {
+      _status = StreamStatus.error;
+      _errorMessage = e.toString();
+    }
+
+    notifyListeners();
+  }
+
+  // ── Fetch Live Stream (single camera) ─────────────────────────────────────
+  Future<void> fetchLiveStream({
+    required String hostelId,
+    required String cameraId,
+    required String token,
+  }) async {
+    _status = StreamStatus.loading;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final stream = await _streamService.getLiveStream(
         hostelId: hostelId,
+        cameraId: cameraId,
+        token: token,
+      );
+      _liveStream = stream;
+      _cameraStreamMap[cameraId] = stream;
+      _status = stream.isStreaming
+          ? StreamStatus.streaming
+          : StreamStatus.stopped;
+    } catch (e) {
+      _status = StreamStatus.error;
+      _errorMessage = e.toString();
+    }
+
+    notifyListeners();
+  }
+
+  // ── Start Streaming ────────────────────────────────────────────────────────
+  Future<bool> startStreaming({
+    required String hostelId,
+    required String cameraId,
+    required String token,
+  }) async {
+    _isLoadingToggle = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final result = await _streamService.startStreaming(
+        hostelId: hostelId,
+        cameraId: cameraId,
         token: token,
       );
 
-      _unknownVisitorsResponse = response;
+      if (result.success) {
+        await fetchLiveStream(
+          hostelId: hostelId,
+          cameraId: cameraId,
+          token: token,
+        );
+        _startPolling(hostelId: hostelId, cameraId: cameraId, token: token);
+      }
+
+      _isLoadingToggle = false;
+      notifyListeners();
+      return result.success;
     } catch (e) {
       _errorMessage = e.toString();
-    } finally {
-      _isLoadingVisitors = false;
+      _isLoadingToggle = false;
       notifyListeners();
+      return false;
     }
   }
 
-  // ── Reset ────────────────────────────────────────────────────────────────────
+  // ── Stop Streaming ─────────────────────────────────────────────────────────
+  Future<bool> stopStreaming({
+    required String hostelId,
+    required String cameraId,
+    required String token,
+  }) async {
+    _isLoadingToggle = true;
+    _errorMessage = '';
+    notifyListeners();
 
-  void resetStreaming() {
-    _streamingStatus = StreamingStatus.idle;
-    _startStreamingResponse = null;
-    _stopStreamingResponse = null;
+    try {
+      final result = await _streamService.stopStreaming(
+        hostelId: hostelId,
+        cameraId: cameraId,
+        token: token,
+      );
+
+      if (result.success) {
+        _stopPolling();
+        await fetchLiveStream(
+          hostelId: hostelId,
+          cameraId: cameraId,
+          token: token,
+        );
+      }
+
+      _isLoadingToggle = false;
+      notifyListeners();
+      return result.success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoadingToggle = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ── Polling ────────────────────────────────────────────────────────────────
+  void _startPolling({
+    required String hostelId,
+    required String cameraId,
+    required String token,
+    Duration interval = const Duration(seconds: 5),
+  }) {
+    _stopPolling();
+    _pollingTimer = Timer.periodic(interval, (_) {
+      fetchLiveStream(hostelId: hostelId, cameraId: cameraId, token: token);
+    });
+  }
+
+  void _stopPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = null;
+  }
+
+  // ── Reset ──────────────────────────────────────────────────────────────────
+  void reset() {
+    _stopPolling();
     _liveStream = null;
-    _errorMessage = null;
+    _cameraStreamMap.clear();
+    _status = StreamStatus.idle;
+    _errorMessage = '';
+    _isLoadingToggle = false;
     notifyListeners();
   }
 
-  void clearVisitors() {
-    _unknownVisitorsResponse = null;
-    notifyListeners();
-  }
-
-  // ── Private Helpers ──────────────────────────────────────────────────────────
-
-  void _setStreamingStatus(StreamingStatus status) {
-    _streamingStatus = status;
-    notifyListeners();
-  }
-
-  void _setError(String message) {
-    _errorMessage = message;
-    _streamingStatus = StreamingStatus.error;
-    notifyListeners();
-  }
-
-  void _clearError() {
-    _errorMessage = null;
+  @override
+  void dispose() {
+    _stopPolling();
+    super.dispose();
   }
 }

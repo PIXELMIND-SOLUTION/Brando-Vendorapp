@@ -943,9 +943,6 @@ class _VideoCardState extends State<_VideoCard> {
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// Image Card
-// ────────────────────────────────────────────────────────────
 class _ImageCard extends StatelessWidget {
   final Map<String, dynamic> image;
   final Color cameraColor;
@@ -1120,9 +1117,6 @@ class _ImageCard extends StatelessWidget {
   }
 }
 
-// ────────────────────────────────────────────────────────────
-// Grid Painter (subtle camera-feed grid)
-// ────────────────────────────────────────────────────────────
 class _GridPainter extends CustomPainter {
   final double opacity;
   _GridPainter({this.opacity = 0.08});

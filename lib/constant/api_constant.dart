@@ -56,8 +56,8 @@ class ApiConstant {
   static String getLiveStream(String hostelId, String cameraId) =>
       '$cameraBase/getstream/$hostelId/$cameraId';
 
-  static String getUnknownVisitors(String hostelId) =>
-      '$cameraBase/getunknown-visitors/$hostelId';
+  // static String getUnknownVisitors(String hostelId) =>
+  //     '$cameraBase/getunknown-visitors/$hostelId';
 
      
 }

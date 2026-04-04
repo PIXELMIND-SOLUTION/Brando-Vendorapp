@@ -1012,6 +1012,7 @@ class _HistoryScreenState extends State<MenuScreen> {
 
   @override
   Widget build(BuildContext context) {
+    print('Hostellllllllllllllll idddddddddddddddddd ${widget.hostelId}');
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

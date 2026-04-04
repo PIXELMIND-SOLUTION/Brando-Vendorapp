@@ -3,121 +3,100 @@ import 'package:brando_vendor/constant/api_constant.dart';
 import 'package:brando_vendor/model/streaming_model.dart';
 import 'package:http/http.dart' as http;
 
-class CameraStreamingService {
-  // ── Shared headers ──────────────────────────────────────────────────────────
-  Map<String, String> _headers({String? token}) => {
-        'Content-Type': 'application/json',
-        if (token != null) 'Authorization': 'Bearer $token',
-      };
-
-  Future<StartStreamingResponseModel> startStreaming({
-    required String hostelId,
-    required String cameraId,
-    String? token,
-  }) async {
-    final url = Uri.parse(ApiConstant.startStreaming(hostelId, cameraId));
-
-    try {
-      final response = await http.post(
-        url,
-        headers: _headers(token: token),
-      );
-
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return StartStreamingResponseModel.fromJson(json);
-      } else {
-        throw Exception(
-          json['message'] ?? 'Failed to start streaming (${response.statusCode})',
-        );
-      }
-    } catch (e) {
-      throw Exception('Start streaming error: $e');
-    }
-  }
-
-
-  Future<StopStreamingResponseModel> stopStreaming({
-    required String hostelId,
-    required String cameraId,
-    String? token,
-  }) async {
-    final url = Uri.parse(ApiConstant.stopStreaming(hostelId, cameraId));
-
-    try {
-      final response = await http.post(
-        url,
-        headers: _headers(token: token),
-      );
-
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        return StopStreamingResponseModel.fromJson(json);
-      } else {
-        throw Exception(
-          json['message'] ?? 'Failed to stop streaming (${response.statusCode})',
-        );
-      }
-    } catch (e) {
-      throw Exception('Stop streaming error: $e');
-    }
-  }
-
-
+class StreamService {
   Future<LiveStreamModel> getLiveStream({
     required String hostelId,
     required String cameraId,
-    String? token,
+    required String token,
   }) async {
-    final url = Uri.parse(ApiConstant.getLiveStream(hostelId, cameraId));
+    final url = ApiConstant.getLiveStream(hostelId, cameraId);
 
     try {
       final response = await http.get(
-        url,
-        headers: _headers(token: token),
+        Uri.parse(url),
+        headers: _buildHeaders(token),
       );
 
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body);
+
+
+      print('Response status code for get live streaming ${response.statusCode}');
+            print('Response  bodyyyyyyyyy for get live streaming ${response.body}');
+
 
       if (response.statusCode == 200) {
-        return LiveStreamModel.fromJson(json);
+        return LiveStreamModel.fromJson(data);
       } else {
-        throw Exception(
-          json['message'] ?? 'Failed to get live stream (${response.statusCode})',
-        );
+        throw Exception(data['message'] ?? 'Failed to fetch live stream');
       }
     } catch (e) {
-      throw Exception('Get live stream error: $e');
+      throw Exception('getLiveStream error: $e');
     }
   }
 
-
-  Future<UnknownVisitorsResponseModel> getUnknownVisitors({
+  /// Starts the stream for a specific camera.
+  Future<StreamToggleModel> startStreaming({
     required String hostelId,
-    String? token,
+    required String cameraId,
+    required String token,
   }) async {
-    final url = Uri.parse(ApiConstant.getUnknownVisitors(hostelId));
+    final url = ApiConstant.startStreaming(hostelId, cameraId);
 
     try {
-      final response = await http.get(
-        url,
-        headers: _headers(token: token),
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _buildHeaders(token),
       );
 
-      final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final data = jsonDecode(response.body);
+
+        print('Response status code for starttttttttt streaming ${response.statusCode}');
+            print('Response  bodyyyyyyyyy for starrttytyt live streaming ${response.body}');
 
       if (response.statusCode == 200) {
-        return UnknownVisitorsResponseModel.fromJson(json);
+        return StreamToggleModel.fromJson(data);
       } else {
-        throw Exception(
-          json['message'] ??
-              'Failed to get unknown visitors (${response.statusCode})',
-        );
+        throw Exception(data['message'] ?? 'Failed to start streaming');
       }
     } catch (e) {
-      throw Exception('Get unknown visitors error: $e');
+      throw Exception('startStreaming error: $e');
     }
+  }
+
+  /// Stops the stream for a specific camera.
+  Future<StreamToggleModel> stopStreaming({
+    required String hostelId,
+    required String cameraId,
+    required String token,
+  }) async {
+    final url = ApiConstant.stopStreaming(hostelId, cameraId);
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _buildHeaders(token),
+      );
+
+      final data = jsonDecode(response.body);
+
+
+      print('Response status code for stooooooop streaming ${response.statusCode}');
+            print('Response  bodyyyyyyyyy for stoooooop live streaming ${response.body}');
+
+      if (response.statusCode == 200) {
+        return StreamToggleModel.fromJson(data);
+      } else {
+        throw Exception(data['message'] ?? 'Failed to stop streaming');
+      }
+    } catch (e) {
+      throw Exception('stopStreaming error: $e');
+    }
+  }
+
+  Map<String, String> _buildHeaders(String token) {
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer $token',
+    };
   }
 }
