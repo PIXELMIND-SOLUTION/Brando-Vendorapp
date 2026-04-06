@@ -53,11 +53,71 @@ class UnknownUserDetection {
   }
 }
 
+// class LiveStreamModel {
+//   final bool success;
+//   final bool isStreaming;
+//   final String cameraStatus;
+//   final String liveStreamUrl;
+//   final String message;
+//   final String channel;
+//   final UnknownUserDetection unknownUserDetection;
+
+//   LiveStreamModel({
+//     required this.success,
+//     required this.isStreaming,
+//     required this.cameraStatus,
+//     required this.liveStreamUrl,
+//     required this.message,
+//     required this.channel,
+//     required this.unknownUserDetection,
+//   });
+
+//   factory LiveStreamModel.fromJson(Map<String, dynamic> json) {
+//     return LiveStreamModel(
+//       success: json['success'] ?? false,
+//       isStreaming: json['isStreaming'] ?? false,
+//       cameraStatus: json['cameraStatus'] ?? '',
+//       liveStreamUrl: json['liveStreamUrl'] ?? '',
+//       message: json['message'] ?? '',
+//       channel: json['channel']?.toString() ?? '',
+//       unknownUserDetection: UnknownUserDetection.fromJson(
+//         json['unknownUserDetection'] ?? {},
+//       ),
+//     );
+//   }
+
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'success': success,
+//       'isStreaming': isStreaming,
+//       'cameraStatus': cameraStatus,
+//       'liveStreamUrl': liveStreamUrl,
+//       'message': message,
+//       'channel': channel,
+//       'unknownUserDetection': unknownUserDetection.toJson(),
+//     };
+//   }
+
+//   /// Replaces localhost URL with the actual server IP for device access
+//   String get resolvedStreamUrl {
+//     return liveStreamUrl.replaceAll(
+//       'http://localhost:2003',
+//       'http://31.97.206.144:2003',
+//     );
+//   }
+
+//   bool get isCameraActive => cameraStatus == 'active';
+// }
+
+
+
+
 class LiveStreamModel {
   final bool success;
   final bool isStreaming;
   final String cameraStatus;
   final String liveStreamUrl;
+  final String directPlayUrl; // ← ADDED
   final String message;
   final String channel;
   final UnknownUserDetection unknownUserDetection;
@@ -67,6 +127,7 @@ class LiveStreamModel {
     required this.isStreaming,
     required this.cameraStatus,
     required this.liveStreamUrl,
+    required this.directPlayUrl, // ← ADDED
     required this.message,
     required this.channel,
     required this.unknownUserDetection,
@@ -78,6 +139,7 @@ class LiveStreamModel {
       isStreaming: json['isStreaming'] ?? false,
       cameraStatus: json['cameraStatus'] ?? '',
       liveStreamUrl: json['liveStreamUrl'] ?? '',
+      directPlayUrl: json['directPlayUrl'] ?? '', // ← ADDED
       message: json['message'] ?? '',
       channel: json['channel']?.toString() ?? '',
       unknownUserDetection: UnknownUserDetection.fromJson(
@@ -92,15 +154,23 @@ class LiveStreamModel {
       'isStreaming': isStreaming,
       'cameraStatus': cameraStatus,
       'liveStreamUrl': liveStreamUrl,
+      'directPlayUrl': directPlayUrl, // ← ADDED
       'message': message,
       'channel': channel,
       'unknownUserDetection': unknownUserDetection.toJson(),
     };
   }
 
-  /// Replaces localhost URL with the actual server IP for device access
   String get resolvedStreamUrl {
     return liveStreamUrl.replaceAll(
+      'http://localhost:2003',
+      'http://31.97.206.144:2003',
+    );
+  }
+
+  // Optionally resolve directPlayUrl too
+  String get resolvedDirectPlayUrl {
+    return directPlayUrl.replaceAll(
       'http://localhost:2003',
       'http://31.97.206.144:2003',
     );

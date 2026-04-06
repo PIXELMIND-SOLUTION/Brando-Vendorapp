@@ -45,6 +45,8 @@ dependencies:
   google_places_flutter: ^2.1.1
   path_provider: ^2.1.5
   gal: ^2.3.2
+  chewie: ^1.13.0
+  webview_flutter: ^4.13.1
 
 dev_dependencies:
   flutter_test:

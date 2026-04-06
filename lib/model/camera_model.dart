@@ -1,3 +1,91 @@
+// class CameraModel {
+//   final String cameraId;
+//   final String name;
+//   final String ipAddress;
+//   final int port;
+//   final String username;
+//   final String password;
+//   final String location;
+//   final String streamUrl;
+//   final String status;
+//   final String id;
+//   final DateTime createdAt;
+  
+
+//   CameraModel({
+//     required this.cameraId,
+//     required this.name,
+//     required this.ipAddress,
+//     required this.port,
+//     required this.username,
+//     required this.password,
+//     required this.location,
+//     required this.streamUrl,
+//     required this.status,
+//     required this.id,
+//     required this.createdAt,
+//   });
+
+//   factory CameraModel.fromJson(Map<String, dynamic> json) {
+//     return CameraModel(
+//       cameraId: json['cameraId'] ?? '',
+//       name: json['name'] ?? '',
+//       ipAddress: json['ipAddress'] ?? '',
+//       port: json['port'] ?? 0,
+//       username: json['username'] ?? '',
+//       password: json['password'] ?? '',
+//       location: json['location'] ?? '',
+//       streamUrl: json['streamUrl'] ?? '',
+//       status: json['status'] ?? 'inactive',
+//       id: json['_id'] ?? '',
+//       createdAt: json['createdAt'] != null
+//           ? DateTime.parse(json['createdAt'])
+//           : DateTime.now(),
+//     );
+//   }
+
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'name': name,
+//       'ipAddress': ipAddress,
+//       'port': port,
+//       'username': username,
+//       'password': password,
+//       'location': location,
+//     };
+//   }
+
+//   CameraModel copyWith({
+//     String? cameraId,
+//     String? name,
+//     String? ipAddress,
+//     int? port,
+//     String? username,
+//     String? password,
+//     String? location,
+//     String? streamUrl,
+//     String? status,
+//     String? id,
+//     DateTime? createdAt,
+//   }) {
+//     return CameraModel(
+//       cameraId: cameraId ?? this.cameraId,
+//       name: name ?? this.name,
+//       ipAddress: ipAddress ?? this.ipAddress,
+//       port: port ?? this.port,
+//       username: username ?? this.username,
+//       password: password ?? this.password,
+//       location: location ?? this.location,
+//       streamUrl: streamUrl ?? this.streamUrl,
+//       status: status ?? this.status,
+//       id: id ?? this.id,
+//       createdAt: createdAt ?? this.createdAt,
+//     );
+//   }
+// }
+
+
+
 class CameraModel {
   final String cameraId;
   final String name;
@@ -10,6 +98,8 @@ class CameraModel {
   final String status;
   final String id;
   final DateTime createdAt;
+  final String manufacturer; // ✅ NEW
+  final int channel;         // ✅ NEW
 
   CameraModel({
     required this.cameraId,
@@ -23,6 +113,8 @@ class CameraModel {
     required this.status,
     required this.id,
     required this.createdAt,
+    required this.manufacturer,
+    required this.channel,
   });
 
   factory CameraModel.fromJson(Map<String, dynamic> json) {
@@ -37,6 +129,8 @@ class CameraModel {
       streamUrl: json['streamUrl'] ?? '',
       status: json['status'] ?? 'inactive',
       id: json['_id'] ?? '',
+      manufacturer: json['manufacturer'] ?? '', // ✅ NEW
+      channel: json['channel'] ?? 0,             // ✅ NEW
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -51,6 +145,8 @@ class CameraModel {
       'username': username,
       'password': password,
       'location': location,
+      'manufacturer': manufacturer, // ✅ NEW
+      'channel': channel,           // ✅ NEW
     };
   }
 
@@ -66,6 +162,8 @@ class CameraModel {
     String? status,
     String? id,
     DateTime? createdAt,
+    String? manufacturer, // ✅ NEW
+    int? channel,         // ✅ NEW
   }) {
     return CameraModel(
       cameraId: cameraId ?? this.cameraId,
@@ -79,11 +177,43 @@ class CameraModel {
       status: status ?? this.status,
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
+      manufacturer: manufacturer ?? this.manufacturer, // ✅ NEW
+      channel: channel ?? this.channel,                 // ✅ NEW
     );
   }
 }
-
 // Request payload model
+// class CameraPayload {
+//   final String name;
+//   final String ipAddress;
+//   final int port;
+//   final String username;
+//   final String password;
+//   final String location;
+
+//   CameraPayload({
+//     required this.name,
+//     required this.ipAddress,
+//     required this.port,
+//     required this.username,
+//     required this.password,
+//     required this.location,
+//   });
+
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'name': name,
+//       'ipAddress': ipAddress,
+//       'port': port,
+//       'username': username,
+//       'password': password,
+//       'location': location,
+//     };
+//   }
+// }
+
+
+
 class CameraPayload {
   final String name;
   final String ipAddress;
@@ -91,6 +221,8 @@ class CameraPayload {
   final String username;
   final String password;
   final String location;
+  final String manufacturer; // NEW
+  final int channel;         // NEW
 
   CameraPayload({
     required this.name,
@@ -99,6 +231,8 @@ class CameraPayload {
     required this.username,
     required this.password,
     required this.location,
+    required this.manufacturer,
+    required this.channel,
   });
 
   Map<String, dynamic> toJson() {
@@ -109,6 +243,8 @@ class CameraPayload {
       'username': username,
       'password': password,
       'location': location,
+      'manufacturer': manufacturer, // NEW
+      'channel': channel,           // NEW
     };
   }
 }
