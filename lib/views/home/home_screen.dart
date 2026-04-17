@@ -18003,7 +18003,21 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
+// bool _hostelIsAc(Hostel hostel) {
+//   final types = hostel.type.map((t) => t.trim().toUpperCase()).toList();
+//   if (types.any((t) => t == 'NON-AC' || t == 'NON AC')) return false;
+//   return types.contains('AC');
+// }
+
+
+
 bool _hostelIsAc(Hostel hostel) {
+  // First check sharings (what the API actually returns)
+  if (hostel.sharings.isNotEmpty) {
+    return hostel.sharings.any((s) => s.type!.trim().toUpperCase() == 'AC');
+  }
+  
+  // Fallback to type field
   final types = hostel.type.map((t) => t.trim().toUpperCase()).toList();
   if (types.any((t) => t == 'NON-AC' || t == 'NON AC')) return false;
   return types.contains('AC');
