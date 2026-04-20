@@ -2,12 +2,13 @@ import 'package:brando_vendor/help/need_help_screen.dart';
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
 import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
+import 'package:brando_vendor/views/allhostels/all_hostel_screen.dart';
 import 'package:brando_vendor/views/deleteaccount/delete_account.dart';
 import 'package:brando_vendor/views/details/bank/bank_detail.dart';
 import 'package:brando_vendor/views/home/menu_screen.dart';
 import 'package:brando_vendor/views/profile/edit_profile.dart';
-import 'package:brando_vendor/views/recordings/recording_details.dart';
 import 'package:brando_vendor/views/splash/splash_screen.dart';
+import 'package:brando_vendor/views/userform/user_form_details.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -57,7 +58,6 @@ class ProfileScreen extends StatelessWidget {
               Navigator.pop(ctx);
               await context.read<VendorProvider>().logout();
               if (context.mounted) {
-                // ✅ Reset navbar index to Home before navigating
                 context.read<BottomNavbarProvider>().setIndex(0);
                 Navigator.pushAndRemoveUntil(
                   context,
@@ -112,14 +112,6 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: _buildTile(Icons.person_outline, "Personal information"),
               ),
-
-              // GestureDetector(
-              //   onTap: () => Navigator.push(
-              //     context,
-              //     MaterialPageRoute(builder: (_) => MenuScreen(hostelId: '69c614eda370f4b126c482b9',)),
-              //   ),
-              //   child: _buildTile(Icons.history, "History"),
-              // ),
               GestureDetector(
                 onTap: () {
                   final hostelId =
@@ -155,13 +147,32 @@ class ProfileScreen extends StatelessWidget {
                 child: _buildTile(Icons.account_balance, "Bank Details"),
               ),
 
-              GestureDetector(
+              // GestureDetector(
+              //   onTap: () => Navigator.push(
+              //     context,
+              //     MaterialPageRoute(builder: (_) => RecordingDetails()),
+              //   ),
+              //   child: _buildTile(Icons.image_outlined, "Recording & Images"),
+              // ),
+
+
+               GestureDetector(
                 onTap: () => Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (_) => RecordingDetails()),
+                  MaterialPageRoute(builder: (_) => AllHostelScreen()),
                 ),
-                child: _buildTile(Icons.image_outlined, "Recording & Images"),
+                child: _buildTile(Icons.hotel, "All Hostels"),
               ),
+
+
+                GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => UserFormDetails()),
+                ),
+                child: _buildTile(Icons.description, "Form Details"),
+              ),
+
 
               _buildTile(Icons.description_outlined, "Terms & Conditions"),
               GestureDetector(

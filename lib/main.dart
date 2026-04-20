@@ -1,8 +1,10 @@
 import 'package:brando_vendor/provider/auth/auth_provider.dart';
 import 'package:brando_vendor/provider/auth/profile_provider.dart';
+import 'package:brando_vendor/provider/booking/booking_provider.dart';
 import 'package:brando_vendor/provider/camera/camera_provider.dart';
 import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/form/form_details_provider.dart';
+import 'package:brando_vendor/provider/form/user_form_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
 import 'package:brando_vendor/provider/stream/stream_provider.dart';
 import 'package:brando_vendor/views/splash/splash_screen.dart';
@@ -32,9 +34,11 @@ class MyApp extends StatelessWidget {
 
         ChangeNotifierProvider(create: (_) => FormDetailsProvider()),
 
+        ChangeNotifierProvider(create: (_) => StreamCameraProvider()),
 
-                ChangeNotifierProvider(create: (_) =>StreamCameraProvider()),
+        ChangeNotifierProvider(create: (_) => BookingRequestProvider()),
 
+        ChangeNotifierProvider(create: (_) => HostelBookingProvider()),
       ],
       child: MaterialApp(
         title: 'BRANDO VENDOR',

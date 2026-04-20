@@ -47,6 +47,7 @@ dependencies:
   gal: ^2.3.2
   chewie: ^1.13.0
   webview_flutter: ^4.13.1
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:

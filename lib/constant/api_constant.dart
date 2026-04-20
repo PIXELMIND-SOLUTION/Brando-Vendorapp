@@ -56,8 +56,25 @@ class ApiConstant {
   static String getLiveStream(String hostelId, String cameraId) =>
       '$cameraBase/getstream/$hostelId/$cameraId';
 
-  // static String getUnknownVisitors(String hostelId) =>
-  //     '$cameraBase/getunknown-visitors/$hostelId';
+  static const String bookingBase = 'http://31.97.206.144:2003/api/vendors';
 
-     
+  static String getAllBookingRequests(String vendorId) =>
+      '$bookingBase/allhostelbookingreq/$vendorId';
+
+  static String updateBookingRequest(String bookingId) =>
+      '$bookingBase/updatebookingreq/$bookingId';
+
+  static String deleteBookingRequest(String bookingId) =>
+      '$bookingBase/deletebookingreq/$bookingId';
+
+
+
+      static String getHostelBookings(String vendorId) =>
+    '$baseUrl/hostelbookings/$vendorId';
+
+static String updateHostelBooking(String bookingId) =>
+    '$baseUrl/update-booking/$bookingId';
+
+static String deleteHostelBooking(String bookingId) =>
+    '$baseUrl/deletehostelbooking/$bookingId';
 }
