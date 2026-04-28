@@ -1,15 +1,9 @@
-
-
 import 'package:brando_vendor/model/form_details_model.dart';
 import 'package:brando_vendor/provider/form/form_details_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-
-// ─────────────────────────────────────────────
-//  HISTORY SCREEN
-// ─────────────────────────────────────────────
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
@@ -120,7 +114,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
           }
 
-          // ── Empty ──
           if (provider.submissions.isEmpty) {
             return const Center(
               child: Text(

@@ -37,7 +37,7 @@ class NotificationScreen extends StatefulWidget {
 }
 
 class _NotificationScreenState extends State<NotificationScreen> {
-  static const String _baseUrl = 'http://31.97.206.144:2003/api/vendors';
+  static const String _baseUrl = 'http://187.127.146.52:2003/api/vendors';
 
   List<NotificationModel> _notifications = [];
   bool _isLoading = true;

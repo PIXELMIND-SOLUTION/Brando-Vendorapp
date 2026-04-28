@@ -55,7 +55,6 @@ import 'package:brando_vendor/model/form_details_model.dart';
 import 'package:http/http.dart' as http;
 
 class FormDetailsService {
-  // GET all submissions for a hostel
   Future<FormDetailsResponse> getFormDetails(String hostelId) async {
     final url = Uri.parse(ApiConstant.formdetails(hostelId));
 
@@ -77,7 +76,7 @@ class FormDetailsService {
   Future<void> updateSubmission({
     required String submissionId,
     required Map<String, String> fields,        // text fields
-    Map<String, String>? filePaths,             // field name → local file path
+    Map<String, String>? filePaths,             
   }) async {
     final url = Uri.parse(ApiConstant.updateSubmission(submissionId));
 

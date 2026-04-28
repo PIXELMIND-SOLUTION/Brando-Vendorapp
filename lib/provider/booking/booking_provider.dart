@@ -18,8 +18,13 @@ class BookingRequestProvider extends ChangeNotifier {
   bool get isLoading => _status == BookingRequestStatus.loading;
 
   // Filtered getters
+  // List<BookingRequestModel> get pendingRequests =>
+  //     _bookingRequests.where((r) => r.status == 'Pending').toList();
+
+
+
   List<BookingRequestModel> get pendingRequests =>
-      _bookingRequests.where((r) => r.status == 'Pending').toList();
+    _bookingRequests.where((r) => r.status == 'Requested').toList();
 
   List<BookingRequestModel> get acceptedRequests =>
       _bookingRequests.where((r) => r.status == 'Accepted').toList();
@@ -45,27 +50,52 @@ class BookingRequestProvider extends ChangeNotifier {
   }
 
   // Update booking status (Accepted / Rejected)
+  // Future<bool> updateBookingStatus({
+  //   required String bookingId,
+  //   required String status,
+  // }) async {
+  //   _setState(BookingRequestStatus.loading);
+  //   try {
+  //     final updated = await _service.updateBookingRequest(
+  //       bookingId: bookingId,
+  //       status: status,
+  //     );
+  //     final index = _bookingRequests.indexWhere((r) => r.id == bookingId);
+  //     if (index != -1) {
+  //       _bookingRequests[index] = updated;
+  //     }
+  //     _setState(BookingRequestStatus.success);
+  //     return true;
+  //   } catch (e) {
+  //     _setState(BookingRequestStatus.error, e.toString());
+  //     return false;
+  //   }
+  // }
+
+
+
   Future<bool> updateBookingStatus({
-    required String bookingId,
-    required String status,
-  }) async {
-    _setState(BookingRequestStatus.loading);
-    try {
-      final updated = await _service.updateBookingRequest(
-        bookingId: bookingId,
-        status: status,
-      );
-      final index = _bookingRequests.indexWhere((r) => r.id == bookingId);
-      if (index != -1) {
-        _bookingRequests[index] = updated;
-      }
-      _setState(BookingRequestStatus.success);
-      return true;
-    } catch (e) {
-      _setState(BookingRequestStatus.error, e.toString());
-      return false;
+  required String bookingId,
+  required String status,
+}) async {
+  _setState(BookingRequestStatus.loading);
+  try {
+    await _service.updateBookingRequest(
+      bookingId: bookingId,
+      status: status,
+    );
+    // Use copyWith to only update status, preserving existing user/hostel data
+    final index = _bookingRequests.indexWhere((r) => r.id == bookingId);
+    if (index != -1) {
+      _bookingRequests[index] = _bookingRequests[index].copyWith(status: status);
     }
+    _setState(BookingRequestStatus.success);
+    return true;
+  } catch (e) {
+    _setState(BookingRequestStatus.error, e.toString());
+    return false;
   }
+}
 
   // Delete booking request
   Future<bool> deleteBookingRequest(String bookingId) async {
