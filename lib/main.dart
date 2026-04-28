@@ -39,6 +39,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => BookingRequestProvider()),
 
         ChangeNotifierProvider(create: (_) => HostelBookingProvider()),
+        
       ],
       child: MaterialApp(
         title: 'BRANDO VENDOR',
