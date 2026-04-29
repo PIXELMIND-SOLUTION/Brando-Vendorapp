@@ -40,7 +40,7 @@
 //   final String mobileNumber;
 //   final String token;
 //   final String otp;
-//   final bool isExists;  
+//   final bool isExists;
 
 //   LoginResponseModel({
 //     required this.success,
@@ -58,7 +58,7 @@
 //       mobileNumber: json['mobileNumber'] ?? '',
 //       token: json['token'] ?? '',
 //       otp: json['otp'] ?? '',
-//       isExists: json['isExists'] ?? false, 
+//       isExists: json['isExists'] ?? false,
 //     );
 //   }
 // }
@@ -85,24 +85,6 @@
 //     );
 //   }
 // }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // ─────────────────────────────────────────────────────────────
 // Register Response Model
@@ -172,7 +154,8 @@ class VerifyRegistrationOtpResponseModel {
   });
 
   factory VerifyRegistrationOtpResponseModel.fromJson(
-      Map<String, dynamic> json) {
+    Map<String, dynamic> json,
+  ) {
     final data = json['data'] as Map<String, dynamic>? ?? {};
     return VerifyRegistrationOtpResponseModel(
       success: json['success'] ?? false,
@@ -191,31 +174,66 @@ class VerifyRegistrationOtpResponseModel {
 // Login Response Model
 // POST /login  →  sends OTP
 // ─────────────────────────────────────────────────────────────
+// class LoginResponseModel {
+//   final bool success;
+//   final String message;
+//   final String mobileNumber;
+//   final String token;
+//   final String otp;
+//   final bool isExists;
+
+//   LoginResponseModel({
+//     required this.success,
+//     required this.message,
+//     required this.mobileNumber,
+//     required this.token,
+//     required this.otp,
+//     required this.isExists,
+//   });
+
+//   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
+//     return LoginResponseModel(
+//       success: json['success'] ?? false,
+//       message: json['message'] ?? '',
+//       mobileNumber: json['mobileNumber'] ?? '',
+//       token: json['token'] ?? '',
+//       otp: json['otp'] ?? '',
+//       isExists: json['isExists'] ?? false,
+//     );
+//   }
+// }
+
 class LoginResponseModel {
   final bool success;
-  final String message;
-  final String mobileNumber;
-  final String token;
-  final String otp;
   final bool isExists;
+  final bool adminApproved;
+  final String approvalStatus;
+  final String token;
+  final String mobileNumber;
+  final String message;
+  final String? userId;
 
   LoginResponseModel({
     required this.success,
-    required this.message,
-    required this.mobileNumber,
-    required this.token,
-    required this.otp,
     required this.isExists,
+    required this.adminApproved,
+    required this.approvalStatus,
+    required this.token,
+    required this.mobileNumber,
+    required this.message,
+    this.userId, // Add this
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     return LoginResponseModel(
       success: json['success'] ?? false,
-      message: json['message'] ?? '',
-      mobileNumber: json['mobileNumber'] ?? '',
-      token: json['token'] ?? '',
-      otp: json['otp'] ?? '',
       isExists: json['isExists'] ?? false,
+      adminApproved: json['adminApproved'] ?? false,
+      approvalStatus: json['approvalStatus'] ?? '',
+      token: json['token'] ?? '',
+      mobileNumber: json['mobileNumber'] ?? '',
+      message: json['message'] ?? '',
+      userId: json['userId']?.toString(), // Capture userId from response
     );
   }
 }

@@ -111,21 +111,8 @@
 // //   }
 // // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import 'dart:io';
+import 'package:brando_vendor/widgets/app_back_control.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -140,9 +127,9 @@ class BookingScreen extends StatelessWidget {
   Future<void> _downloadQR(BuildContext context) async {
     try {
       if (qrUrl == null || qrUrl!.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("No QR available")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("No QR available")));
         return;
       }
 
@@ -189,161 +176,177 @@ class BookingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false,
-        title: const Text(
-          "QR Code Generator",
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+    return AppBackControl(
+      showConfirmationDialog: true,
+      dialogTitle: 'Exit App?',
+      dialogMessage: 'Are you sure you want to exit the app?',
+      confirmText: 'Exit',
+      cancelText: 'Stay',
+      onBackPressed: () {
+        // Optional: Do any cleanup if needed
+        print('User exiting app');
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F2F2),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          automaticallyImplyLeading: false,
+          title: const Text(
+            "QR Code Generator",
+            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500),
+          ),
         ),
-      ),
-      body: Column(
-        children: [
-          const SizedBox(height: 40),
+        body: Column(
+          children: [
+            const SizedBox(height: 40),
 
-          // ── QR Image ─────────────────────────────
-          Center(
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.06),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: qrUrl != null
-                  ? Image.network(
-                      qrUrl!,
-                      height: 200,
-                      width: 200,
-                      fit: BoxFit.contain,
-                      loadingBuilder: (context, child, progress) {
-                        if (progress == null) return child;
-                        return const SizedBox(
-                          height: 200,
-                          width: 200,
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      },
-                      errorBuilder: (_, __, ___) => const SizedBox(
+            // ── QR Image ─────────────────────────────
+            Center(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: qrUrl != null
+                    ? Image.network(
+                        qrUrl!,
                         height: 200,
                         width: 200,
-                        child: Icon(Icons.qr_code,
-                            size: 80, color: Colors.grey),
+                        fit: BoxFit.contain,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const SizedBox(
+                            height: 200,
+                            width: 200,
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => const SizedBox(
+                          height: 200,
+                          width: 200,
+                          child: Icon(
+                            Icons.qr_code,
+                            size: 80,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        "assets/qrimage.png",
+                        height: 200,
+                        width: 200,
+                        fit: BoxFit.contain,
                       ),
-                    )
-                  : Image.asset(
-                      "assets/qrimage.png",
-                      height: 200,
-                      width: 200,
-                      fit: BoxFit.contain,
-                    ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // ── Note ───────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: RichText(
-              textAlign: TextAlign.center,
-              text: const TextSpan(
-                style: TextStyle(fontSize: 13),
-                children: [
-                  TextSpan(
-                    text: "Note : ",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextSpan(
-                    text:
-                        "After scanning the QR code, data will be reflected in the menu screen.",
-                    style: TextStyle(color: Colors.black54),
-                  ),
-                ],
               ),
             ),
-          ),
 
-          // ── Copy URL ───────────────────────────
-          if (qrUrl != null) ...[
-            const SizedBox(height: 14),
-            GestureDetector(
-              onTap: () {
-                Clipboard.setData(ClipboardData(text: qrUrl!));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('QR URL copied!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE53935).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
+            const SizedBox(height: 20),
+
+            // ── Note ───────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 30),
+              child: RichText(
+                textAlign: TextAlign.center,
+                text: const TextSpan(
+                  style: TextStyle(fontSize: 13),
                   children: [
-                    Icon(Icons.copy, size: 14, color: Color(0xFFE53935)),
-                    SizedBox(width: 6),
-                    Text(
-                      'Copy URL',
+                    TextSpan(
+                      text: "Note : ",
                       style: TextStyle(
-                        color: Color(0xFFE53935),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    TextSpan(
+                      text:
+                          "After scanning the QR code, data will be reflected in the menu screen.",
+                      style: TextStyle(color: Colors.black54),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
 
-          const Spacer(),
-
-          // ── Download Button ────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            // ── Copy URL ───────────────────────────
+            if (qrUrl != null) ...[
+              const SizedBox(height: 14),
+              GestureDetector(
+                onTap: () {
+                  Clipboard.setData(ClipboardData(text: qrUrl!));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('QR URL copied!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE53935).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.copy, size: 14, color: Color(0xFFE53935)),
+                      SizedBox(width: 6),
+                      Text(
+                        'Copy URL',
+                        style: TextStyle(
+                          color: Color(0xFFE53935),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                onPressed: () => _downloadQR(context),
-                child: const Text(
-                  "Download",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
+              ),
+            ],
+
+            const Spacer(),
+
+            // ── Download Button ────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => _downloadQR(context),
+                  child: const Text(
+                    "Download",
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

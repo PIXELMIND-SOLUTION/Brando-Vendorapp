@@ -67,8 +67,6 @@
 //   static String deleteBookingRequest(String bookingId) =>
 //       '$bookingBase/deletebookingreq/$bookingId';
 
-
-
 //       static String getHostelBookings(String vendorId) =>
 //     '$baseUrl/hostelbookings/$vendorId';
 
@@ -79,25 +77,15 @@
 //     '$baseUrl/deletehostelbooking/$bookingId';
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
 class ApiConstant {
   static const String baseUrl = 'http://187.127.146.52:2003/api/vendors';
   static const String register = '$baseUrl/register';
   static const String login = '$baseUrl/login';
   static const String verifyOtp = '$baseUrl/verify-otp';
-  static const String verifyRegistrationOtp = '$baseUrl/verify-registration-otp';
-  static const String resendRegistrationOtp = '$baseUrl/resend-registration-otp';
+  static const String verifyRegistrationOtp =
+      '$baseUrl/verify-registration-otp';
+  static const String resendRegistrationOtp =
+      '$baseUrl/resend-registration-otp';
   static const String resendOtp = '$baseUrl/resend-otp';
   static const String profile = '$baseUrl/profile';
   static const String updateProfile = '$baseUrl/update-profile';
@@ -109,6 +97,15 @@ class ApiConstant {
   static String deletehostel(String hostelId) => '$adminBase/hostel/$hostelId';
   static String gethostelbyvendor(String vendorId) =>
       '$adminBase/hostels/vendor/$vendorId';
+
+  static String getBookingsByStatus(String vendorId, String status) =>
+      '${baseUrl}/vendor-bookings/$vendorId?status=$status';
+
+  static String acceptBooking(String vendorId, String bookingId) =>
+      '${baseUrl}/$vendorId/accept-booking/$bookingId';
+
+  static String rejectBooking(String vendorId, String bookingId) =>
+      '${baseUrl}/cancel-booking/$vendorId/$bookingId';
 
   static String formdetails(String hostelId) =>
       '$adminBase/submissions/hostel/$hostelId';

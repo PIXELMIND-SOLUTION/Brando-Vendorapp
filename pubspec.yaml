@@ -48,10 +48,15 @@ dependencies:
   chewie: ^1.13.0
   webview_flutter: ^4.13.1
   cached_network_image: ^3.4.1
+  excel: ^4.0.6
+  permission_handler: ^12.0.1
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.4
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
@@ -62,6 +67,12 @@ dev_dependencies:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/appstore.jpg"
+  remove_alpha_ios: true
 
 # The following section is specific to Flutter packages.
 flutter:
@@ -78,6 +89,7 @@ flutter:
     - assets\hostelimage.png
     - assets\profile.png
     - assets\qrimage.png
+    - assets\appstore.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

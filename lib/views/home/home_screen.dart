@@ -3,14 +3,17 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:brando_vendor/helper/shared_preference.dart';
 import 'package:brando_vendor/model/camera_model.dart';
+import 'package:brando_vendor/model/category_model.dart';
 import 'package:brando_vendor/model/create_hostel_model.dart';
 import 'package:brando_vendor/model/streaming_model.dart';
 import 'package:brando_vendor/provider/camera/camera_provider.dart';
+import 'package:brando_vendor/provider/create/category/category_provider.dart';
 import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/stream/stream_provider.dart';
 import 'package:brando_vendor/views/details/hostel_details.dart';
 import 'package:brando_vendor/views/location/location_screen.dart';
 import 'package:brando_vendor/views/notifications/notification_screen.dart';
+import 'package:brando_vendor/widgets/app_back_control.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -600,6 +603,39 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Future<void> _openEditHostel(Hostel hostel) async {
+  //   await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => HifiDetailsScreen(
+  //         existingHostel: hostel,
+  //         onSave: (request) async {
+  //           if (!mounted) return;
+  //           final success = await context.read<HostelProvider>().updateHostel(
+  //             hostelId: hostel.id,
+  //             request: request,
+  //           );
+  //           if (mounted) {
+  //             if (success) {
+  //               _showSuccess('Hostel Updated!');
+  //             } else {
+  //               ScaffoldMessenger.of(context).showSnackBar(
+  //                 SnackBar(
+  //                   content: Text(
+  //                     context.read<HostelProvider>().errorMessage ??
+  //                         'Failed to update hostel',
+  //                   ),
+  //                   backgroundColor: Colors.red,
+  //                 ),
+  //               );
+  //             }
+  //           }
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Future<void> _openEditHostel(Hostel hostel) async {
     await Navigator.push(
       context,
@@ -608,13 +644,31 @@ class _HomeScreenState extends State<HomeScreen> {
           existingHostel: hostel,
           onSave: (request) async {
             if (!mounted) return;
+            final vendorId = await SharedPreferenceHelper.getVendorId();
+
+            final updatedRequest = HostelRequest(
+              categoryId: request.categoryId,
+              vendorId: vendorId, // ✅ FIX HERE
+              name: request.name,
+              rating: request.rating,
+              address: request.address,
+              monthlyAdvance: request.monthlyAdvance,
+              latitude: request.latitude,
+              longitude: request.longitude,
+              isAc: request.isAc,
+              sharings: request.sharings,
+              imagePaths: request.imagePaths,
+            );
+
             final success = await context.read<HostelProvider>().updateHostel(
               hostelId: hostel.id,
-              request: request,
+              request: updatedRequest,
             );
             if (mounted) {
               if (success) {
                 _showSuccess('Hostel Updated!');
+                // 🔥 THIS IS THE KEY FIX - Refresh after update
+                await _refreshHostelsData();
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
@@ -631,6 +685,35 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshHostelsData() async {
+    final vendorId = await SharedPreferenceHelper.getVendorId();
+    if (vendorId == null || !mounted) return;
+
+    // Refresh hostels
+    await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
+
+    if (!mounted) return;
+    final hostels = context.read<HostelProvider>().hostels;
+
+    // Also refresh cameras and streams if hostels exist
+    if (hostels.isNotEmpty && mounted) {
+      await context.read<CameraProvider>().getAllHostelCameras(
+        hostels.first.id,
+      );
+
+      if (!mounted) return;
+      final cameras = context.read<CameraProvider>().cameras;
+      final token = await SharedPreferenceHelper.getToken() ?? '';
+      if (cameras.isNotEmpty && mounted) {
+        await context.read<StreamCameraProvider>().fetchAllCameraStreams(
+          hostelId: hostels.first.id,
+          cameras: cameras,
+          token: token,
+        );
+      }
+    }
   }
 
   Future<void> _deleteHostel(Hostel hostel) async {
@@ -743,143 +826,1047 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Add this method to _HomeScreenState class
+  Future<void> _refreshAllData() async {
+    try {
+      // Refresh banners
+      await fetchBanners();
+
+      // Refresh hostels data
+      final vendorId = await SharedPreferenceHelper.getVendorId();
+      if (vendorId != null && mounted) {
+        await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
+
+        if (mounted) {
+          final hostels = context.read<HostelProvider>().hostels;
+          if (hostels.isNotEmpty) {
+            await context.read<CameraProvider>().getAllHostelCameras(
+              hostels.first.id,
+            );
+
+            if (mounted) {
+              final cameras = context.read<CameraProvider>().cameras;
+              final token = await SharedPreferenceHelper.getToken() ?? '';
+              if (cameras.isNotEmpty) {
+                await context
+                    .read<StreamCameraProvider>()
+                    .fetchAllCameraStreams(
+                      hostelId: hostels.first.id,
+                      cameras: cameras,
+                      token: token,
+                    );
+              }
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('Error refreshing data: $e');
+    }
+  }
+
+  // @override
+  // Widget build(BuildContext context) {
+  //   return AppBackControl(
+  //     showConfirmationDialog: true,
+  //     dialogTitle: 'Exit App?',
+  //     dialogMessage: 'Are you sure you want to exit the app?',
+  //     confirmText: 'Exit',
+  //     cancelText: 'Stay',
+  //     onBackPressed: () {
+  //       // Optional: Do any cleanup if needed
+  //       print('User exiting app');
+  //     },
+  //     child: Stack(
+  //       children: [
+  //         Scaffold(
+  //           backgroundColor: Colors.white,
+  //           body: SafeArea(
+  //             child: RefreshIndicator(
+  //               onRefresh: _refreshAllData, // Add this method
+  //               color: const Color(0xFFE53935),
+  //               backgroundColor: Colors.white,
+  //               strokeWidth: 2,
+
+  //               child: SingleChildScrollView(
+  //                 child: Column(
+  //                   crossAxisAlignment: CrossAxisAlignment.start,
+  //                   children: [
+  //                     // ── Top bar ─────────────────────────────────────────────
+  //                     Padding(
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 16,
+  //                         vertical: 10,
+  //                       ),
+  //                       child: Row(
+  //                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                         children: [
+  //                           Column(
+  //                             crossAxisAlignment: CrossAxisAlignment.start,
+  //                             children: [
+  //                               const Text(
+  //                                 'Location',
+  //                                 style: TextStyle(
+  //                                   fontSize: 11,
+  //                                   color: Colors.grey,
+  //                                 ),
+  //                               ),
+  //                               Row(
+  //                                 children: [
+  //                                   const Icon(
+  //                                     Icons.location_on,
+  //                                     color: Color(0xFFE53935),
+  //                                     size: 16,
+  //                                   ),
+  //                                   const SizedBox(width: 4),
+  //                                   GestureDetector(
+  //                                     onTap: () {
+  //                                       Navigator.push(
+  //                                         context,
+  //                                         MaterialPageRoute(
+  //                                           builder: (context) =>
+  //                                               LocationScreen(),
+  //                                         ),
+  //                                       );
+  //                                     },
+  //                                     child: const Text(
+  //                                       'Kphb Hyderabad Kukatpally ...',
+  //                                       style: TextStyle(
+  //                                         fontSize: 13,
+  //                                         fontWeight: FontWeight.w600,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+  //                                   const Icon(
+  //                                     Icons.keyboard_arrow_down,
+  //                                     size: 18,
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           Stack(
+  //                             children: [
+  //                               GestureDetector(
+  //                                 onTap: () => Navigator.push(
+  //                                   context,
+  //                                   MaterialPageRoute(
+  //                                     builder: (_) => NotificationScreen(),
+  //                                   ),
+  //                                 ),
+  //                                 child: const Icon(
+  //                                   Icons.notifications_none,
+  //                                   size: 26,
+  //                                 ),
+  //                               ),
+  //                               Positioned(
+  //                                 right: 0,
+  //                                 top: 0,
+  //                                 child: Container(
+  //                                   width: 8,
+  //                                   height: 8,
+  //                                   decoration: const BoxDecoration(
+  //                                     color: Color(0xFFE53935),
+  //                                     shape: BoxShape.circle,
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+
+  //                     // ── Carousel ─────────────────────────────────────────────
+  //                     SizedBox(
+  //                       height: 130,
+  //                       child: _isLoadingBanners
+  //                           ? const Center(child: CircularProgressIndicator())
+  //                           : _carouselImages.isEmpty
+  //                           ? const Center(child: Text('No banners available'))
+  //                           : PageView.builder(
+  //                               controller: _carouselController,
+  //                               itemCount: _carouselImages.length,
+  //                               onPageChanged: (i) =>
+  //                                   setState(() => _carouselPage = i),
+  //                               itemBuilder: (_, index) => Padding(
+  //                                 padding: const EdgeInsets.symmetric(
+  //                                   horizontal: 16,
+  //                                 ),
+  //                                 child: ClipRRect(
+  //                                   borderRadius: BorderRadius.circular(12),
+  //                                   child: Stack(
+  //                                     fit: StackFit.expand,
+  //                                     children: [
+  //                                       Image.network(
+  //                                         _carouselImages[index],
+  //                                         fit: BoxFit.cover,
+  //                                         errorBuilder: (_, __, ___) =>
+  //                                             Container(
+  //                                               color: const Color(0xFFEEEEEE),
+  //                                               child: const Center(
+  //                                                 child: Icon(
+  //                                                   Icons.broken_image,
+  //                                                   size: 40,
+  //                                                   color: Colors.grey,
+  //                                                 ),
+  //                                               ),
+  //                                             ),
+  //                                       ),
+  //                                       Container(
+  //                                         decoration: BoxDecoration(
+  //                                           gradient: LinearGradient(
+  //                                             begin: Alignment.centerLeft,
+  //                                             end: Alignment.centerRight,
+  //                                             colors: [
+  //                                               Colors.black.withOpacity(0.4),
+  //                                               Colors.transparent,
+  //                                             ],
+  //                                           ),
+  //                                         ),
+  //                                       ),
+  //                                     ],
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ),
+  //                     ),
+
+  //                     // Dots
+  //                     Padding(
+  //                       padding: const EdgeInsets.symmetric(vertical: 8),
+  //                       child: Row(
+  //                         mainAxisAlignment: MainAxisAlignment.center,
+  //                         children: List.generate(
+  //                           _carouselImages.length,
+  //                           (i) => AnimatedContainer(
+  //                             duration: const Duration(milliseconds: 300),
+  //                             margin: const EdgeInsets.symmetric(horizontal: 3),
+  //                             width: _carouselPage == i ? 18 : 8,
+  //                             height: 8,
+  //                             decoration: BoxDecoration(
+  //                               borderRadius: BorderRadius.circular(4),
+  //                               color: _carouselPage == i
+  //                                   ? const Color(0xFFE53935)
+  //                                   : Colors.grey.shade300,
+  //                             ),
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+
+  //                     // ── Camera Capturing section ──────────────────────────────
+  //                     Padding(
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 16,
+  //                         vertical: 4,
+  //                       ),
+  //                       child: RichText(
+  //                         text: const TextSpan(
+  //                           children: [
+  //                             TextSpan(
+  //                               text: 'Camera ',
+  //                               style: TextStyle(
+  //                                 color: Color(0xFFE53935),
+  //                                 fontWeight: FontWeight.bold,
+  //                                 fontSize: 16,
+  //                               ),
+  //                             ),
+  //                             TextSpan(
+  //                               text: 'Capturing',
+  //                               style: TextStyle(
+  //                                 color: Colors.black,
+  //                                 fontWeight: FontWeight.bold,
+  //                                 fontSize: 16,
+  //                               ),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       ),
+  //                     ),
+
+  //                     Consumer3<
+  //                       HostelProvider,
+  //                       CameraProvider,
+  //                       StreamCameraProvider
+  //                     >(
+  //                       builder:
+  //                           (
+  //                             context,
+  //                             hostelProvider,
+  //                             cameraProvider,
+  //                             streamProvider,
+  //                             _,
+  //                           ) {
+  //                             final hostels = hostelProvider.hostels;
+  //                             if (hostels.isEmpty) {
+  //                               return Padding(
+  //                                 padding: const EdgeInsets.symmetric(
+  //                                   horizontal: 16,
+  //                                   vertical: 8,
+  //                                 ),
+  //                                 child: _AddCameraCard(
+  //                                   onTap: null,
+  //                                   label: 'Add a hostel first to add cameras',
+  //                                 ),
+  //                               );
+  //                             }
+
+  //                             final hostel = hostels.first;
+
+  //                             return Padding(
+  //                               padding: const EdgeInsets.symmetric(
+  //                                 horizontal: 16,
+  //                                 vertical: 8,
+  //                               ),
+  //                               child: Column(
+  //                                 crossAxisAlignment: CrossAxisAlignment.start,
+  //                                 children: [
+  //                                   if (cameraProvider.cameras.isNotEmpty)
+  //                                     SizedBox(
+  //                                       height: 100,
+  //                                       child: ListView.builder(
+  //                                         scrollDirection: Axis.horizontal,
+  //                                         itemCount:
+  //                                             cameraProvider.cameras.length,
+  //                                         itemBuilder: (_, i) {
+  //                                           final cam =
+  //                                               cameraProvider.cameras[i];
+  //                                           final streamData = streamProvider
+  //                                               .getStreamForCamera(
+  //                                                 cam.cameraId,
+  //                                               );
+  //                                           return GestureDetector(
+  //                                             onTap: () {
+  //                                               cameraProvider.getSingleCamera(
+  //                                                 hostelId: hostel.id,
+  //                                                 cameraId: cam.cameraId,
+  //                                               );
+  //                                               Navigator.push(
+  //                                                 context,
+  //                                                 MaterialPageRoute(
+  //                                                   builder: (_) => MultiProvider(
+  //                                                     providers: [
+  //                                                       ChangeNotifierProvider.value(
+  //                                                         value: cameraProvider,
+  //                                                       ),
+  //                                                       ChangeNotifierProvider.value(
+  //                                                         value: streamProvider,
+  //                                                       ),
+  //                                                     ],
+  //                                                     child:
+  //                                                         CameraDetailsScreen(
+  //                                                           hostelId: hostel.id,
+  //                                                           camera: cam,
+  //                                                         ),
+  //                                                   ),
+  //                                                 ),
+  //                                               );
+  //                                             },
+  //                                             child: _CameraThumbCard(
+  //                                               camera: cam,
+  //                                               streamData: streamData,
+  //                                             ),
+  //                                           );
+  //                                         },
+  //                                       ),
+  //                                     ),
+
+  //                                   if (cameraProvider.cameras.isNotEmpty) ...[
+  //                                     const SizedBox(height: 12),
+  //                                     _LiveStreamCompactPanel(
+  //                                       hostelId: hostel.id,
+  //                                       cameras: cameraProvider.cameras,
+  //                                       streamProvider: streamProvider,
+  //                                     ),
+  //                                   ],
+
+  //                                   const SizedBox(height: 10),
+  //                                   _AddCameraCard(
+  //                                     onTap: () =>
+  //                                         _openAddCameraSheet(hostel.id),
+  //                                     label: 'Add Your Camera',
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             );
+  //                           },
+  //                     ),
+
+  //                     // ── Hifi heading + Monthly/Daily toggle ──────────────────
+  //                     Padding(
+  //                       padding: const EdgeInsets.symmetric(
+  //                         horizontal: 16,
+  //                         vertical: 4,
+  //                       ),
+  //                       child: Row(
+  //                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //                         children: [
+  //                           RichText(
+  //                             text: const TextSpan(
+  //                               children: [
+  //                                 TextSpan(
+  //                                   text: 'Hifi ',
+  //                                   style: TextStyle(
+  //                                     color: Color(0xFFE53935),
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 16,
+  //                                   ),
+  //                                 ),
+  //                                 TextSpan(
+  //                                   text: 'Details',
+  //                                   style: TextStyle(
+  //                                     color: Colors.black,
+  //                                     fontWeight: FontWeight.bold,
+  //                                     fontSize: 16,
+  //                                   ),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                           Container(
+  //                             decoration: BoxDecoration(
+  //                               color: Colors.grey.shade100,
+  //                               borderRadius: BorderRadius.circular(20),
+  //                               border: Border.all(color: Colors.grey.shade300),
+  //                             ),
+  //                             child: Row(
+  //                               mainAxisSize: MainAxisSize.min,
+  //                               children: [
+  //                                 _PriceToggleChip(
+  //                                   label: 'Monthly',
+  //                                   selected: !_showDailyPrice,
+  //                                   onTap: () =>
+  //                                       setState(() => _showDailyPrice = false),
+  //                                 ),
+  //                                 _PriceToggleChip(
+  //                                   label: 'Daily',
+  //                                   selected: _showDailyPrice,
+  //                                   onTap: () =>
+  //                                       setState(() => _showDailyPrice = true),
+  //                                 ),
+  //                               ],
+  //                             ),
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+
+  //                     // ── Hostel cards ─────────────────────────────────────────
+  //                     Consumer<HostelProvider>(
+  //                       builder: (context, provider, _) {
+  //                         if (provider.isLoading)
+  //                           return const Padding(
+  //                             padding: EdgeInsets.symmetric(vertical: 20),
+  //                             child: Center(child: CircularProgressIndicator()),
+  //                           );
+  //                         if (provider.hasError)
+  //                           return Padding(
+  //                             padding: const EdgeInsets.symmetric(
+  //                               horizontal: 16,
+  //                               vertical: 10,
+  //                             ),
+  //                             child: Text(
+  //                               provider.errorMessage ?? 'Something went wrong',
+  //                               style: const TextStyle(color: Colors.red),
+  //                             ),
+  //                           );
+  //                         return Column(
+  //                           children: provider.hostels
+  //                               .map(
+  //                                 (hostel) => Padding(
+  //                                   padding: const EdgeInsets.symmetric(
+  //                                     horizontal: 16,
+  //                                     vertical: 6,
+  //                                   ),
+  //                                   child: GestureDetector(
+  //                                     onTap: () => Navigator.push(
+  //                                       context,
+  //                                       MaterialPageRoute(
+  //                                         builder: (_) => HostelDetails(
+  //                                           hostel: hostel,
+  //                                           qrUrl: hostel.qrUrl,
+  //                                         ),
+  //                                       ),
+  //                                     ),
+  //                                     child: _HifiHostelCard(
+  //                                       hostel: hostel,
+  //                                       showDailyPrice: _showDailyPrice,
+  //                                       isDeleting:
+  //                                           provider.isDeleting &&
+  //                                           provider.deletingHostelId ==
+  //                                               hostel.id,
+  //                                       onEdit: () => _openEditHostel(hostel),
+  //                                       onDelete: () => _deleteHostel(hostel),
+  //                                     ),
+  //                                   ),
+  //                                 ),
+  //                               )
+  //                               .toList(),
+  //                         );
+  //                       },
+  //                     ),
+
+  //                     GestureDetector(
+  //                       onTap: _openCreateHostel,
+  //                       child: Padding(
+  //                         padding: const EdgeInsets.symmetric(
+  //                           horizontal: 16,
+  //                           vertical: 8,
+  //                         ),
+  //                         child: Container(
+  //                           width: double.infinity,
+  //                           height: 90,
+  //                           decoration: BoxDecoration(
+  //                             border: Border.all(color: Colors.grey.shade300),
+  //                             borderRadius: BorderRadius.circular(10),
+  //                           ),
+  //                           child: const Column(
+  //                             mainAxisAlignment: MainAxisAlignment.center,
+  //                             children: [
+  //                               Icon(
+  //                                 Icons.add,
+  //                                 size: 32,
+  //                                 color: Colors.black54,
+  //                               ),
+  //                               SizedBox(height: 6),
+  //                               Text(
+  //                                 'Add Details',
+  //                                 style: TextStyle(
+  //                                   fontSize: 14,
+  //                                   color: Colors.black54,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     const SizedBox(height: 80),
+  //                   ],
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //         if (_showSuccessOverlay)
+  //           Positioned.fill(
+  //             child: _SuccessOverlay(
+  //               message: _successMessage,
+  //               onDismiss: _dismissSuccess,
+  //             ),
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: Colors.white,
-          body: SafeArea(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ── Top bar ─────────────────────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Location',
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: Colors.grey,
-                              ),
+    return AppBackControl(
+      showConfirmationDialog: true,
+      dialogTitle: 'Exit App?',
+      dialogMessage: 'Are you sure you want to exit the app?',
+      confirmText: 'Exit',
+      cancelText: 'Stay',
+      onBackPressed: () {
+        // Optional: Do any cleanup if needed
+        print('User exiting app');
+      },
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: Colors.white,
+            body: SafeArea(
+              child: RefreshIndicator(
+                onRefresh: _refreshAllData,
+                color: const Color(0xFFE53935),
+                backgroundColor: Colors.white,
+                strokeWidth: 2,
+                displacement: 40, // Add this to make it more responsive
+                edgeOffset: 20, // Add this to trigger from edge
+                child: CustomScrollView(
+                  // Change from SingleChildScrollView to CustomScrollView
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── Top bar ─────────────────────────────────────────────
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
                             ),
-                            Row(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Icon(
-                                  Icons.location_on,
-                                  color: Color(0xFFE53935),
-                                  size: 16,
-                                ),
-                                const SizedBox(width: 4),
-                                GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) => LocationScreen(),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Location',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
                                       ),
-                                    );
-                                  },
-                                  child: const Text(
-                                    'Kphb Hyderabad Kukatpally ...',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
                                     ),
-                                  ),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.location_on,
+                                          color: Color(0xFFE53935),
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        GestureDetector(
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    LocationScreen(),
+                                              ),
+                                            );
+                                          },
+                                          child: const Text(
+                                            'Kphb Hyderabad Kukatpally ...',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.keyboard_arrow_down,
+                                          size: 18,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
-                                const Icon(Icons.keyboard_arrow_down, size: 18),
+                                Stack(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => NotificationScreen(),
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.notifications_none,
+                                        size: 26,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 0,
+                                      top: 0,
+                                      child: Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFE53935),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
-                          ],
-                        ),
-                        Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => NotificationScreen(),
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.notifications_none,
-                                size: 26,
-                              ),
-                            ),
-                            Positioned(
-                              right: 0,
-                              top: 0,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFE53935),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                          ),
 
-                  // ── Carousel ─────────────────────────────────────────────
-                  SizedBox(
-                    height: 130,
-                    child: _isLoadingBanners
-                        ? const Center(child: CircularProgressIndicator())
-                        : _carouselImages.isEmpty
-                        ? const Center(child: Text('No banners available'))
-                        : PageView.builder(
-                            controller: _carouselController,
-                            itemCount: _carouselImages.length,
-                            onPageChanged: (i) =>
-                                setState(() => _carouselPage = i),
-                            itemBuilder: (_, index) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
+                          // ── Carousel ─────────────────────────────────────────────
+                          SizedBox(
+                            height: 130,
+                            child: _isLoadingBanners
+                                ? const Center(
+                                    child: CircularProgressIndicator(),
+                                  )
+                                : _carouselImages.isEmpty
+                                ? const Center(
+                                    child: Text('No banners available'),
+                                  )
+                                : PageView.builder(
+                                    controller: _carouselController,
+                                    itemCount: _carouselImages.length,
+                                    onPageChanged: (i) =>
+                                        setState(() => _carouselPage = i),
+                                    itemBuilder: (_, index) => Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Stack(
+                                          fit: StackFit.expand,
+                                          children: [
+                                            Image.network(
+                                              _carouselImages[index],
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) =>
+                                                  Container(
+                                                    color: const Color(
+                                                      0xFFEEEEEE,
+                                                    ),
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons.broken_image,
+                                                        size: 40,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ),
+                                            ),
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                gradient: LinearGradient(
+                                                  begin: Alignment.centerLeft,
+                                                  end: Alignment.centerRight,
+                                                  colors: [
+                                                    Colors.black.withOpacity(
+                                                      0.4,
+                                                    ),
+                                                    Colors.transparent,
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                          ),
+
+                          // Dots
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(
+                                _carouselImages.length,
+                                (i) => AnimatedContainer(
+                                  duration: const Duration(milliseconds: 300),
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 3,
+                                  ),
+                                  width: _carouselPage == i ? 18 : 8,
+                                  height: 8,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    color: _carouselPage == i
+                                        ? const Color(0xFFE53935)
+                                        : Colors.grey.shade300,
+                                  ),
+                                ),
                               ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Stack(
-                                  fit: StackFit.expand,
-                                  children: [
-                                    Image.network(
-                                      _carouselImages[index],
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, __, ___) => Container(
-                                        color: const Color(0xFFEEEEEE),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.broken_image,
-                                            size: 40,
-                                            color: Colors.grey,
+                            ),
+                          ),
+
+                          // ── Camera Capturing section ──────────────────────────────
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: RichText(
+                              text: const TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: 'Camera ',
+                                    style: TextStyle(
+                                      color: Color(0xFFE53935),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: 'Capturing',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          Consumer3<
+                            HostelProvider,
+                            CameraProvider,
+                            StreamCameraProvider
+                          >(
+                            builder:
+                                (
+                                  context,
+                                  hostelProvider,
+                                  cameraProvider,
+                                  streamProvider,
+                                  _,
+                                ) {
+                                  final hostels = hostelProvider.hostels;
+                                  if (hostels.isEmpty) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 8,
+                                      ),
+                                      child: _AddCameraCard(
+                                        onTap: null,
+                                        label:
+                                            'Add a hostel first to add cameras',
+                                      ),
+                                    );
+                                  }
+
+                                  final hostel = hostels.first;
+
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (cameraProvider.cameras.isNotEmpty)
+                                          SizedBox(
+                                            height: 100,
+                                            child: ListView.builder(
+                                              scrollDirection: Axis.horizontal,
+                                              itemCount:
+                                                  cameraProvider.cameras.length,
+                                              itemBuilder: (_, i) {
+                                                final cam =
+                                                    cameraProvider.cameras[i];
+                                                final streamData =
+                                                    streamProvider
+                                                        .getStreamForCamera(
+                                                          cam.cameraId,
+                                                        );
+                                                return GestureDetector(
+                                                  onTap: () {
+                                                    cameraProvider
+                                                        .getSingleCamera(
+                                                          hostelId: hostel.id,
+                                                          cameraId:
+                                                              cam.cameraId,
+                                                        );
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder: (_) => MultiProvider(
+                                                          providers: [
+                                                            ChangeNotifierProvider.value(
+                                                              value:
+                                                                  cameraProvider,
+                                                            ),
+                                                            ChangeNotifierProvider.value(
+                                                              value:
+                                                                  streamProvider,
+                                                            ),
+                                                          ],
+                                                          child:
+                                                              CameraDetailsScreen(
+                                                                hostelId:
+                                                                    hostel.id,
+                                                                camera: cam,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                    );
+                                                  },
+                                                  child: _CameraThumbCard(
+                                                    camera: cam,
+                                                    streamData: streamData,
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+
+                                        if (cameraProvider
+                                            .cameras
+                                            .isNotEmpty) ...[
+                                          const SizedBox(height: 12),
+                                          _LiveStreamCompactPanel(
+                                            hostelId: hostel.id,
+                                            cameras: cameraProvider.cameras,
+                                            streamProvider: streamProvider,
+                                          ),
+                                        ],
+
+                                        const SizedBox(height: 10),
+                                        _AddCameraCard(
+                                          onTap: () =>
+                                              _openAddCameraSheet(hostel.id),
+                                          label: 'Add Your Camera',
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                          ),
+
+                          // ── Hifi heading + Monthly/Daily toggle ──────────────────
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                RichText(
+                                  text: const TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: 'Hifi ',
+                                        style: TextStyle(
+                                          color: Color(0xFFE53935),
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: 'Details',
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      _PriceToggleChip(
+                                        label: 'Monthly',
+                                        selected: !_showDailyPrice,
+                                        onTap: () => setState(
+                                          () => _showDailyPrice = false,
+                                        ),
+                                      ),
+                                      _PriceToggleChip(
+                                        label: 'Daily',
+                                        selected: _showDailyPrice,
+                                        onTap: () => setState(
+                                          () => _showDailyPrice = true,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // ── Hostel cards ─────────────────────────────────────────
+                          Consumer<HostelProvider>(
+                            builder: (context, provider, _) {
+                              if (provider.isLoading)
+                                return const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 20),
+                                  child: Center(
+                                    child: CircularProgressIndicator(),
+                                  ),
+                                );
+                              if (provider.hasError)
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 10,
+                                  ),
+                                  child: Text(
+                                    provider.errorMessage ??
+                                        'Something went wrong',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                );
+                              return Column(
+                                children: provider.hostels
+                                    .map(
+                                      (hostel) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 6,
+                                        ),
+                                        child: GestureDetector(
+                                          onTap: () => Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => HostelDetails(
+                                                hostel: hostel,
+                                                qrUrl: hostel.qrUrl,
+                                              ),
+                                            ),
+                                          ),
+                                          child: _HifiHostelCard(
+                                            hostel: hostel,
+                                            showDailyPrice: _showDailyPrice,
+                                            isDeleting:
+                                                provider.isDeleting &&
+                                                provider.deletingHostelId ==
+                                                    hostel.id,
+                                            onEdit: () =>
+                                                _openEditHostel(hostel),
+                                            onDelete: () =>
+                                                _deleteHostel(hostel),
                                           ),
                                         ),
                                       ),
+                                    )
+                                    .toList(),
+                              );
+                            },
+                          ),
+
+                          GestureDetector(
+                            onTap: _openCreateHostel,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              child: Container(
+                                width: double.infinity,
+                                height: 90,
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.add,
+                                      size: 32,
+                                      color: Colors.black54,
                                     ),
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          begin: Alignment.centerLeft,
-                                          end: Alignment.centerRight,
-                                          colors: [
-                                            Colors.black.withOpacity(0.4),
-                                            Colors.transparent,
-                                          ],
-                                        ),
+                                    SizedBox(height: 6),
+                                    Text(
+                                      'Add Details',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.black54,
                                       ),
                                     ),
                                   ],
@@ -887,321 +1874,24 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                           ),
-                  ),
-
-                  // Dots
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        _carouselImages.length,
-                        (i) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 300),
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: _carouselPage == i ? 18 : 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(4),
-                            color: _carouselPage == i
-                                ? const Color(0xFFE53935)
-                                : Colors.grey.shade300,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // ── Camera Capturing section ──────────────────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: RichText(
-                      text: const TextSpan(
-                        children: [
-                          TextSpan(
-                            text: 'Camera ',
-                            style: TextStyle(
-                              color: Color(0xFFE53935),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          TextSpan(
-                            text: 'Capturing',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
+                          const SizedBox(height: 80),
                         ],
                       ),
                     ),
-                  ),
-
-                  Consumer3<
-                    HostelProvider,
-                    CameraProvider,
-                    StreamCameraProvider
-                  >(
-                    builder:
-                        (
-                          context,
-                          hostelProvider,
-                          cameraProvider,
-                          streamProvider,
-                          _,
-                        ) {
-                          final hostels = hostelProvider.hostels;
-                          if (hostels.isEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              child: _AddCameraCard(
-                                onTap: null,
-                                label: 'Add a hostel first to add cameras',
-                              ),
-                            );
-                          }
-
-                          final hostel = hostels.first;
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (cameraProvider.cameras.isNotEmpty)
-                                  SizedBox(
-                                    height: 100,
-                                    child: ListView.builder(
-                                      scrollDirection: Axis.horizontal,
-                                      itemCount: cameraProvider.cameras.length,
-                                      itemBuilder: (_, i) {
-                                        final cam = cameraProvider.cameras[i];
-                                        final streamData = streamProvider
-                                            .getStreamForCamera(cam.cameraId);
-                                        return GestureDetector(
-                                          onTap: () {
-                                            cameraProvider.getSingleCamera(
-                                              hostelId: hostel.id,
-                                              cameraId: cam.cameraId,
-                                            );
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) => MultiProvider(
-                                                  providers: [
-                                                    ChangeNotifierProvider.value(
-                                                      value: cameraProvider,
-                                                    ),
-                                                    ChangeNotifierProvider.value(
-                                                      value: streamProvider,
-                                                    ),
-                                                  ],
-                                                  child: CameraDetailsScreen(
-                                                    hostelId: hostel.id,
-                                                    camera: cam,
-                                                  ),
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          child: _CameraThumbCard(
-                                            camera: cam,
-                                            streamData: streamData,
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-
-                                if (cameraProvider.cameras.isNotEmpty) ...[
-                                  const SizedBox(height: 12),
-                                  _LiveStreamCompactPanel(
-                                    hostelId: hostel.id,
-                                    cameras: cameraProvider.cameras,
-                                    streamProvider: streamProvider,
-                                  ),
-                                ],
-
-                                const SizedBox(height: 10),
-                                _AddCameraCard(
-                                  onTap: () => _openAddCameraSheet(hostel.id),
-                                  label: 'Add Your Camera',
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                  ),
-
-                  // ── Hifi heading + Monthly/Daily toggle ──────────────────
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 4,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        RichText(
-                          text: const TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'Hifi ',
-                                style: TextStyle(
-                                  color: Color(0xFFE53935),
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              TextSpan(
-                                text: 'Details',
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.grey.shade300),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _PriceToggleChip(
-                                label: 'Monthly',
-                                selected: !_showDailyPrice,
-                                onTap: () =>
-                                    setState(() => _showDailyPrice = false),
-                              ),
-                              _PriceToggleChip(
-                                label: 'Daily',
-                                selected: _showDailyPrice,
-                                onTap: () =>
-                                    setState(() => _showDailyPrice = true),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // ── Hostel cards ─────────────────────────────────────────
-                  Consumer<HostelProvider>(
-                    builder: (context, provider, _) {
-                      if (provider.isLoading)
-                        return const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      if (provider.hasError)
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
-                          child: Text(
-                            provider.errorMessage ?? 'Something went wrong',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        );
-                      return Column(
-                        children: provider.hostels
-                            .map(
-                              (hostel) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 6,
-                                ),
-                                child: GestureDetector(
-                                  onTap: () => Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => HostelDetails(
-                                        hostel: hostel,
-                                        qrUrl: hostel.qrUrl,
-                                      ),
-                                    ),
-                                  ),
-                                  child: _HifiHostelCard(
-                                    hostel: hostel,
-                                    showDailyPrice: _showDailyPrice,
-                                    isDeleting:
-                                        provider.isDeleting &&
-                                        provider.deletingHostelId == hostel.id,
-                                    onEdit: () => _openEditHostel(hostel),
-                                    onDelete: () => _deleteHostel(hostel),
-                                  ),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      );
-                    },
-                  ),
-
-                  GestureDetector(
-                    onTap: _openCreateHostel,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      child: Container(
-                        width: double.infinity,
-                        height: 90,
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add, size: 32, color: Colors.black54),
-                            SizedBox(height: 6),
-                            Text(
-                              'Add Details',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black54,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 80),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        if (_showSuccessOverlay)
-          Positioned.fill(
-            child: _SuccessOverlay(
-              message: _successMessage,
-              onDismiss: _dismissSuccess,
+          if (_showSuccessOverlay)
+            Positioned.fill(
+              child: _SuccessOverlay(
+                message: _successMessage,
+                onDismiss: _dismissSuccess,
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -3163,6 +3853,398 @@ class _PriceToggleChip extends StatelessWidget {
 // ─────────────────────────────────────────────
 // HIFI HOSTEL CARD
 // ─────────────────────────────────────────────
+// class _HifiHostelCard extends StatelessWidget {
+//   final Hostel hostel;
+//   final VoidCallback onEdit;
+//   final VoidCallback onDelete;
+//   final bool isDeleting;
+//   final bool showDailyPrice;
+
+//   const _HifiHostelCard({
+//     required this.hostel,
+//     required this.onEdit,
+//     required this.onDelete,
+//     this.isDeleting = false,
+//     this.showDailyPrice = false,
+//   });
+
+//   Future<void> openGoogleMaps(
+//     double latitude,
+//     double longitude,
+//     BuildContext context,
+//   ) async {
+//     // Create both Google Maps app URL and web fallback
+//     final googleMapsUrl = Uri.parse('comgooglemaps://?q=$latitude,$longitude');
+//     final webUrl = Uri.parse(
+//       'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+//     );
+
+//     try {
+//       // Try to open Google Maps app first
+//       if (await canLaunchUrl(googleMapsUrl)) {
+//         await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+//       }
+//       // Fallback to web browser
+//       else if (await canLaunchUrl(webUrl)) {
+//         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+//       } else {
+//         throw 'Could not open Google Maps';
+//       }
+//     } catch (e) {
+//       print('Error opening maps: $e');
+//       // Final fallback - try web URL with external application
+//       if (await canLaunchUrl(webUrl)) {
+//         await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+//       } else {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Could not open maps. Please install Google Maps.'),
+//             backgroundColor: Colors.red,
+//           ),
+//         );
+//       }
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     Future<void> openWhatsApp(String phoneNumber) async {
+//       final message = Uri.encodeComponent(
+//         'Hello, I am interested in your hostel.',
+//       );
+//       final nativeUri = Uri.parse(
+//         'whatsapp://send?phone=$phoneNumber&text=$message',
+//       );
+//       if (await canLaunchUrl(nativeUri)) {
+//         await launchUrl(nativeUri);
+//         return;
+//       }
+//       final webUri = Uri.parse('https://wa.me/$phoneNumber?text=$message');
+//       await launchUrl(webUri, mode: LaunchMode.externalApplication);
+//     }
+
+//     final isAc = _hostelIsAc(hostel);
+//     final sharings = hostel.sharings.isNotEmpty
+//         ? hostel.sharings
+//         : (isAc
+//               ? (hostel.rooms?.ac.isNotEmpty == true
+//                     ? hostel.rooms!.ac
+//                     : hostel.rooms?.nonAc ?? [])
+//               : (hostel.rooms?.nonAc.isNotEmpty == true
+//                     ? hostel.rooms!.nonAc
+//                     : hostel.rooms?.ac ?? []));
+//     final typeLabel = hostel.type.isNotEmpty
+//         ? hostel.type.join(' / ')
+//         : 'Hostel';
+
+//     return AnimatedOpacity(
+//       opacity: isDeleting ? 0.5 : 1.0,
+//       duration: const Duration(milliseconds: 300),
+//       child: Container(
+//         decoration: BoxDecoration(
+//           border: Border.all(color: Colors.grey.shade200),
+//           borderRadius: BorderRadius.circular(12),
+//           color: Colors.white,
+//           boxShadow: [
+//             BoxShadow(
+//               color: Colors.grey.withOpacity(0.1),
+//               blurRadius: 8,
+//               offset: const Offset(0, 2),
+//             ),
+//           ],
+//         ),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 ClipRRect(
+//                   borderRadius: const BorderRadius.only(
+//                     topLeft: Radius.circular(12),
+//                     bottomLeft: Radius.circular(12),
+//                     topRight: Radius.circular(12),
+//                     bottomRight: Radius.circular(12),
+//                   ),
+//                   child: hostel.images.isNotEmpty
+//                       ? Image.network(
+//                           hostel.images.first,
+//                           width: 100,
+//                           height: 110,
+//                           fit: BoxFit.cover,
+//                           errorBuilder: (_, __, ___) => _placeholder(),
+//                         )
+//                       : _placeholder(),
+//                 ),
+//                 const SizedBox(width: 10),
+//                 Expanded(
+//                   child: Padding(
+//                     padding: const EdgeInsets.symmetric(
+//                       vertical: 10,
+//                       horizontal: 4,
+//                     ),
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         Row(
+//                           children: [
+//                             Expanded(
+//                               child: Text(
+//                                 hostel.name,
+//                                 style: const TextStyle(
+//                                   fontWeight: FontWeight.bold,
+//                                   fontSize: 13,
+//                                 ),
+//                                 maxLines: 2,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                             ),
+//                             Container(
+//                               padding: const EdgeInsets.symmetric(
+//                                 horizontal: 6,
+//                                 vertical: 2,
+//                               ),
+//                               decoration: BoxDecoration(
+//                                 color: const Color(0xFFE53935),
+//                                 borderRadius: BorderRadius.circular(4),
+//                               ),
+//                               child: Text(
+//                                 typeLabel,
+//                                 style: const TextStyle(
+//                                   color: Colors.white,
+//                                   fontSize: 9,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                         const SizedBox(height: 4),
+//                         Row(
+//                           children: [
+//                             const Icon(
+//                               Icons.star,
+//                               color: Colors.amber,
+//                               size: 13,
+//                             ),
+//                             const SizedBox(width: 2),
+//                             Text(
+//                               '${hostel.rating}',
+//                               style: const TextStyle(fontSize: 11),
+//                             ),
+//                             const SizedBox(width: 6),
+//                             Container(
+//                               padding: const EdgeInsets.symmetric(
+//                                 horizontal: 5,
+//                                 vertical: 2,
+//                               ),
+//                               decoration: BoxDecoration(
+//                                 color: isAc
+//                                     ? Colors.blue.shade50
+//                                     : Colors.orange.shade50,
+//                                 borderRadius: BorderRadius.circular(4),
+//                                 border: Border.all(
+//                                   color: isAc
+//                                       ? Colors.blue.shade200
+//                                       : Colors.orange.shade200,
+//                                 ),
+//                               ),
+//                               child: Text(
+//                                 isAc ? 'AC' : 'Non-AC',
+//                                 style: TextStyle(
+//                                   fontSize: 9,
+//                                   color: isAc
+//                                       ? Colors.blue.shade700
+//                                       : Colors.orange.shade700,
+//                                   fontWeight: FontWeight.bold,
+//                                 ),
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                         const SizedBox(height: 4),
+//                         Row(
+//                           children: [
+//                             const Icon(
+//                               Icons.location_on,
+//                               size: 11,
+//                               color: Colors.grey,
+//                             ),
+//                             const SizedBox(width: 2),
+//                             Expanded(
+//                               child: Text(
+//                                 hostel.address,
+//                                 style: const TextStyle(
+//                                   fontSize: 10,
+//                                   color: Colors.grey,
+//                                 ),
+//                                 maxLines: 1,
+//                                 overflow: TextOverflow.ellipsis,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+
+//                         // const SizedBox(height: 8),
+//                         // Wrap(
+//                         //   spacing: 4,
+//                         //   runSpacing: 4,
+//                         //   children: sharings.take(4).map((s) {
+//                         //     final double? price = showDailyPrice
+//                         //         ? (s.dailyPrice ??
+//                         //               s.acDailyPrice ??
+//                         //               s.nonAcDailyPrice)
+//                         //         : (s.monthlyPrice ??
+//                         //               s.acMonthlyPrice ??
+//                         //               s.nonAcMonthlyPrice);
+//                         //     return Container(
+//                         //       padding: const EdgeInsets.symmetric(
+//                         //         horizontal: 6,
+//                         //         vertical: 3,
+//                         //       ),
+//                         //       decoration: BoxDecoration(
+//                         //         color: const Color(0xFFE53935),
+//                         //         borderRadius: BorderRadius.circular(4),
+//                         //       ),
+//                         //       child: Text(
+//                         //         '${s.shareType}: ₹${price?.toStringAsFixed(0) ?? '-'}/${showDailyPrice ? 'day' : 'mo'}',
+//                         //         style: const TextStyle(
+//                         //           color: Colors.white,
+//                         //           fontSize: 9,
+//                         //           fontWeight: FontWeight.bold,
+//                         //         ),
+//                         //       ),
+//                         //     );
+//                         //   }).toList(),
+//                         // ),
+//                         const SizedBox(height: 8),
+//                         Row(
+//                           children: [
+//                             Expanded(
+//                               child: Wrap(
+//                                 spacing: 4,
+//                                 runSpacing: 4,
+//                                 children: sharings.take(4).map((s) {
+//                                   final double? price = showDailyPrice
+//                                       ? (s.dailyPrice ??
+//                                             s.acDailyPrice ??
+//                                             s.nonAcDailyPrice)
+//                                       : (s.monthlyPrice ??
+//                                             s.acMonthlyPrice ??
+//                                             s.nonAcMonthlyPrice);
+//                                   return Container(
+//                                     padding: const EdgeInsets.symmetric(
+//                                       horizontal: 6,
+//                                       vertical: 3,
+//                                     ),
+//                                     decoration: BoxDecoration(
+//                                       color: const Color(0xFFE53935),
+//                                       borderRadius: BorderRadius.circular(4),
+//                                     ),
+//                                     child: Text(
+//                                       '${s.shareType}: ₹${price?.toStringAsFixed(0) ?? '-'}/${showDailyPrice ? 'day' : 'mo'}',
+//                                       style: const TextStyle(
+//                                         color: Colors.white,
+//                                         fontSize: 9,
+//                                         fontWeight: FontWeight.bold,
+//                                       ),
+//                                     ),
+//                                   );
+//                                 }).toList(),
+//                               ),
+//                             ),
+//                             if (sharings.length > 4) ...[
+//                               const SizedBox(width: 4),
+//                               Container(
+//                                 padding: const EdgeInsets.all(4),
+//                                 decoration: BoxDecoration(
+//                                   color: const Color.fromARGB(255, 255, 0, 0),
+//                                   borderRadius: BorderRadius.circular(4),
+//                                 ),
+//                                 child: const Icon(
+//                                   Icons.arrow_forward_ios,
+//                                   size: 10,
+//                                   color: Color.fromARGB(255, 255, 255, 255),
+//                                 ),
+//                               ),
+//                             ],
+//                           ],
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             Padding(
+//               padding: const EdgeInsets.fromLTRB(10, 6, 10, 10),
+//               child: Wrap(
+//                 spacing: 6,
+//                 runSpacing: 6,
+//                 children: [
+//                   _ActionBtn(
+//                     icon: Icons.call,
+//                     label: 'Call',
+//                     color: const Color(0xFF4CAF50),
+//                     onTap: () async {
+//                       final uri = Uri(scheme: 'tel', path: '9961593179');
+//                       if (await canLaunchUrl(uri)) await launchUrl(uri);
+//                     },
+//                   ),
+//                   _ActionBtn(
+//                     icon: Icons.chat_bubble_outline,
+//                     label: 'Whatsapp',
+//                     color: const Color(0xFF25D366),
+//                     onTap: () => openWhatsApp('919961593179'),
+//                   ),
+//                   _ActionBtn(
+//                     icon: Icons.location_on,
+//                     label: 'Location',
+//                     color: const Color(0xFF2196F3),
+//                     onTap: () {
+//                       openGoogleMaps(
+//                         hostel.latitude,
+//                         hostel.longitude,
+//                         context,
+//                       );
+//                     },
+//                   ),
+//                   _ActionBtn(
+//                     icon: Icons.edit,
+//                     label: 'Edit',
+//                     color: const Color(0xFFE53935),
+//                     onTap: onEdit,
+//                   ),
+//                   _ActionBtn(
+//                     icon: isDeleting ? null : Icons.delete_outline,
+//                     label: isDeleting ? '...' : 'Delete',
+//                     color: const Color(0xFF757575),
+//                     onTap: isDeleting ? () {} : onDelete,
+//                     isLoading: isDeleting,
+//                   ),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _placeholder() => Container(
+//     width: 100,
+//     height: 110,
+//     decoration: BoxDecoration(
+//       color: Colors.grey.shade200,
+//       borderRadius: const BorderRadius.only(
+//         topLeft: Radius.circular(12),
+//         bottomLeft: Radius.circular(12),
+//       ),
+//     ),
+//     child: const Icon(Icons.apartment, size: 40, color: Colors.grey),
+//   );
+// }
+
 class _HifiHostelCard extends StatelessWidget {
   final Hostel hostel;
   final VoidCallback onEdit;
@@ -3177,6 +4259,39 @@ class _HifiHostelCard extends StatelessWidget {
     this.isDeleting = false,
     this.showDailyPrice = false,
   });
+
+  Future<void> openGoogleMaps(
+    double latitude,
+    double longitude,
+    BuildContext context,
+  ) async {
+    final googleMapsUrl = Uri.parse('comgooglemaps://?q=$latitude,$longitude');
+    final webUrl = Uri.parse(
+      'https://www.google.com/maps/search/?api=1&query=$latitude,$longitude',
+    );
+
+    try {
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+      } else if (await canLaunchUrl(webUrl)) {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } else {
+        throw 'Could not open Google Maps';
+      }
+    } catch (e) {
+      print('Error opening maps: $e');
+      if (await canLaunchUrl(webUrl)) {
+        await launchUrl(webUrl, mode: LaunchMode.externalApplication);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Could not open maps. Please install Google Maps.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -3209,6 +4324,9 @@ class _HifiHostelCard extends StatelessWidget {
         ? hostel.type.join(' / ')
         : 'Hostel';
 
+    // Get category name
+    final categoryName = hostel.categoryName ?? 'Hostel';
+
     return AnimatedOpacity(
       opacity: isDeleting ? 0.5 : 1.0,
       duration: const Duration(milliseconds: 300),
@@ -3231,22 +4349,52 @@ class _HifiHostelCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                    topRight: Radius.circular(12),
-                    bottomRight: Radius.circular(12),
-                  ),
-                  child: hostel.images.isNotEmpty
-                      ? Image.network(
-                          hostel.images.first,
-                          width: 100,
-                          height: 110,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _placeholder(),
-                        )
-                      : _placeholder(),
+                // Image section with category name below
+                Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(12),
+                        bottomLeft: Radius.circular(12),
+                        topRight: Radius.circular(12),
+                        bottomRight: Radius.circular(12),
+                      ),
+                      child: hostel.images.isNotEmpty
+                          ? Image.network(
+                              hostel.images.first,
+                              width: 100,
+                              height: 90,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  _placeholder(width: 100, height: 90),
+                            )
+                          : _placeholder(width: 100, height: 90),
+                    ),
+                    const SizedBox(height: 4),
+                    // Category name below image
+                    Container(
+                      width: 100,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFE53935).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        categoryName,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFE53935),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -3357,36 +4505,57 @@ class _HifiHostelCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 4,
-                          runSpacing: 4,
-                          children: sharings.take(4).map((s) {
-                            final double? price = showDailyPrice
-                                ? (s.dailyPrice ??
-                                      s.acDailyPrice ??
-                                      s.nonAcDailyPrice)
-                                : (s.monthlyPrice ??
-                                      s.acMonthlyPrice ??
-                                      s.nonAcMonthlyPrice);
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 3,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Wrap(
+                                spacing: 4,
+                                runSpacing: 4,
+                                children: sharings.take(4).map((s) {
+                                  final double? price = showDailyPrice
+                                      ? (s.dailyPrice ??
+                                            s.acDailyPrice ??
+                                            s.nonAcDailyPrice)
+                                      : (s.monthlyPrice ??
+                                            s.acMonthlyPrice ??
+                                            s.nonAcMonthlyPrice);
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 3,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE53935),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      '${s.shareType}: ₹${price?.toStringAsFixed(0) ?? '-'}/${showDailyPrice ? 'day' : 'mo'}',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
                               ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFE53935),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                '${s.shareType}: ₹${price?.toStringAsFixed(0) ?? '-'}/${showDailyPrice ? 'day' : 'mo'}',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.bold,
+                            ),
+                            if (sharings.length > 4) ...[
+                              const SizedBox(width: 4),
+                              Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: BoxDecoration(
+                                  color: const Color.fromARGB(255, 255, 0, 0),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 10,
+                                  color: Color.fromARGB(255, 255, 255, 255),
                                 ),
                               ),
-                            );
-                          }).toList(),
+                            ],
+                          ],
                         ),
                       ],
                     ),
@@ -3419,7 +4588,13 @@ class _HifiHostelCard extends StatelessWidget {
                     icon: Icons.location_on,
                     label: 'Location',
                     color: const Color(0xFF2196F3),
-                    onTap: () {},
+                    onTap: () {
+                      openGoogleMaps(
+                        hostel.latitude,
+                        hostel.longitude,
+                        context,
+                      );
+                    },
                   ),
                   _ActionBtn(
                     icon: Icons.edit,
@@ -3443,9 +4618,9 @@ class _HifiHostelCard extends StatelessWidget {
     );
   }
 
-  Widget _placeholder() => Container(
-    width: 100,
-    height: 110,
+  Widget _placeholder({double width = 100, double height = 110}) => Container(
+    width: width,
+    height: height,
     decoration: BoxDecoration(
       color: Colors.grey.shade200,
       borderRadius: const BorderRadius.only(
@@ -3568,6 +4743,9 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     });
   }
 
+  Category? _selectedCategory;
+  bool _isLoadingCategories = true;
+
   @override
   void initState() {
     super.initState();
@@ -3625,38 +4803,348 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       isAc: true,
       isMonthly: false,
     );
+
+    _loadCategories().then((_) {
+      // After categories are loaded, set the selected category for edit mode
+      if (widget.existingHostel != null && mounted) {
+        final categoryProvider = Provider.of<CategoryProvider>(
+          context,
+          listen: false,
+        );
+        final category = categoryProvider.categories.firstWhere(
+          (cat) => cat.id == widget.existingHostel!.categoryId,
+          orElse: () => categoryProvider.categories.first,
+        );
+        setState(() {
+          _selectedCategory = category;
+        });
+      }
+    });
   }
+
+  Future<void> _loadCategories() async {
+    setState(() => _isLoadingCategories = true);
+    final categoryProvider = Provider.of<CategoryProvider>(
+      context,
+      listen: false,
+    );
+    await categoryProvider.fetchCategories();
+
+    // If editing existing hostel, set the selected category
+    if (widget.existingHostel != null && mounted) {
+      final category = categoryProvider.categories.firstWhere(
+        (cat) => cat.id == widget.existingHostel!.categoryId,
+        orElse: () => categoryProvider.categories.first,
+      );
+      setState(() {
+        _selectedCategory = category;
+      });
+    }
+
+    setState(() => _isLoadingCategories = false);
+  }
+  // Map<String, TextEditingController> _buildControllers(
+  //   List<SharingOption> sharings, {
+  //   required bool isAc,
+  //   required bool isMonthly,
+  // }) {
+  //   final defaults = isMonthly
+  //       ? {
+  //           '1 Share': isAc ? '0' : '0',
+  //           '2 Share': isAc ? '0' : '0',
+  //           '3 Share': isAc ? '0' : '0',
+  //           '4 Share': isAc ? '0' : '0',
+  //           '5 Share': isAc ? '0' : '0',
+  //           '6 Share': isAc ? '0' : '0',
+  //         }
+  //       : {
+  //           '1 Share': isAc ? '0' : '0',
+  //           '2 Share': isAc ? '0' : '0',
+  //           '3 Share': isAc ? '0' : '0',
+  //           '4 Share': isAc ? '0' : '0',
+  //           '5 Share': isAc ? '0' : '0',
+  //           '6 Share': isAc ? '0' : '0',
+  //         };
+  //   return {
+  //     for (var key in _shareKeys)
+  //       key: TextEditingController(
+  //         text: sharings.isNotEmpty
+  //             ? _findPrice(sharings, key, isAc: isAc, isMonthly: isMonthly)
+  //             : defaults[key] ?? '0',
+  //       ),
+  //   };
+  // }
+
+  // Map<String, TextEditingController> _buildControllers(
+  //   List<SharingOption> sharings, {
+  //   required bool isAc,
+  //   required bool isMonthly,
+  // }) {
+  //   final controllers = <String, TextEditingController>{};
+
+  //   for (var key in _shareKeys) {
+  //     String initialValue = '0';
+
+  //     if (sharings.isNotEmpty) {
+  //       final price = _findPrice(
+  //         sharings,
+  //         key,
+  //         isAc: isAc,
+  //         isMonthly: isMonthly,
+  //       );
+  //       initialValue = price; // This will already be '0' if price <= 0
+  //     }
+
+  //     controllers[key] = TextEditingController(text: initialValue);
+  //   }
+
+  //   return controllers;
+  // }
 
   Map<String, TextEditingController> _buildControllers(
     List<SharingOption> sharings, {
     required bool isAc,
     required bool isMonthly,
   }) {
-    final defaults = isMonthly
-        ? {
-            '1 Share': isAc ? '9000' : '7000',
-            '2 Share': isAc ? '8000' : '6000',
-            '3 Share': isAc ? '7000' : '5000',
-            '4 Share': isAc ? '6000' : '4500',
-            '5 Share': isAc ? '5000' : '4000',
-            '6 Share': isAc ? '4500' : '3500',
-          }
-        : {
-            '1 Share': isAc ? '600' : '500',
-            '2 Share': isAc ? '550' : '450',
-            '3 Share': isAc ? '500' : '400',
-            '4 Share': isAc ? '450' : '350',
-            '5 Share': isAc ? '400' : '300',
-            '6 Share': isAc ? '350' : '250',
-          };
-    return {
-      for (var key in _shareKeys)
-        key: TextEditingController(
-          text: sharings.isNotEmpty
-              ? _findPrice(sharings, key, isAc: isAc, isMonthly: isMonthly)
-              : defaults[key] ?? '0',
+    final controllers = <String, TextEditingController>{};
+
+    for (var key in _shareKeys) {
+      String initialValue = '0';
+
+      if (sharings.isNotEmpty) {
+        final price = _findPrice(
+          sharings,
+          key,
+          isAc: isAc,
+          isMonthly: isMonthly,
+        );
+        initialValue = price;
+      }
+
+      // Always create controller for all share types
+      // Don't filter out zero prices here - let the grid handle filtering
+      controllers[key] = TextEditingController(text: initialValue);
+    }
+
+    return controllers;
+  }
+
+  // String _findPrice(
+  //   List<SharingOption> sharings,
+  //   String shareKey, {
+  //   required bool isAc,
+  //   required bool isMonthly,
+  // }) {
+  //   if (sharings.isEmpty) return '0';
+  //   final keyNumber = shareKey.split(' ').first.trim();
+  //   SharingOption? match;
+  //   try {
+  //     match = sharings.firstWhere(
+  //       (s) => s.shareType.toLowerCase() == shareKey.toLowerCase(),
+  //     );
+  //   } catch (_) {}
+  //   if (match == null) {
+  //     try {
+  //       match = sharings.firstWhere(
+  //         (s) => s.shareType.replaceAll(RegExp(r'[^0-9]'), '') == keyNumber,
+  //       );
+  //     } catch (_) {}
+  //   }
+  //   if (match == null) return '0';
+  //   double? price;
+  //   if (isAc) {
+  //     price = isMonthly ? match.acMonthlyPrice : match.acDailyPrice;
+  //     if (price == null || price == 0) {
+  //       price = isMonthly ? match.monthlyPrice : match.dailyPrice;
+  //     }
+  //   } else {
+  //     price = isMonthly ? match.nonAcMonthlyPrice : match.nonAcDailyPrice;
+  //     if (price == null || price == 0) {
+  //       price = isMonthly ? match.monthlyPrice : match.dailyPrice;
+  //     }
+  //   }
+  //   if (price == null || price.isNaN || price.isInfinite || price < 0)
+  //     return '0';
+  //   return price.toStringAsFixed(0);
+  // }
+
+  // Widget _buildFilteredGrid(
+  //   Map<String, TextEditingController> prices,
+  //   Color color,
+  //   String period,
+  // ) {
+  //   // Filter out entries where price is 0 or empty
+  //   final filteredEntries = prices.entries.where((entry) {
+  //     final priceText = entry.value.text.trim();
+  //     if (priceText.isEmpty) return false;
+  //     final price = double.tryParse(priceText);
+  //     // Keep only if price is > 0
+  //     return price != null && price > 0;
+  //   }).toList();
+
+  //   if (filteredEntries.isEmpty) {
+  //     return Container(
+  //       padding: const EdgeInsets.all(16),
+  //       decoration: BoxDecoration(
+  //         color: Colors.grey.shade100,
+  //         borderRadius: BorderRadius.circular(8),
+  //       ),
+  //       child: Center(
+  //         child: Text(
+  //           'No $period prices available for ${_isAcEnabled ? "AC" : "Non-AC"}',
+  //           style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+  //         ),
+  //       ),
+  //     );
+  //   }
+
+  //   return GridView.builder(
+  //     shrinkWrap: true,
+  //     physics: const NeverScrollableScrollPhysics(),
+  //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //       crossAxisCount: 3,
+  //       mainAxisSpacing: 8,
+  //       crossAxisSpacing: 8,
+  //       childAspectRatio: 1.4,
+  //     ),
+  //     itemCount: filteredEntries.length,
+  //     itemBuilder: (_, i) {
+  //       final entry = filteredEntries[i];
+  //       return Container(
+  //         decoration: BoxDecoration(
+  //           color: color,
+  //           borderRadius: BorderRadius.circular(8),
+  //         ),
+  //         padding: const EdgeInsets.all(6),
+  //         child: Column(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             Text(
+  //               entry.key,
+  //               textAlign: TextAlign.center,
+  //               style: const TextStyle(
+  //                 color: Colors.white,
+  //                 fontSize: 9,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //             const SizedBox(height: 4),
+  //             SizedBox(
+  //               height: 22,
+  //               child: TextField(
+  //                 controller: entry.value,
+  //                 textAlign: TextAlign.center,
+  //                 style: const TextStyle(
+  //                   color: Colors.white,
+  //                   fontSize: 11,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //                 decoration: const InputDecoration(
+  //                   isDense: true,
+  //                   contentPadding: EdgeInsets.zero,
+  //                   border: InputBorder.none,
+  //                 ),
+  //                 keyboardType: TextInputType.number,
+  //                 onChanged: (_) {
+  //                   // Trigger rebuild when price changes
+  //                   setState(() {});
+  //                 },
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+
+  Widget _buildFilteredGrid(
+    Map<String, TextEditingController> prices,
+    Color color,
+    String period,
+  ) {
+    // Filter out entries where price is 0 or empty
+    final filteredEntries = prices.entries.where((entry) {
+      final priceText = entry.value.text.trim();
+      if (priceText.isEmpty) return false;
+      final price = double.tryParse(priceText);
+      // Keep only if price is > 0
+      return price != null && price > 0;
+    }).toList();
+
+    if (filteredEntries.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
         ),
-    };
+        child: Center(
+          child: Text(
+            'No $period prices available for ${_isAcEnabled ? "AC" : "Non-AC"}',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
+        ),
+      );
+    }
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 8,
+        crossAxisSpacing: 8,
+        childAspectRatio: 1.4,
+      ),
+      itemCount: filteredEntries.length,
+      itemBuilder: (_, i) {
+        final entry = filteredEntries[i];
+        return Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          padding: const EdgeInsets.all(6),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                entry.key,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              SizedBox(
+                height: 22,
+                child: TextField(
+                  controller: entry.value,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    border: InputBorder.none,
+                  ),
+                  keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    setState(() {}); // Trigger rebuild when price changes
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   String _findPrice(
@@ -3681,6 +5169,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       } catch (_) {}
     }
     if (match == null) return '0';
+
     double? price;
     if (isAc) {
       price = isMonthly ? match.acMonthlyPrice : match.acDailyPrice;
@@ -3693,8 +5182,12 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         price = isMonthly ? match.monthlyPrice : match.dailyPrice;
       }
     }
-    if (price == null || price.isNaN || price.isInfinite || price < 0)
+
+    // Return '0' for null, NaN, infinite, negative, or zero prices
+    if (price == null || price.isNaN || price.isInfinite || price <= 0) {
       return '0';
+    }
+
     return price.toStringAsFixed(0);
   }
 
@@ -3728,7 +5221,79 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     return (parsed == null || parsed.isNaN || parsed.isInfinite) ? 0 : parsed;
   }
 
+  // void _saveAndGoBack() {
+  //   if (_selectedCategory == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text(
+  //           'Please select a category (Men\'s PG, Women\'s PG, or Coliving PG)',
+  //         ),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+  //   final sharings = _shareKeys.map((key) {
+  //     if (_isAcEnabled) {
+  //       final acMonthly = _parsePrice(_monthlyAc[key]);
+  //       final acDaily = _parsePrice(_dailyAc[key]);
+  //       return SharingOption(
+  //         shareType: key,
+  //         type: 'AC',
+  //         acMonthlyPrice: acMonthly,
+  //         acDailyPrice: acDaily,
+  //         nonAcMonthlyPrice: 0,
+  //         nonAcDailyPrice: 0,
+  //         monthlyPrice: acMonthly,
+  //         dailyPrice: acDaily,
+  //       );
+  //     } else {
+  //       final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
+  //       final nonAcDaily = _parsePrice(_dailyNonAc[key]);
+  //       return SharingOption(
+  //         shareType: key,
+  //         type: 'Non-AC',
+  //         monthlyPrice: nonAcMonthly,
+  //         dailyPrice: nonAcDaily,
+  //         acMonthlyPrice: 0,
+  //         acDailyPrice: 0,
+  //         nonAcMonthlyPrice: nonAcMonthly,
+  //         nonAcDailyPrice: nonAcDaily,
+  //       );
+  //     }
+  //   }).toList();
+
+  //   final imagePaths = _hostelImages.map((x) => x.path).toList();
+  //   final request = HostelRequest(
+  //     categoryId:
+  //         _selectedCategory!.id, // For new, selected category is required
+  //     vendorId: '', // This will be set in the calling function
+  //     name: _titleController.text.trim(),
+  //     rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
+  //     address: _addressController.text.trim(),
+  //     monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
+  //     latitude: double.tryParse(_latController.text.trim()) ?? 0,
+  //     longitude: double.tryParse(_lngController.text.trim()) ?? 0,
+  //     isAc: _isAcEnabled,
+  //     sharings: sharings,
+  //     imagePaths: imagePaths,
+  //   );
+  //   widget.onSave(request);
+  //   Navigator.pop(context);
+  // }
+
   void _saveAndGoBack() {
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Please select a category (Men\'s PG, Women\'s PG, or Coliving PG)',
+          ),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
     final sharings = _shareKeys.map((key) {
       if (_isAcEnabled) {
         final acMonthly = _parsePrice(_monthlyAc[key]);
@@ -3761,6 +5326,8 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
     final imagePaths = _hostelImages.map((x) => x.path).toList();
     final request = HostelRequest(
+      categoryId: _selectedCategory!.id,
+      vendorId: '',
       name: _titleController.text.trim(),
       rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
       address: _addressController.text.trim(),
@@ -3880,6 +5447,98 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Add Category Dropdown (only for new hostels, not for edit)
+            // if (!isEdit) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Category *',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      color: Color(0xFFE53935),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Consumer<CategoryProvider>(
+                    builder: (context, categoryProvider, _) {
+                      if (categoryProvider.isLoading) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (categoryProvider.categories.isEmpty) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            'No categories available',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        );
+                      }
+
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<Category>(
+                            isExpanded: true,
+                            hint: const Text('Select Category'),
+                            value: _selectedCategory,
+                            items: categoryProvider.categories.map((category) {
+                              return DropdownMenuItem<Category>(
+                                value: category,
+                                child: Text(category.name),
+                              );
+                            }).toList(),
+                            onChanged: (Category? newValue) {
+                              setState(() {
+                                _selectedCategory = newValue;
+                              });
+                            },
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  if (_selectedCategory == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Please select a category',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.red.shade400,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 24, thickness: 1),
+            // ],
             if (widget.lockAcToggle && !isEdit)
               Padding(
                 padding: const EdgeInsets.symmetric(
@@ -4280,6 +5939,38 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     ),
   );
 
+  // Widget _buildPriceSection(String label) => Padding(
+  //   padding: const EdgeInsets.symmetric(horizontal: 16),
+  //   child: Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       if (_isAcEnabled) ...[
+  //         Text(
+  //           '$label Prices for AC',
+  //           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         _buildGrid(
+  //           label == 'Monthly' ? _monthlyAc : _dailyAc,
+  //           Colors.blue.shade700,
+  //         ),
+  //         const SizedBox(height: 10),
+  //       ] else ...[
+  //         Text(
+  //           '$label Prices for Non-AC',
+  //           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         _buildGrid(
+  //           label == 'Monthly' ? _monthlyNonAc : _dailyNonAc,
+  //           const Color(0xFFE53935),
+  //         ),
+  //         const SizedBox(height: 10),
+  //       ],
+  //     ],
+  //   ),
+  // );
+
   Widget _buildPriceSection(String label) => Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16),
     child: Column(
@@ -4294,6 +5985,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
           _buildGrid(
             label == 'Monthly' ? _monthlyAc : _dailyAc,
             Colors.blue.shade700,
+            isEditMode: widget.existingHostel != null,
           ),
           const SizedBox(height: 10),
         ] else ...[
@@ -4305,6 +5997,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
           _buildGrid(
             label == 'Monthly' ? _monthlyNonAc : _dailyNonAc,
             const Color(0xFFE53935),
+            isEditMode: widget.existingHostel != null,
           ),
           const SizedBox(height: 10),
         ],
@@ -4312,8 +6005,90 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     ),
   );
 
-  Widget _buildGrid(Map<String, TextEditingController> prices, Color color) {
-    final keys = prices.keys.toList();
+  // Widget _buildGrid(Map<String, TextEditingController> prices, Color color) {
+  //   final keys = prices.keys.toList();
+  //   return GridView.builder(
+  //     shrinkWrap: true,
+  //     physics: const NeverScrollableScrollPhysics(),
+  //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+  //       crossAxisCount: 3,
+  //       mainAxisSpacing: 8,
+  //       crossAxisSpacing: 8,
+  //       childAspectRatio: 1.4,
+  //     ),
+  //     itemCount: keys.length,
+  //     itemBuilder: (_, i) {
+  //       final key = keys[i];
+  //       return Container(
+  //         decoration: BoxDecoration(
+  //           color: color,
+  //           borderRadius: BorderRadius.circular(8),
+  //         ),
+  //         padding: const EdgeInsets.all(6),
+  //         child: Column(
+  //           mainAxisAlignment: MainAxisAlignment.center,
+  //           children: [
+  //             Text(
+  //               key,
+  //               textAlign: TextAlign.center,
+  //               style: const TextStyle(
+  //                 color: Colors.white,
+  //                 fontSize: 9,
+  //                 fontWeight: FontWeight.w500,
+  //               ),
+  //             ),
+  //             const SizedBox(height: 4),
+  //             SizedBox(
+  //               height: 22,
+  //               child: TextField(
+  //                 controller: prices[key],
+  //                 textAlign: TextAlign.center,
+  //                 style: const TextStyle(
+  //                   color: Colors.white,
+  //                   fontSize: 11,
+  //                   fontWeight: FontWeight.bold,
+  //                 ),
+  //                 decoration: const InputDecoration(
+  //                   isDense: true,
+  //                   contentPadding: EdgeInsets.zero,
+  //                   border: InputBorder.none,
+  //                 ),
+  //                 keyboardType: TextInputType.number,
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
+  Widget _buildGrid(
+    Map<String, TextEditingController> prices,
+    Color color, {
+    bool isEditMode = false,
+  }) {
+    // For edit mode: show all share types (including zeros with a placeholder)
+    // For new mode: show ALL share types (don't filter zeros)
+    final entries = prices.entries.toList(); // Show ALL entries, don't filter
+
+    if (entries.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Center(
+          child: Text(
+            isEditMode
+                ? 'Tap on any share to add price'
+                : 'No prices available',
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+          ),
+        ),
+      );
+    }
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -4323,44 +6098,60 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         crossAxisSpacing: 8,
         childAspectRatio: 1.4,
       ),
-      itemCount: keys.length,
+      itemCount: entries.length,
       itemBuilder: (_, i) {
-        final key = keys[i];
+        final entry = entries[i];
+        final priceText = entry.value.text.trim();
+        final hasPrice =
+            priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
+
         return Container(
           decoration: BoxDecoration(
-            color: color,
+            color: hasPrice ? color : color.withOpacity(0.5),
             borderRadius: BorderRadius.circular(8),
+            border: (!hasPrice)
+                ? Border.all(color: color.withOpacity(0.5), width: 1.5)
+                : null,
           ),
           padding: const EdgeInsets.all(6),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                key,
+                entry.key,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: hasPrice ? Colors.white : Colors.white70,
                   fontSize: 9,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: hasPrice ? FontWeight.w500 : FontWeight.normal,
                 ),
               ),
               const SizedBox(height: 4),
               SizedBox(
                 height: 22,
                 child: TextField(
-                  controller: prices[key],
+                  controller: entry.value,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: hasPrice ? Colors.white : Colors.white70,
                     fontSize: 11,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: hasPrice ? FontWeight.bold : FontWeight.normal,
                   ),
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     isDense: true,
                     contentPadding: EdgeInsets.zero,
                     border: InputBorder.none,
+                    hintText: !hasPrice ? 'Add' : null,
+                    hintStyle: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                   keyboardType: TextInputType.number,
+                  onChanged: (_) {
+                    setState(() {}); // Trigger rebuild when price changes
+                  },
                 ),
               ),
             ],
