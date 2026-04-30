@@ -2236,45 +2236,45 @@ class _BookingRequestCard extends StatelessWidget {
             ],
 
             // Action buttons for PENDING tab only
-            if (showActions) ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _handleReject(context),
-                      icon: const Icon(Icons.close_rounded, size: 16),
-                      label: const Text('Reject'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFEF4444),
-                        side: const BorderSide(color: Color(0xFFEF4444)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _handleAccept(context),
-                      icon: const Icon(Icons.check_rounded, size: 16),
-                      label: const Text('Accept'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+            // if (showActions) ...[
+            //   const SizedBox(height: 14),
+            //   Row(
+            //     children: [
+            //       Expanded(
+            //         child: OutlinedButton.icon(
+            //           onPressed: () => _handleReject(context),
+            //           icon: const Icon(Icons.close_rounded, size: 16),
+            //           label: const Text('Reject'),
+            //           style: OutlinedButton.styleFrom(
+            //             foregroundColor: const Color(0xFFEF4444),
+            //             side: const BorderSide(color: Color(0xFFEF4444)),
+            //             shape: RoundedRectangleBorder(
+            //               borderRadius: BorderRadius.circular(10),
+            //             ),
+            //             padding: const EdgeInsets.symmetric(vertical: 10),
+            //           ),
+            //         ),
+            //       ),
+            //       const SizedBox(width: 10),
+            //       Expanded(
+            //         child: ElevatedButton.icon(
+            //           onPressed: () => _handleAccept(context),
+            //           icon: const Icon(Icons.check_rounded, size: 16),
+            //           label: const Text('Accept'),
+            //           style: ElevatedButton.styleFrom(
+            //             backgroundColor: const Color(0xFF10B981),
+            //             foregroundColor: Colors.white,
+            //             elevation: 0,
+            //             shape: RoundedRectangleBorder(
+            //               borderRadius: BorderRadius.circular(10),
+            //             ),
+            //             padding: const EdgeInsets.symmetric(vertical: 10),
+            //           ),
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ],
           ],
         ),
       ),
