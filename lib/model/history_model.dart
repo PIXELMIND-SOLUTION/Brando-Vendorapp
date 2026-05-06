@@ -217,6 +217,7 @@ class Booking {
   final List<dynamic> statusHistory;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final String currentMonthPaymentStatus;
 
   Booking({
     required this.id,
@@ -238,6 +239,7 @@ class Booking {
     required this.statusHistory,
     required this.createdAt,
     required this.updatedAt,
+    required this.currentMonthPaymentStatus,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -269,6 +271,7 @@ class Booking {
       statusHistory: json['statusHistory'] ?? [],
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+      currentMonthPaymentStatus: json['currentMonthPaymentStatus'] ?? 'pending',
     );
   }
 }
@@ -311,12 +314,14 @@ class PaymentHistory {
   final String date;
   final int amount;
   final String status;
+  final dynamic remainingAmount;
 
   PaymentHistory({
     required this.id,
     required this.date,
     required this.amount,
     required this.status,
+    required this.remainingAmount,
   });
 
   factory PaymentHistory.fromJson(Map<String, dynamic> json) {
@@ -325,6 +330,7 @@ class PaymentHistory {
       date: json['date'] ?? '',
       amount: json['amount'] ?? 0,
       status: json['status'] ?? '',
+      remainingAmount: json['remainingAmount'] ?? 0,
     );
   }
 }
