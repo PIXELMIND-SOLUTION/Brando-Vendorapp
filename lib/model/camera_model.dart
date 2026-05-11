@@ -1,91 +1,3 @@
-// class CameraModel {
-//   final String cameraId;
-//   final String name;
-//   final String ipAddress;
-//   final int port;
-//   final String username;
-//   final String password;
-//   final String location;
-//   final String streamUrl;
-//   final String status;
-//   final String id;
-//   final DateTime createdAt;
-  
-
-//   CameraModel({
-//     required this.cameraId,
-//     required this.name,
-//     required this.ipAddress,
-//     required this.port,
-//     required this.username,
-//     required this.password,
-//     required this.location,
-//     required this.streamUrl,
-//     required this.status,
-//     required this.id,
-//     required this.createdAt,
-//   });
-
-//   factory CameraModel.fromJson(Map<String, dynamic> json) {
-//     return CameraModel(
-//       cameraId: json['cameraId'] ?? '',
-//       name: json['name'] ?? '',
-//       ipAddress: json['ipAddress'] ?? '',
-//       port: json['port'] ?? 0,
-//       username: json['username'] ?? '',
-//       password: json['password'] ?? '',
-//       location: json['location'] ?? '',
-//       streamUrl: json['streamUrl'] ?? '',
-//       status: json['status'] ?? 'inactive',
-//       id: json['_id'] ?? '',
-//       createdAt: json['createdAt'] != null
-//           ? DateTime.parse(json['createdAt'])
-//           : DateTime.now(),
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       'name': name,
-//       'ipAddress': ipAddress,
-//       'port': port,
-//       'username': username,
-//       'password': password,
-//       'location': location,
-//     };
-//   }
-
-//   CameraModel copyWith({
-//     String? cameraId,
-//     String? name,
-//     String? ipAddress,
-//     int? port,
-//     String? username,
-//     String? password,
-//     String? location,
-//     String? streamUrl,
-//     String? status,
-//     String? id,
-//     DateTime? createdAt,
-//   }) {
-//     return CameraModel(
-//       cameraId: cameraId ?? this.cameraId,
-//       name: name ?? this.name,
-//       ipAddress: ipAddress ?? this.ipAddress,
-//       port: port ?? this.port,
-//       username: username ?? this.username,
-//       password: password ?? this.password,
-//       location: location ?? this.location,
-//       streamUrl: streamUrl ?? this.streamUrl,
-//       status: status ?? this.status,
-//       id: id ?? this.id,
-//       createdAt: createdAt ?? this.createdAt,
-//     );
-//   }
-// }
-
-
-
 class CameraModel {
   final String cameraId;
   final String name;
@@ -99,7 +11,7 @@ class CameraModel {
   final String id;
   final DateTime createdAt;
   final String manufacturer; // ✅ NEW
-  final int channel;         // ✅ NEW
+  final int channel; // ✅ NEW
 
   CameraModel({
     required this.cameraId,
@@ -130,7 +42,7 @@ class CameraModel {
       status: json['status'] ?? 'inactive',
       id: json['_id'] ?? '',
       manufacturer: json['manufacturer'] ?? '', // ✅ NEW
-      channel: json['channel'] ?? 0,             // ✅ NEW
+      channel: json['channel'] ?? 0, // ✅ NEW
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'])
           : DateTime.now(),
@@ -146,7 +58,7 @@ class CameraModel {
       'password': password,
       'location': location,
       'manufacturer': manufacturer, // ✅ NEW
-      'channel': channel,           // ✅ NEW
+      'channel': channel, // ✅ NEW
     };
   }
 
@@ -163,7 +75,7 @@ class CameraModel {
     String? id,
     DateTime? createdAt,
     String? manufacturer, // ✅ NEW
-    int? channel,         // ✅ NEW
+    int? channel, // ✅ NEW
   }) {
     return CameraModel(
       cameraId: cameraId ?? this.cameraId,
@@ -178,7 +90,7 @@ class CameraModel {
       id: id ?? this.id,
       createdAt: createdAt ?? this.createdAt,
       manufacturer: manufacturer ?? this.manufacturer, // ✅ NEW
-      channel: channel ?? this.channel,                 // ✅ NEW
+      channel: channel ?? this.channel, // ✅ NEW
     );
   }
 }
@@ -212,8 +124,6 @@ class CameraModel {
 //   }
 // }
 
-
-
 class CameraPayload {
   final String name;
   final String ipAddress;
@@ -222,7 +132,7 @@ class CameraPayload {
   final String password;
   final String location;
   final String manufacturer; // NEW
-  final int channel;         // NEW
+  final int channel; // NEW
 
   CameraPayload({
     required this.name,
@@ -244,30 +154,74 @@ class CameraPayload {
       'password': password,
       'location': location,
       'manufacturer': manufacturer, // NEW
-      'channel': channel,           // NEW
+      'channel': channel, // NEW
     };
   }
 }
+
+// // API response wrapper
+// class CameraResponse {
+//   final bool success;
+//   final String message;
+//   final CameraModel? camera;
+
+//   CameraResponse({
+//     required this.success,
+//     required this.message,
+//     this.camera,
+//   });
+
+//   factory CameraResponse.fromJson(Map<String, dynamic> json) {
+//     return CameraResponse(
+//       success: json['success'] ?? false,
+//       message: json['message'] ?? '',
+//       camera: json['camera'] != null
+//           ? CameraModel.fromJson(json['camera'])
+//           : null,
+//     );
+//   }
+// }
 
 // API response wrapper
 class CameraResponse {
   final bool success;
   final String message;
   final CameraModel? camera;
+  final List<CameraModel> cameras; // Add this
 
   CameraResponse({
     required this.success,
     required this.message,
     this.camera,
+    this.cameras = const [],
   });
 
   factory CameraResponse.fromJson(Map<String, dynamic> json) {
+    // Parse single camera if exists
+    CameraModel? singleCamera;
+    if (json['camera'] != null) {
+      singleCamera = CameraModel.fromJson(json['camera']);
+    }
+
+    // Parse cameras list from response (for POST request)
+    List<CameraModel> camerasList = [];
+    if (json['cameras'] != null && json['cameras'] is List) {
+      camerasList = (json['cameras'] as List)
+          .map((c) => CameraModel.fromJson(c))
+          .toList();
+    }
+    // Handle case where data is directly under 'camera' key in LIST format
+    else if (json['data'] != null && json['data'] is List) {
+      camerasList = (json['data'] as List)
+          .map((c) => CameraModel.fromJson(c))
+          .toList();
+    }
+
     return CameraResponse(
       success: json['success'] ?? false,
       message: json['message'] ?? '',
-      camera: json['camera'] != null
-          ? CameraModel.fromJson(json['camera'])
-          : null,
+      camera: singleCamera,
+      cameras: camerasList,
     );
   }
 }

@@ -609,6 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showSuccessOverlay = false;
   String _successMessage = '';
   bool _showDailyPrice = false;
+  String? _selectedHostelId; // Add this for selected hostel
 
   @override
   void initState() {
@@ -617,28 +618,48 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHostels());
   }
 
+  // Future<void> _loadHostels() async {
+  //   final vendorId = await SharedPreferenceHelper.getVendorId();
+  //   if (vendorId == null || !mounted) return;
+  //   await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
+
+  //   if (!mounted) return;
+  //   final hostels = context.read<HostelProvider>().hostels;
+  //   if (hostels.isNotEmpty && mounted) {
+  //     await context.read<CameraProvider>().getAllHostelCameras(
+  //       hostels.first.id,
+  //     );
+
+  //     if (!mounted) return;
+  //     final cameras = context.read<CameraProvider>().cameras;
+  //     final token = await SharedPreferenceHelper.getToken() ?? '';
+  //     if (cameras.isNotEmpty && mounted) {
+  //       await context.read<StreamCameraProvider>().fetchAllCameraStreams(
+  //         hostelId: hostels.first.id,
+  //         cameras: cameras,
+  //         token: token,
+  //       );
+  //     }
+  //   }
+  // }
+
   Future<void> _loadHostels() async {
     final vendorId = await SharedPreferenceHelper.getVendorId();
     if (vendorId == null || !mounted) return;
+
     await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
 
     if (!mounted) return;
+
     final hostels = context.read<HostelProvider>().hostels;
     if (hostels.isNotEmpty && mounted) {
-      await context.read<CameraProvider>().getAllHostelCameras(
-        hostels.first.id,
-      );
-
-      if (!mounted) return;
-      final cameras = context.read<CameraProvider>().cameras;
-      final token = await SharedPreferenceHelper.getToken() ?? '';
-      if (cameras.isNotEmpty && mounted) {
-        await context.read<StreamCameraProvider>().fetchAllCameraStreams(
-          hostelId: hostels.first.id,
-          cameras: cameras,
-          token: token,
-        );
+      // Set default selected hostel
+      if (_selectedHostelId == null) {
+        setState(() {
+          _selectedHostelId = hostels.first.id;
+        });
       }
+      await _loadCamerasForHostel(_selectedHostelId!);
     }
   }
 
@@ -907,6 +928,41 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Future<void> _refreshAllData() async {
+  //   try {
+  //     await fetchBanners();
+  //     final vendorId = await SharedPreferenceHelper.getVendorId();
+  //     if (vendorId != null && mounted) {
+  //       await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
+
+  //       if (mounted) {
+  //         final hostels = context.read<HostelProvider>().hostels;
+  //         if (hostels.isNotEmpty) {
+  //           await context.read<CameraProvider>().getAllHostelCameras(
+  //             hostels.first.id,
+  //           );
+
+  //           if (mounted) {
+  //             final cameras = context.read<CameraProvider>().cameras;
+  //             final token = await SharedPreferenceHelper.getToken() ?? '';
+  //             if (cameras.isNotEmpty) {
+  //               await context
+  //                   .read<StreamCameraProvider>()
+  //                   .fetchAllCameraStreams(
+  //                     hostelId: hostels.first.id,
+  //                     cameras: cameras,
+  //                     token: token,
+  //                   );
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   } catch (e) {
+  //     print('Error refreshing data: $e');
+  //   }
+  // }
+
   Future<void> _refreshAllData() async {
     try {
       await fetchBanners();
@@ -917,28 +973,40 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           final hostels = context.read<HostelProvider>().hostels;
           if (hostels.isNotEmpty) {
-            await context.read<CameraProvider>().getAllHostelCameras(
-              hostels.first.id,
-            );
-
-            if (mounted) {
-              final cameras = context.read<CameraProvider>().cameras;
-              final token = await SharedPreferenceHelper.getToken() ?? '';
-              if (cameras.isNotEmpty) {
-                await context
-                    .read<StreamCameraProvider>()
-                    .fetchAllCameraStreams(
-                      hostelId: hostels.first.id,
-                      cameras: cameras,
-                      token: token,
-                    );
-              }
+            // If no hostel selected or selected hostel not in list, select first
+            if (_selectedHostelId == null ||
+                !hostels.any((h) => h.id == _selectedHostelId)) {
+              setState(() {
+                _selectedHostelId = hostels.first.id;
+              });
             }
+            await _loadCamerasForHostel(_selectedHostelId!);
           }
         }
       }
     } catch (e) {
       print('Error refreshing data: $e');
+    }
+  }
+
+  Future<void> _loadCamerasForHostel(String hostelId) async {
+    if (!mounted) return;
+
+    // Load cameras for selected hostel
+    await context.read<CameraProvider>().getAllHostelCameras(hostelId);
+
+    if (!mounted) return;
+
+    // Load stream data for cameras
+    final cameras = context.read<CameraProvider>().cameras;
+    final token = await SharedPreferenceHelper.getToken() ?? '';
+
+    if (cameras.isNotEmpty && mounted) {
+      await context.read<StreamCameraProvider>().fetchAllCameraStreams(
+        hostelId: hostelId,
+        cameras: cameras,
+        token: token,
+      );
     }
   }
 
@@ -1146,6 +1214,154 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
 
                           // ── Camera Capturing section ──────────────────────
+                          // Padding(
+                          //   padding: const EdgeInsets.symmetric(
+                          //     horizontal: 16,
+                          //     vertical: 4,
+                          //   ),
+                          //   child: RichText(
+                          //     text: const TextSpan(
+                          //       children: [
+                          //         TextSpan(
+                          //           text: 'Camera ',
+                          //           style: TextStyle(
+                          //             color: Color(0xFFE53935),
+                          //             fontWeight: FontWeight.bold,
+                          //             fontSize: 16,
+                          //           ),
+                          //         ),
+                          //         TextSpan(
+                          //           text: 'Capturing',
+                          //           style: TextStyle(
+                          //             color: Colors.black,
+                          //             fontWeight: FontWeight.bold,
+                          //             fontSize: 16,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
+
+                          // Consumer3<
+                          //   HostelProvider,
+                          //   CameraProvider,
+                          //   StreamCameraProvider
+                          // >(
+                          //   builder:
+                          //       (
+                          //         context,
+                          //         hostelProvider,
+                          //         cameraProvider,
+                          //         streamProvider,
+                          //         _,
+                          //       ) {
+                          //         final hostels = hostelProvider.hostels;
+                          //         if (hostels.isEmpty) {
+                          //           return Padding(
+                          //             padding: const EdgeInsets.symmetric(
+                          //               horizontal: 16,
+                          //               vertical: 8,
+                          //             ),
+                          //             child: _AddCameraCard(
+                          //               onTap: null,
+                          //               label:
+                          //                   'Add a hostel first to add cameras',
+                          //             ),
+                          //           );
+                          //         }
+
+                          //         final hostel = hostels.first;
+
+                          //         return Padding(
+                          //           padding: const EdgeInsets.symmetric(
+                          //             horizontal: 16,
+                          //             vertical: 8,
+                          //           ),
+                          //           child: Column(
+                          //             crossAxisAlignment:
+                          //                 CrossAxisAlignment.start,
+                          //             children: [
+                          //               if (cameraProvider.cameras.isNotEmpty)
+                          //                 SizedBox(
+                          //                   height: 100,
+                          //                   child: ListView.builder(
+                          //                     scrollDirection: Axis.horizontal,
+                          //                     itemCount:
+                          //                         cameraProvider.cameras.length,
+                          //                     itemBuilder: (_, i) {
+                          //                       final cam =
+                          //                           cameraProvider.cameras[i];
+                          //                       final streamData =
+                          //                           streamProvider
+                          //                               .getStreamForCamera(
+                          //                                 cam.cameraId,
+                          //                               );
+                          //                       return GestureDetector(
+                          //                         onTap: () {
+                          //                           cameraProvider
+                          //                               .getSingleCamera(
+                          //                                 hostelId: hostel.id,
+                          //                                 cameraId:
+                          //                                     cam.cameraId,
+                          //                               );
+                          //                           Navigator.push(
+                          //                             context,
+                          //                             MaterialPageRoute(
+                          //                               builder: (_) => MultiProvider(
+                          //                                 providers: [
+                          //                                   ChangeNotifierProvider.value(
+                          //                                     value:
+                          //                                         cameraProvider,
+                          //                                   ),
+                          //                                   ChangeNotifierProvider.value(
+                          //                                     value:
+                          //                                         streamProvider,
+                          //                                   ),
+                          //                                 ],
+                          //                                 child:
+                          //                                     CameraDetailsScreen(
+                          //                                       hostelId:
+                          //                                           hostel.id,
+                          //                                       camera: cam,
+                          //                                     ),
+                          //                               ),
+                          //                             ),
+                          //                           );
+                          //                         },
+                          //                         child: _CameraThumbCard(
+                          //                           camera: cam,
+                          //                           streamData: streamData,
+                          //                         ),
+                          //                       );
+                          //                     },
+                          //                   ),
+                          //                 ),
+
+                          //               if (cameraProvider
+                          //                   .cameras
+                          //                   .isNotEmpty) ...[
+                          //                 const SizedBox(height: 12),
+                          //                 _LiveStreamCompactPanel(
+                          //                   hostelId: hostel.id,
+                          //                   cameras: cameraProvider.cameras,
+                          //                   streamProvider: streamProvider,
+                          //                 ),
+                          //               ],
+
+                          //               const SizedBox(height: 10),
+                          //               _AddCameraCard(
+                          //                 onTap: () =>
+                          //                     _openAddCameraSheet(hostel.id),
+                          //                 label: 'Add Your Camera',
+                          //               ),
+                          //             ],
+                          //           ),
+                          //         );
+                          //       },
+                          // ),
+
+                          // ── Camera Capturing section ──────────────────────
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 16,
@@ -1175,55 +1391,197 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
 
-                          Consumer3<
-                            HostelProvider,
-                            CameraProvider,
-                            StreamCameraProvider
-                          >(
-                            builder:
-                                (
-                                  context,
-                                  hostelProvider,
-                                  cameraProvider,
-                                  streamProvider,
+                          Consumer<HostelProvider>(
+                            builder: (context, hostelProvider, _) {
+                              final hostels = hostelProvider.hostels;
+                              if (hostels.isEmpty) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 8,
+                                  ),
+                                  child: _AddCameraCard(
+                                    onTap: null,
+                                    label: 'Add a hostel first to add cameras',
+                                  ),
+                                );
+                              }
+
+                              // Set default selected hostel if none selected
+                              if (_selectedHostelId == null &&
+                                  hostels.isNotEmpty) {
+                                WidgetsBinding.instance.addPostFrameCallback((
                                   _,
                                 ) {
-                                  final hostels = hostelProvider.hostels;
-                                  if (hostels.isEmpty) {
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 8,
-                                      ),
-                                      child: _AddCameraCard(
-                                        onTap: null,
-                                        label:
-                                            'Add a hostel first to add cameras',
-                                      ),
-                                    );
-                                  }
+                                  setState(() {
+                                    _selectedHostelId = hostels.first.id;
+                                  });
+                                  _loadCamerasForHostel(hostels.first.id);
+                                });
+                              }
 
-                                  final hostel = hostels.first;
-
-                                  return Padding(
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Hostel Selector Dropdown
+                                  Padding(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 16,
                                       vertical: 8,
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (cameraProvider.cameras.isNotEmpty)
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: Colors.grey.shade300,
+                                        ),
+                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.white,
+                                      ),
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<String>(
+                                          isExpanded: true,
+                                          hint: const Text('Select Hostel'),
+                                          value: _selectedHostelId,
+                                          items: hostels.map((hostel) {
+                                            return DropdownMenuItem<String>(
+                                              value: hostel.id,
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: 8,
+                                                    height: 8,
+                                                    decoration: BoxDecoration(
+                                                      color: const Color(
+                                                        0xFFE53935,
+                                                      ),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      hostel.name,
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (String? newValue) {
+                                            if (newValue != null) {
+                                              setState(() {
+                                                _selectedHostelId = newValue;
+                                              });
+                                              _loadCamerasForHostel(newValue);
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  // Cameras Grid/List
+                                  Consumer2<
+                                    CameraProvider,
+                                    StreamCameraProvider
+                                  >(
+                                    builder: (context, cameraProvider, streamProvider, _) {
+                                      if (cameraProvider.isLoading) {
+                                        return const Padding(
+                                          padding: EdgeInsets.all(20),
+                                          child: Center(
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        );
+                                      }
+
+                                      final cameras = cameraProvider.cameras;
+
+                                      if (cameras.isEmpty) {
+                                        return Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 8,
+                                            ),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(20),
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color: Colors.grey.shade200,
+                                                ),
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.videocam_off_outlined,
+                                                    size: 48,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'No cameras added yet',
+                                                    style: TextStyle(
+                                                      color:
+                                                          Colors.grey.shade600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 8),
+                                                  Text(
+                                                    'Tap "Add Your Camera" to add one',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color:
+                                                          Colors.grey.shade500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      }
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 4,
+                                            ),
+                                            child: Text(
+                                              'Cameras (${cameras.length})',
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black54,
+                                              ),
+                                            ),
+                                          ),
                                           SizedBox(
                                             height: 100,
                                             child: ListView.builder(
                                               scrollDirection: Axis.horizontal,
-                                              itemCount:
-                                                  cameraProvider.cameras.length,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 16,
+                                                  ),
+                                              itemCount: cameras.length,
                                               itemBuilder: (_, i) {
-                                                final cam =
-                                                    cameraProvider.cameras[i];
+                                                final cam = cameras[i];
                                                 final streamData =
                                                     streamProvider
                                                         .getStreamForCamera(
@@ -1233,7 +1591,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                                   onTap: () {
                                                     cameraProvider
                                                         .getSingleCamera(
-                                                          hostelId: hostel.id,
+                                                          hostelId:
+                                                              _selectedHostelId!,
                                                           cameraId:
                                                               cam.cameraId,
                                                         );
@@ -1251,12 +1610,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                                                   streamProvider,
                                                             ),
                                                           ],
-                                                          child:
-                                                              CameraDetailsScreen(
-                                                                hostelId:
-                                                                    hostel.id,
-                                                                camera: cam,
-                                                              ),
+                                                          child: CameraDetailsScreen(
+                                                            hostelId:
+                                                                _selectedHostelId!,
+                                                            camera: cam,
+                                                          ),
                                                         ),
                                                       ),
                                                     );
@@ -1269,28 +1627,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                               },
                                             ),
                                           ),
-
-                                        if (cameraProvider
-                                            .cameras
-                                            .isNotEmpty) ...[
                                           const SizedBox(height: 12),
                                           _LiveStreamCompactPanel(
-                                            hostelId: hostel.id,
-                                            cameras: cameraProvider.cameras,
+                                            hostelId: _selectedHostelId!,
+                                            cameras: cameras,
                                             streamProvider: streamProvider,
                                           ),
+                                          const SizedBox(height: 10),
                                         ],
-
-                                        const SizedBox(height: 10),
-                                        _AddCameraCard(
-                                          onTap: () =>
-                                              _openAddCameraSheet(hostel.id),
-                                          label: 'Add Your Camera',
-                                        ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                                      );
+                                    },
+                                  ),
+                                  _AddCameraCard(
+                                    onTap: () =>
+                                        _openAddCameraSheet(_selectedHostelId!),
+                                    label: 'Add Your Camera',
+                                  ),
+                                ],
+                              );
+                            },
                           ),
 
                           // ── Hifi heading + Monthly/Daily toggle ───────────
@@ -1526,250 +1881,253 @@ class _LiveStreamCompactPanelState extends State<_LiveStreamCompactPanel> {
   Widget build(BuildContext context) {
     final stream = _currentStream;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: stream?.isStreaming == true
-                        ? Colors.greenAccent
-                        : Colors.red,
-                    boxShadow: [
-                      if (stream?.isStreaming == true)
-                        BoxShadow(
-                          color: Colors.greenAccent.withOpacity(0.6),
-                          blurRadius: 6,
-                          spreadRadius: 2,
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Text(
-                  'Live Stream',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13,
-                  ),
-                ),
-                const Spacer(),
-                if (widget.streamProvider.isLoading)
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      color: Colors.white54,
-                      strokeWidth: 1.5,
-                    ),
-                  ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
           ),
-
-          if (widget.cameras.length > 1)
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: List.generate(widget.cameras.length, (i) {
-                    final cam = widget.cameras[i];
-                    final isSelected = i == _selectedIndex;
-                    final s = widget.streamProvider.getStreamForCamera(
-                      cam.cameraId,
-                    );
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedIndex = i),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        margin: const EdgeInsets.only(right: 8, bottom: 8),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? const Color(0xFFE53935)
-                              : Colors.white12,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFFE53935)
-                                : Colors.white24,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: s?.isStreaming == true
-                                    ? Colors.greenAccent
-                                    : Colors.red,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Text(
-                              cam.name,
-                              style: TextStyle(
-                                color: isSelected
-                                    ? Colors.white
-                                    : Colors.white70,
-                                fontSize: 10,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.white12),
-              ),
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 8),
               child: Row(
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 8,
+                    height: 8,
                     decoration: BoxDecoration(
-                      color: stream?.isStreaming == true
-                          ? Colors.greenAccent.withOpacity(0.12)
-                          : Colors.red.withOpacity(0.12),
                       shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      stream?.isStreaming == true
-                          ? Icons.videocam
-                          : Icons.videocam_off_outlined,
                       color: stream?.isStreaming == true
                           ? Colors.greenAccent
-                          : Colors.redAccent,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _selectedCamera.name,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                          : Colors.red,
+                      boxShadow: [
+                        if (stream?.isStreaming == true)
+                          BoxShadow(
+                            color: Colors.greenAccent.withOpacity(0.6),
+                            blurRadius: 6,
+                            spreadRadius: 2,
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Row(
-                          children: [
-                            if (stream?.channel.isNotEmpty == true) ...[
-                              const SizedBox(width: 6),
-                              Text(
-                                'Ch ${stream!.channel}',
-                                style: const TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: 10,
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  GestureDetector(
-                    onTap: () {
-                      final url = stream?.directPlayUrl ?? '';
-                      if (url.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Stream URL not available'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
-                      _openWebView(url, _selectedCamera.name);
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                  const SizedBox(width: 8),
+                  const Text(
+                    'Live Stream',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (widget.streamProvider.isLoading)
+                    const SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        color: Colors.white54,
+                        strokeWidth: 1.5,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE53935),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.play_circle_fill,
-                            color: Colors.white,
-                            size: 20,
+                    ),
+                ],
+              ),
+            ),
+
+            if (widget.cameras.length > 1)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: List.generate(widget.cameras.length, (i) {
+                      final cam = widget.cameras[i];
+                      final isSelected = i == _selectedIndex;
+                      final s = widget.streamProvider.getStreamForCamera(
+                        cam.cameraId,
+                      );
+                      return GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = i),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          margin: const EdgeInsets.only(right: 8, bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
                           ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Watch\nLive',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              height: 1.2,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? const Color(0xFFE53935)
+                                : Colors.white12,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFFE53935)
+                                  : Colors.white24,
                             ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 6,
+                                height: 6,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: s?.isStreaming == true
+                                      ? Colors.greenAccent
+                                      : Colors.red,
+                                ),
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                cam.name,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.white70,
+                                  fontSize: 10,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
+
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 12),
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white12),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: stream?.isStreaming == true
+                            ? Colors.greenAccent.withOpacity(0.12)
+                            : Colors.red.withOpacity(0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        stream?.isStreaming == true
+                            ? Icons.videocam
+                            : Icons.videocam_off_outlined,
+                        color: stream?.isStreaming == true
+                            ? Colors.greenAccent
+                            : Colors.redAccent,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _selectedCamera.name,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 3),
+                          Row(
+                            children: [
+                              if (stream?.channel.isNotEmpty == true) ...[
+                                const SizedBox(width: 6),
+                                Text(
+                                  'Ch ${stream!.channel}',
+                                  style: const TextStyle(
+                                    color: Colors.white38,
+                                    fontSize: 10,
+                                  ),
+                                ),
+                              ],
+                            ],
                           ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 10),
+                    GestureDetector(
+                      onTap: () {
+                        final url = stream?.directPlayUrl ?? '';
+                        if (url.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Stream URL not available'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+                        _openWebView(url, _selectedCamera.name);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE53935),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.play_circle_fill,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                            SizedBox(height: 3),
+                            Text(
+                              'Watch\nLive',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
-          if (stream != null)
-            _UnknownDetectionBar(detection: stream.unknownUserDetection),
+            if (stream != null)
+              _UnknownDetectionBar(detection: stream.unknownUserDetection),
 
-          const SizedBox(height: 4),
-        ],
+            const SizedBox(height: 4),
+          ],
+        ),
       ),
     );
   }
@@ -2019,7 +2377,10 @@ class _AddCameraSheetState extends State<_AddCameraSheet> {
       hostelId: widget.hostelId,
       payload: payload,
     );
+    print("fffffffffffffffffff$success");
+
     if (!mounted) return;
+    print("llllllllllllllllllllll$success");
     if (success) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -2484,245 +2845,249 @@ class _CameraDetailsScreenState extends State<CameraDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return SafeArea(
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'Camera ',
-                style: TextStyle(
-                  color: Color(0xFFE53935),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              TextSpan(
-                text: 'Details',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-            ],
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
+            onPressed: () => Navigator.pop(context),
           ),
-        ),
-        actions: [
-          Consumer<CameraProvider>(
-            builder: (_, provider, __) => provider.isLoading
-                ? const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Color(0xFFE53935),
-                        strokeWidth: 2,
-                      ),
-                    ),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(
-                          Icons.edit_outlined,
-                          color: Color(0xFFE53935),
-                        ),
-                        onPressed: _openEditCameraSheet,
-                        tooltip: 'Edit Camera',
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete_outline,
-                          color: Color(0xFFE53935),
-                        ),
-                        onPressed: _confirmDelete,
-                        tooltip: 'Delete Camera',
-                      ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-      body: Consumer2<CameraProvider, StreamCameraProvider>(
-        builder: (_, cameraProvider, streamProvider, __) {
-          if (cameraProvider.isLoading &&
-              cameraProvider.selectedCamera == null) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final cam = cameraProvider.selectedCamera ?? _camera;
-          final streamData =
-              streamProvider.getStreamForCamera(cam.cameraId) ??
-              streamProvider.liveStream;
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          title: RichText(
+            text: const TextSpan(
               children: [
-                _CameraDetailStreamCard(
-                  stream: streamData,
-                  cameraName: cam.name,
-                  isLoadingStream: streamProvider.isLoadingToggle,
-                ),
-
-                const SizedBox(height: 20),
-                const SizedBox(height: 24),
-
-                const Text(
-                  'Connection Details',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-
-                _DetailCard(
-                  items: [
-                    _DetailItem(
-                      icon: Icons.router_outlined,
-                      label: 'IP Address',
-                      value: cam.ipAddress,
-                    ),
-                    _DetailItem(
-                      icon: Icons.settings_ethernet,
-                      label: 'Port',
-                      value: cam.port.toString(),
-                    ),
-                    _DetailItem(
-                      icon: Icons.person_outline,
-                      label: 'Username',
-                      value: cam.username,
-                    ),
-                    _DetailItem(
-                      icon: Icons.lock_outline,
-                      label: 'Password',
-                      value: '••••••••',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-                const Text(
-                  'Location & Stream',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-
-                _DetailCard(
-                  items: [
-                    _DetailItem(
-                      icon: Icons.location_on_outlined,
-                      label: 'Location',
-                      value: cam.location,
-                    ),
-                    _DetailItem(
-                      icon: Icons.stream,
-                      label: 'Stream URL',
-                      value: cam.streamUrl,
-                      isUrl: true,
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 16),
-                const Text(
-                  'System Info',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-
-                _DetailCard(
-                  items: [
-                    _DetailItem(
-                      icon: Icons.badge_outlined,
-                      label: 'Camera ID',
-                      value: cam.cameraId,
-                    ),
-                    _DetailItem(
-                      icon: Icons.calendar_today_outlined,
-                      label: 'Added On',
-                      value:
-                          '${cam.createdAt.day}/${cam.createdAt.month}/${cam.createdAt.year}',
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 28),
-
-                Consumer<CameraProvider>(
-                  builder: (_, provider, __) => Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE53935),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: provider.isLoading
-                              ? null
-                              : _openEditCameraSheet,
-                          icon: const Icon(Icons.edit_outlined, size: 18),
-                          label: const Text(
-                            'Edit Camera',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: const Color(0xFFE53935),
-                            side: const BorderSide(color: Color(0xFFE53935)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: provider.isLoading ? null : _confirmDelete,
-                          icon: provider.isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    color: Color(0xFFE53935),
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.delete_outline, size: 18),
-                          label: Text(
-                            provider.isLoading ? 'Deleting...' : 'Delete',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+                TextSpan(
+                  text: 'Camera ',
+                  style: TextStyle(
+                    color: Color(0xFFE53935),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
                 ),
-                const SizedBox(height: 20),
+                TextSpan(
+                  text: 'Details',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
               ],
             ),
-          );
-        },
+          ),
+          actions: [
+            Consumer<CameraProvider>(
+              builder: (_, provider, __) => provider.isLoading
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFE53935),
+                          strokeWidth: 2,
+                        ),
+                      ),
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: const Icon(
+                            Icons.edit_outlined,
+                            color: Color(0xFFE53935),
+                          ),
+                          onPressed: _openEditCameraSheet,
+                          tooltip: 'Edit Camera',
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.delete_outline,
+                            color: Color(0xFFE53935),
+                          ),
+                          onPressed: _confirmDelete,
+                          tooltip: 'Delete Camera',
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        ),
+        body: Consumer2<CameraProvider, StreamCameraProvider>(
+          builder: (_, cameraProvider, streamProvider, __) {
+            if (cameraProvider.isLoading &&
+                cameraProvider.selectedCamera == null) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            final cam = cameraProvider.selectedCamera ?? _camera;
+            final streamData =
+                streamProvider.getStreamForCamera(cam.cameraId) ??
+                streamProvider.liveStream;
+
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _CameraDetailStreamCard(
+                    stream: streamData,
+                    cameraName: cam.name,
+                    isLoadingStream: streamProvider.isLoadingToggle,
+                  ),
+
+                  const SizedBox(height: 20),
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'Connection Details',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _DetailCard(
+                    items: [
+                      _DetailItem(
+                        icon: Icons.router_outlined,
+                        label: 'IP Address',
+                        value: cam.ipAddress,
+                      ),
+                      _DetailItem(
+                        icon: Icons.settings_ethernet,
+                        label: 'Port',
+                        value: cam.port.toString(),
+                      ),
+                      _DetailItem(
+                        icon: Icons.person_outline,
+                        label: 'Username',
+                        value: cam.username,
+                      ),
+                      _DetailItem(
+                        icon: Icons.lock_outline,
+                        label: 'Password',
+                        value: '••••••••',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Location & Stream',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _DetailCard(
+                    items: [
+                      _DetailItem(
+                        icon: Icons.location_on_outlined,
+                        label: 'Location',
+                        value: cam.location,
+                      ),
+                      _DetailItem(
+                        icon: Icons.stream,
+                        label: 'Stream URL',
+                        value: cam.streamUrl,
+                        isUrl: true,
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+                  const Text(
+                    'System Info',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+
+                  _DetailCard(
+                    items: [
+                      _DetailItem(
+                        icon: Icons.badge_outlined,
+                        label: 'Camera ID',
+                        value: cam.cameraId,
+                      ),
+                      _DetailItem(
+                        icon: Icons.calendar_today_outlined,
+                        label: 'Added On',
+                        value:
+                            '${cam.createdAt.day}/${cam.createdAt.month}/${cam.createdAt.year}',
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 28),
+
+                  Consumer<CameraProvider>(
+                    builder: (_, provider, __) => Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFE53935),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: provider.isLoading
+                                ? null
+                                : _openEditCameraSheet,
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            label: const Text(
+                              'Edit Camera',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFE53935),
+                              side: const BorderSide(color: Color(0xFFE53935)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            onPressed: provider.isLoading
+                                ? null
+                                : _confirmDelete,
+                            icon: provider.isLoading
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      color: Color(0xFFE53935),
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Icon(Icons.delete_outline, size: 18),
+                            label: Text(
+                              provider.isLoading ? 'Deleting...' : 'Delete',
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

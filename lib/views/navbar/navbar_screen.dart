@@ -188,68 +188,10 @@
 //   }
 // }
 
-// // class NavbarScreen extends StatefulWidget {
-// //   const NavbarScreen({super.key});
-
-// //   @override
-// //   State<NavbarScreen> createState() => _NavbarScreenState();
-// // }
-
-// // class _NavbarScreenState extends State<NavbarScreen> {
-// //   @override
-// //   void initState() {
-// //     super.initState();
-// //     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHostels());
-// //   }
-
-// //   Future<void> _loadHostels() async {
-// //     final vendorId = await SharedPreferenceHelper.getVendorId();
-// //     if (vendorId != null && vendorId.isNotEmpty && mounted) {
-// //       await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
-// //     }
-// //   }
-
-// //   @override
-// //   Widget build(BuildContext context) {
-// //     final currentIndex = context.watch<BottomNavbarProvider>().currentIndex;
-
-// //     return Consumer<HostelProvider>(
-// //       builder: (context, hostelProvider, _) {
-// //         final hostelId = hostelProvider.hostels.isNotEmpty
-// //             ? hostelProvider.hostels.first.id
-// //             : '';
-
-// //         final qrUrl = hostelProvider.hostels.isNotEmpty
-// //             ? hostelProvider
-// //                   .hostels
-// //                   .first
-// //                   .qrUrl
-// //             : null;
-
-// //         final pages = [
-// //           const HomeScreen(),
-// //           MenuScreen(hostelId: hostelId),
-// //           BookingScreen(qrUrl: qrUrl),
-// //           const ProfileScreen(),
-// //         ];
-
-// //         return Scaffold(
-// //           backgroundColor: const Color(0xFFF8F8F8),
-// //           body: hostelProvider.isLoading && hostelId.isEmpty
-// //               // Show a single centered loader while the very first fetch runs
-// //               ? const Center(
-// //                   child: CircularProgressIndicator(color: Color(0xFFE53935)),
-// //                 )
-// //               : IndexedStack(index: currentIndex, children: pages),
-// //           bottomNavigationBar: const CustomBottomNavbar(),
-// //         );
-// //       },
-// //     );
-// //   }
-// // }
-
 // class NavbarScreen extends StatefulWidget {
-//   const NavbarScreen({super.key});
+//   final int initialIndex; // Add initial index parameter
+
+//   const NavbarScreen({super.key, this.initialIndex = 0}); // Default to 0 (Home)
 
 //   @override
 //   State<NavbarScreen> createState() => _NavbarScreenState();
@@ -263,7 +205,14 @@
 //   @override
 //   void initState() {
 //     super.initState();
-//     WidgetsBinding.instance.addPostFrameCallback((_) => _loadHostels());
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _loadHostels();
+//       // Set initial index when provider is available
+//       if (mounted) {
+//         final bottomNavProvider = context.read<BottomNavbarProvider>();
+//         bottomNavProvider.setIndex(widget.initialIndex);
+//       }
+//     });
 //   }
 
 //   Future<void> _loadHostels() async {
@@ -313,6 +262,7 @@
 // }
 
 import 'package:brando_vendor/helper/shared_preference.dart';
+import 'package:brando_vendor/model/create_hostel_model.dart';
 import 'package:brando_vendor/provider/create/create_hostel_provider.dart';
 import 'package:brando_vendor/provider/navbar/navbar_provider.dart';
 import 'package:brando_vendor/views/home/booking_screen.dart';
@@ -503,17 +453,16 @@ class _NavBarItemState extends State<_NavBarItem>
 }
 
 class NavbarScreen extends StatefulWidget {
-  final int initialIndex; // Add initial index parameter
+  final int initialIndex;
 
-  const NavbarScreen({super.key, this.initialIndex = 0}); // Default to 0 (Home)
+  const NavbarScreen({super.key, this.initialIndex = 0});
 
   @override
   State<NavbarScreen> createState() => _NavbarScreenState();
 }
 
 class _NavbarScreenState extends State<NavbarScreen> {
-  String _hostelId = '';
-  String? _qrUrl;
+  List<Hostel> _hostels = [];
   bool _isLoading = true;
 
   @override
@@ -521,7 +470,6 @@ class _NavbarScreenState extends State<NavbarScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadHostels();
-      // Set initial index when provider is available
       if (mounted) {
         final bottomNavProvider = context.read<BottomNavbarProvider>();
         bottomNavProvider.setIndex(widget.initialIndex);
@@ -539,10 +487,8 @@ class _NavbarScreenState extends State<NavbarScreen> {
     await context.read<HostelProvider>().fetchHostelsByVendor(vendorId);
 
     if (!mounted) return;
-    final hostels = context.read<HostelProvider>().hostels;
     setState(() {
-      _hostelId = hostels.isNotEmpty ? hostels.first.id : '';
-      _qrUrl = hostels.isNotEmpty ? hostels.first.qrUrl : null;
+      _hostels = context.read<HostelProvider>().hostels;
       _isLoading = false;
     });
   }
@@ -563,7 +509,7 @@ class _NavbarScreenState extends State<NavbarScreen> {
     final pages = [
       const HomeScreen(),
       MenuScreen(),
-      BookingScreen(qrUrl: _qrUrl),
+      BookingScreen(hostels: _hostels), // Pass all hostels
       const ProfileScreen(),
     ];
 

@@ -26,10 +26,62 @@ class _MenuScreenState extends State<MenuScreen> {
 
   String _searchQuery = '';
 
+  // Filter fields
+  String? _selectedCategory;
+  String? _selectedHostelId;
+  String _selectedRoomStatus = 'all';
+  String _selectedPaymentStatus = 'all';
+  String _selectedRoomNo = ''; // Add this line for room number filter
+
+  // Data for dropdowns
+  List<String> _categories = [];
+  Map<String, List<MapEntry<String, String>>> _hostelsByCategory = {};
+
   @override
   void initState() {
     super.initState();
     Future.microtask(() => _loadVendorAndFetchHistory());
+  }
+
+  void _extractCategoriesAndHostels(List<RoomBookingData> bookings) {
+    Set<String> categoriesSet = {};
+    Map<String, Set<String>> hostelMap = {};
+
+    for (var roomData in bookings) {
+      for (var booking in roomData.bookings) {
+        // Get category name - handle null safely
+        String categoryName =
+            booking.hostelId?.categoryId?.name ?? 'Uncategorized';
+        categoriesSet.add(categoryName);
+
+        // Get hostel info
+        String hostelId = booking.hostelId?.id ?? 'unknown';
+        String hostelName = booking.hostelId?.name ?? 'Unknown Hostel';
+        String hostelKey = '$hostelId|$hostelName';
+
+        if (!hostelMap.containsKey(categoryName)) {
+          hostelMap[categoryName] = {};
+        }
+        hostelMap[categoryName]!.add(hostelKey);
+      }
+    }
+
+    setState(() {
+      _categories = categoriesSet.toList()..sort();
+      _hostelsByCategory = {};
+
+      for (var entry in hostelMap.entries) {
+        _hostelsByCategory[entry.key] = entry.value.map((hostelKey) {
+          List<String> parts = hostelKey.split('|');
+          return MapEntry(parts[0], parts.length > 1 ? parts[1] : 'Unknown');
+        }).toList();
+      }
+
+      // Sort hostels alphabetically within each category
+      for (var key in _hostelsByCategory.keys) {
+        _hostelsByCategory[key]!.sort((a, b) => a.value.compareTo(b.value));
+      }
+    });
   }
 
   Future<void> _loadVendorAndFetchHistory() async {
@@ -73,6 +125,557 @@ class _MenuScreenState extends State<MenuScreen> {
         );
       }
     }
+  }
+
+  void _extractFilterData(List<RoomBookingData> bookings) {
+    Set<String> categories = {};
+    Map<String, Set<String>> hostelMap = {};
+
+    for (var roomData in bookings) {
+      for (var booking in roomData.bookings) {
+        // Get category
+        String category = booking.hostelId?.categoryId?.name ?? 'Uncategorized';
+        categories.add(category);
+
+        // Get hostel info
+        String hostelId = booking.hostelId?.id ?? 'unknown';
+        String hostelName = booking.hostelId?.name ?? 'Unknown Hostel';
+        String hostelKey = '$hostelId|$hostelName';
+
+        if (!hostelMap.containsKey(category)) {
+          hostelMap[category] = {};
+        }
+        hostelMap[category]!.add(hostelKey);
+      }
+    }
+
+    setState(() {
+      _categories = categories.toList()..sort();
+      _hostelsByCategory = {};
+
+      for (var entry in hostelMap.entries) {
+        _hostelsByCategory[entry.key] = entry.value.map((hostelKey) {
+          List<String> parts = hostelKey.split('|');
+          return MapEntry(parts[0], parts.length > 1 ? parts[1] : 'Unknown');
+        }).toList();
+      }
+
+      // Sort hostels within each category
+      for (var key in _hostelsByCategory.keys) {
+        _hostelsByCategory[key]!.sort((a, b) => a.value.compareTo(b.value));
+      }
+    });
+  }
+
+  void _showFilterDialog() {
+    // Local copies for temporary state
+    String tempRoomNo = _selectedRoomNo;
+    String tempRoomStatus = _selectedRoomStatus;
+    String tempPaymentStatus = _selectedPaymentStatus;
+
+    TextEditingController roomNoController = TextEditingController(
+      text: _selectedRoomNo,
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              elevation: 0,
+              backgroundColor: Colors.white,
+              child: Container(
+                width: MediaQuery.of(context).size.width * 0.9,
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE53935),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.filter_list_rounded,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Text(
+                              'Filter Bookings',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close, color: Colors.white),
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Content
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Room Number Filter
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: TextField(
+                              controller: roomNoController,
+                              style: const TextStyle(fontSize: 14),
+                              decoration: InputDecoration(
+                                labelText: 'Room Number',
+                                labelStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                                hintText: 'Enter room number',
+                                hintStyle: TextStyle(
+                                  color: Colors.grey.shade400,
+                                  fontSize: 13,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.meeting_room,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 16,
+                                ),
+                                suffixIcon: tempRoomNo.isNotEmpty
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.close,
+                                          size: 18,
+                                          color: Colors.grey.shade600,
+                                        ),
+                                        onPressed: () {
+                                          roomNoController.clear();
+                                          setDialogState(() {
+                                            tempRoomNo = '';
+                                          });
+                                        },
+                                      )
+                                    : null,
+                              ),
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempRoomNo = value;
+                                });
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Room Status Filter
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: tempRoomStatus,
+                              decoration: InputDecoration(
+                                labelText: 'Room Status',
+                                labelStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.check_circle_outline,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                              ),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: 'all',
+                                  child: Text('All Status'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'running',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF4CAF50),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Running'),
+                                    ],
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'completed',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF9E9E9E),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Completed'),
+                                    ],
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'cancelled',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFE53935),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Cancelled'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempRoomStatus = value!;
+                                });
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Payment Status Filter
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: Colors.grey.shade200),
+                            ),
+                            child: DropdownButtonFormField<String>(
+                              value: tempPaymentStatus,
+                              decoration: InputDecoration(
+                                labelText: 'Payment Status',
+                                labelStyle: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.payment,
+                                  size: 20,
+                                  color: Colors.grey.shade600,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 4,
+                                ),
+                              ),
+                              items: [
+                                const DropdownMenuItem(
+                                  value: 'all',
+                                  child: Text('All Payments'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'paid',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFF4CAF50),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Paid'),
+                                    ],
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'pending',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFFF9800),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Pending'),
+                                    ],
+                                  ),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'overdue',
+                                  child: Row(
+                                    children: [
+                                      Container(
+                                        width: 8,
+                                        height: 8,
+                                        decoration: const BoxDecoration(
+                                          color: Color(0xFFE53935),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Overdue'),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setDialogState(() {
+                                  tempPaymentStatus = value!;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Actions
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                setDialogState(() {
+                                  tempRoomNo = '';
+                                  tempRoomStatus = 'all';
+                                  tempPaymentStatus = 'all';
+                                  roomNoController.clear();
+                                });
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFFE53935),
+                                side: const BorderSide(
+                                  color: Color(0xFFE53935),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('Reset All'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedRoomNo = tempRoomNo;
+                                  _selectedRoomStatus = tempRoomStatus;
+                                  _selectedPaymentStatus = tempPaymentStatus;
+                                });
+                                Navigator.pop(context);
+
+                                // Show confirmation snackbar
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Filters applied successfully',
+                                    ),
+                                    backgroundColor: Colors.green,
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFE53935),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: const Text(
+                                'Apply Filters',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  List<RoomBookingData> _applyFilters(List<RoomBookingData> bookings) {
+    print('=== APPLYING FILTERS ===');
+    print('Selected Room No: "$_selectedRoomNo"');
+    print('Search Query: "$_searchQuery"');
+    print('Selected Category: $_selectedCategory');
+    print('Selected Hostel: $_selectedHostelId');
+    print('Room Status: $_selectedRoomStatus');
+    print('Payment Status: $_selectedPaymentStatus');
+    print('Total bookings to filter: ${bookings.length}');
+
+    List<RoomBookingData> filteredBookings = [];
+
+    for (var roomData in bookings) {
+      List<Booking> filteredRoomBookings = [];
+
+      for (var booking in roomData.bookings) {
+        bool matches = true;
+
+        // Room Number filter - FIX THIS PART
+        if (_selectedRoomNo.isNotEmpty) {
+          print(
+            'Checking Room: "${booking.roomNo}" against "${_selectedRoomNo}"',
+          );
+          if (!booking.roomNo.toLowerCase().contains(
+            _selectedRoomNo.toLowerCase(),
+          )) {
+            matches = false;
+            print('Room ${booking.roomNo} does NOT match');
+          } else {
+            print('Room ${booking.roomNo} MATCHES');
+          }
+        }
+
+        // Category filter
+        if (matches &&
+            _selectedCategory != null &&
+            _selectedCategory != 'Uncategorized') {
+          String bookingCategory =
+              booking.hostelId?.categoryId?.name ?? 'Uncategorized';
+          if (bookingCategory != _selectedCategory) {
+            matches = false;
+          }
+        }
+
+        // Hostel filter
+        if (matches && _selectedHostelId != null) {
+          if (booking.hostelId?.id != _selectedHostelId) {
+            matches = false;
+          }
+        }
+
+        // Search text filter
+        if (matches && _searchQuery.isNotEmpty) {
+          bool nameMatch =
+              booking.userId?.name?.toLowerCase().contains(_searchQuery) ??
+              false;
+          bool roomMatch = booking.roomNo.toLowerCase().contains(_searchQuery);
+          bool refMatch = booking.bookingReference.toLowerCase().contains(
+            _searchQuery,
+          );
+
+          if (!nameMatch && !roomMatch && !refMatch) {
+            matches = false;
+          }
+        }
+
+        // Room status filter
+        if (matches && _selectedRoomStatus != 'all') {
+          if (booking.status.toLowerCase() != _selectedRoomStatus) {
+            matches = false;
+          }
+        }
+
+        // Payment status filter
+        if (matches && _selectedPaymentStatus != 'all') {
+          String currentPayment =
+              booking.currentMonthPaymentStatus?.toLowerCase() ?? 'pending';
+          if (currentPayment != _selectedPaymentStatus) {
+            matches = false;
+          }
+        }
+
+        if (matches) {
+          print('✅ Booking ${booking.bookingReference} PASSED all filters');
+          filteredRoomBookings.add(booking);
+        } else {
+          print('❌ Booking ${booking.bookingReference} FAILED filter');
+        }
+      }
+
+      if (filteredRoomBookings.isNotEmpty) {
+        filteredBookings.add(
+          RoomBookingData(
+            roomNo: roomData.roomNo,
+            totalBookings: filteredRoomBookings.length,
+            bookings: filteredRoomBookings,
+          ),
+        );
+      }
+    }
+
+    print('Final filtered bookings count: ${filteredBookings.length}');
+    print('========================');
+
+    return filteredBookings;
   }
 
   Future<void> _refreshHistory() async {
@@ -570,40 +1173,316 @@ class _MenuScreenState extends State<MenuScreen> {
         //     },
         //   ),
         // ),
+        // body: Column(
+        //   children: [
+        //     // Search Bar
+        //     Padding(
+        //       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        //       child: TextField(
+        //         onChanged: (value) {
+        //           setState(() {
+        //             _searchQuery = value.toLowerCase();
+        //           });
+        //         },
+        //         decoration: InputDecoration(
+        //           hintText: 'Search by name, hostel, or category...',
+        //           prefixIcon: const Icon(
+        //             Icons.search,
+        //             color: Color(0xFFE53935),
+        //           ),
+        //           border: OutlineInputBorder(
+        //             borderRadius: BorderRadius.circular(12),
+        //             borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+        //           ),
+        //           focusedBorder: OutlineInputBorder(
+        //             borderRadius: BorderRadius.circular(12),
+        //             borderSide: const BorderSide(
+        //               color: Color(0xFFE53935),
+        //               width: 1.5,
+        //             ),
+        //           ),
+        //           filled: true,
+        //           fillColor: Colors.white,
+        //         ),
+        //       ),
+        //     ),
+        //     const Divider(height: 1, color: Color(0xFFEEEEEE)),
+        //     Expanded(
+        //       child: RefreshIndicator(
+        //         key: RefreshIndicatorKey,
+        //         color: const Color(0xFFE53935),
+        //         onRefresh: _refreshHistory,
+        //         child: Consumer<HistoryProvider>(
+        //           builder: (context, provider, _) {
+        //             if (provider.isLoading) {
+        //               return const Center(
+        //                 child: CircularProgressIndicator(
+        //                   color: Color(0xFFE53935),
+        //                 ),
+        //               );
+        //             }
+
+        //             if (provider.hasError) {
+        //               return Center(
+        //                 child: Column(
+        //                   mainAxisSize: MainAxisSize.min,
+        //                   children: [
+        //                     const Icon(
+        //                       Icons.error_outline,
+        //                       color: Color(0xFFE53935),
+        //                       size: 48,
+        //                     ),
+        //                     const SizedBox(height: 12),
+        //                     Text(
+        //                       provider.errorMessage,
+        //                       textAlign: TextAlign.center,
+        //                       style: const TextStyle(
+        //                         color: Colors.black54,
+        //                         fontSize: 14,
+        //                       ),
+        //                     ),
+        //                     const SizedBox(height: 16),
+        //                     ElevatedButton(
+        //                       onPressed: () {
+        //                         if (vendorId != null && vendorId!.isNotEmpty) {
+        //                           provider.fetchHistory(vendorId!);
+        //                         }
+        //                       },
+        //                       style: ElevatedButton.styleFrom(
+        //                         backgroundColor: const Color(0xFFE53935),
+        //                         foregroundColor: Colors.white,
+        //                         shape: RoundedRectangleBorder(
+        //                           borderRadius: BorderRadius.circular(8),
+        //                         ),
+        //                       ),
+        //                       child: const Text('Retry'),
+        //                     ),
+        //                   ],
+        //                 ),
+        //               );
+        //             }
+
+        //             if (provider.bookings.isEmpty) {
+        //               return const Center(
+        //                 child: Column(
+        //                   mainAxisSize: MainAxisSize.min,
+        //                   children: [
+        //                     Icon(
+        //                       Icons.history,
+        //                       size: 64,
+        //                       color: Colors.black26,
+        //                     ),
+        //                     SizedBox(height: 16),
+        //                     Text(
+        //                       'No history found.',
+        //                       style: TextStyle(
+        //                         color: Colors.black54,
+        //                         fontSize: 15,
+        //                       ),
+        //                     ),
+        //                   ],
+        //                 ),
+        //               );
+        //             }
+
+        //             // Organize data by category and hostel
+        //             return _buildOrganizedHistory(provider.bookings);
+        //           },
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
         body: Column(
           children: [
-            // Search Bar
+            // Category and Hostel Dropdowns Row
+            // Category and Hostel Dropdowns Row
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: TextField(
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value.toLowerCase();
-                  });
-                },
+              child: DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                hint: const Text('Select Category'),
                 decoration: InputDecoration(
-                  hintText: 'Search by name, hostel, or category...',
+                  labelText: 'Category',
+                  labelStyle: TextStyle(
+                    color: _selectedCategory != null
+                        ? const Color(0xFFE53935)
+                        : Colors.grey.shade600,
+                  ),
                   prefixIcon: const Icon(
-                    Icons.search,
+                    Icons.category,
+                    size: 20,
                     color: Color(0xFFE53935),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(
                       color: Color(0xFFE53935),
                       width: 1.5,
                     ),
                   ),
-                  filled: true,
-                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                 ),
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text('Categories'),
+                  ),
+                  ..._categories.map((category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedCategory = value;
+                    _selectedHostelId =
+                        null; // Reset hostel when category changes
+                  });
+                },
               ),
             ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: DropdownButtonFormField<String>(
+                value: _selectedHostelId,
+                decoration: InputDecoration(
+                  labelText: 'Hostel',
+                  labelStyle: TextStyle(
+                    color: _selectedHostelId != null
+                        ? const Color(0xFFE53935)
+                        : Colors.grey.shade600,
+                  ),
+                  prefixIcon: const Icon(
+                    Icons.business,
+                    size: 20,
+                    color: Color(0xFFE53935),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE53935),
+                      width: 1.5,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
+                ),
+                items: [
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text('All Hostels'),
+                  ),
+                  if (_selectedCategory != null &&
+                      _hostelsByCategory.containsKey(_selectedCategory))
+                    ..._hostelsByCategory[_selectedCategory]!.map((hostel) {
+                      return DropdownMenuItem(
+                        value: hostel.key,
+                        child: Text(hostel.value),
+                      );
+                    }),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    _selectedHostelId = value;
+                  });
+                },
+              ),
+            ),
+
+            // Search Bar with Filter Button
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      onChanged: (value) {
+                        setState(() {
+                          _searchQuery = value.toLowerCase();
+                        });
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Search by name..',
+                        hintStyle: const TextStyle(fontSize: 13),
+                        prefixIcon: const Icon(
+                          Icons.search,
+                          color: Color(0xFFE53935),
+                          size: 18,
+                        ),
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear, size: 16),
+                                onPressed: () {
+                                  setState(() {
+                                    _searchQuery = '';
+                                  });
+                                },
+                              )
+                            : null,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE0E0E0),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFE53935),
+                            width: 1.5,
+                          ),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        isDense: true, // Reduces height
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ), // Controls vertical padding
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Filter Button
+                  Container(
+                    height: 50,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0xFFE0E0E0)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        _showFilterDialog();
+                      },
+                      icon: const Icon(
+                        Icons.filter_list,
+                        color: Color(0xFFE53935),
+                        size: 24,
+                      ),
+                      tooltip: 'Filter',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
             const Divider(height: 1, color: Color(0xFFEEEEEE)),
+
             Expanded(
               child: RefreshIndicator(
                 key: RefreshIndicatorKey,
@@ -682,8 +1561,56 @@ class _MenuScreenState extends State<MenuScreen> {
                       );
                     }
 
-                    // Organize data by category and hostel
-                    return _buildOrganizedHistory(provider.bookings);
+                    // Extract categories when data is loaded and categories list is empty
+                    if (_categories.isEmpty && provider.bookings.isNotEmpty) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _extractCategoriesAndHostels(provider.bookings);
+                      });
+                    }
+
+                    // Apply filters and build organized history
+                    final filteredBookings = _applyFilters(provider.bookings);
+
+                    if (filteredBookings.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.filter_alt_off,
+                              size: 64,
+                              color: Colors.black26,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'No results found',
+                              style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  _selectedCategory = null;
+                                  _selectedHostelId = null;
+                                  _searchQuery = '';
+                                  _selectedRoomStatus = 'all';
+                                  _selectedPaymentStatus = 'all';
+                                });
+                              },
+                              child: const Text(
+                                'Clear filters',
+                                style: TextStyle(color: Color(0xFFE53935)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return _buildOrganizedHistory(filteredBookings);
                   },
                 ),
               ),
@@ -1600,15 +2527,257 @@ class _MenuScreenState extends State<MenuScreen> {
 //   }
 // }
 
+// class _HistoryRow extends StatelessWidget {
+//   final Booking booking;
+//   final VoidCallback onRefresh;
+//   final bool showTransferIcon; // Add this parameter
+
+//   const _HistoryRow({
+//     required this.booking,
+//     required this.onRefresh,
+//     this.showTransferIcon = true, // Default to true for backward compatibility
+//   });
+
+//   String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
+
+//   Color _getStatusColor(String status) {
+//     switch (status.toLowerCase()) {
+//       case 'running':
+//         return const Color(0xFF4CAF50);
+//       case 'completed':
+//         return const Color(0xFF9E9E9E);
+//       case 'cancelled':
+//         return const Color(0xFFE53935);
+//       default:
+//         return const Color(0xFFFF9800);
+//     }
+//   }
+
+//   Color _getPaymentStatusColor(String? status) {
+//     switch (status?.toLowerCase()) {
+//       case 'paid':
+//         return const Color(0xFF4CAF50);
+//       case 'pending':
+//         return const Color(0xFFFF9800);
+//       case 'overdue':
+//         return const Color(0xFFE53935);
+//       default:
+//         return const Color(0xFF9E9E9E);
+//     }
+//   }
+
+//   String _getFormattedAmount() {
+//     return '₹${booking.totalAmount}';
+//   }
+
+//   Future<void> _makeCall(BuildContext context) async {
+//     if (booking.userId != null) {
+//       final Uri callUri = Uri(
+//         scheme: 'tel',
+//         path: booking.userId!.mobileNumber.toString(),
+//       );
+//       if (await canLaunchUrl(callUri)) {
+//         await launchUrl(callUri);
+//       } else {
+//         if (context.mounted) {
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(
+//               content: Text('Could not call ${booking.userId!.mobileNumber}'),
+//               backgroundColor: const Color(0xFFE53935),
+//             ),
+//           );
+//         }
+//       }
+//     }
+//   }
+
+//   void _showTransferPopup(BuildContext context) {
+//     showDialog(
+//       context: context,
+//       barrierColor: Colors.black26,
+//       builder: (_) => TransferPopup(
+//         tenantName: booking.userId?.name ?? 'Tenant',
+//         currentRoom: booking.roomNo,
+//         bookingId: booking.id,
+//         onTransferComplete: onRefresh,
+//       ),
+//     );
+//   }
+
+//   void _navigateToView(BuildContext context) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => TenantViewScreen(booking: booking, onUpdate: onRefresh),
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       children: [
+//         Padding(
+//           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+//           child: Row(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               // Date and Amount Column
+//               SizedBox(
+//                 width: 70,
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       _formatDate(booking.startDate),
+//                       style: const TextStyle(
+//                         fontSize: 13,
+//                         color: Colors.black87,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 2),
+//                     Text(
+//                       _getFormattedAmount(),
+//                       style: const TextStyle(
+//                         fontSize: 11,
+//                         color: Colors.black54,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+
+//               // Name and Details Column
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       booking.userId?.name ?? 'Unknown',
+//                       style: const TextStyle(
+//                         fontSize: 14,
+//                         color: Colors.black87,
+//                         fontWeight: FontWeight.w500,
+//                       ),
+//                       maxLines: 1,
+//                       overflow: TextOverflow.ellipsis,
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Wrap(
+//                       spacing: 8,
+//                       runSpacing: 4,
+//                       children: [
+//                         Text(
+//                           'Ref: ${booking.bookingReference}',
+//                           style: const TextStyle(
+//                             fontSize: 10,
+//                             color: Colors.black45,
+//                           ),
+//                           overflow: TextOverflow.ellipsis,
+//                         ),
+//                         Container(
+//                           padding: const EdgeInsets.symmetric(
+//                             horizontal: 6,
+//                             vertical: 2,
+//                           ),
+//                           decoration: BoxDecoration(
+//                             color: _getPaymentStatusColor(
+//                               booking.currentMonthPaymentStatus,
+//                             ).withOpacity(0.1),
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           child: Text(
+//                             'Payment: ${booking.currentMonthPaymentStatus?.toUpperCase() ?? 'N/A'}',
+//                             style: TextStyle(
+//                               fontSize: 9,
+//                               fontWeight: FontWeight.w600,
+//                               color: _getPaymentStatusColor(
+//                                 booking.currentMonthPaymentStatus,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+
+//               // Status Badge
+//               SizedBox(
+//                 width: 65,
+//                 child: Container(
+//                   padding: const EdgeInsets.symmetric(
+//                     horizontal: 6,
+//                     vertical: 4,
+//                   ),
+//                   decoration: BoxDecoration(
+//                     color: _getStatusColor(booking.status).withOpacity(0.1),
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Text(
+//                     booking.status.toUpperCase(),
+//                     style: TextStyle(
+//                       fontSize: 10,
+//                       fontWeight: FontWeight.w600,
+//                       color: _getStatusColor(booking.status),
+//                     ),
+//                     textAlign: TextAlign.center,
+//                     maxLines: 1,
+//                     overflow: TextOverflow.ellipsis,
+//                   ),
+//                 ),
+//               ),
+//               const SizedBox(width: 8),
+
+//               // Action Buttons
+//               Row(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   _ActionButton(
+//                     onTap: () => _makeCall(context),
+//                     icon: Icons.phone,
+//                     color: Colors.green,
+//                     size: 18,
+//                   ),
+//                   // Conditionally show transfer button
+//                   if (showTransferIcon)
+//                     _ActionButton(
+//                       onTap: () => _showTransferPopup(context),
+//                       icon: Icons.swap_horiz,
+//                       color: Colors.blue,
+//                       size: 18,
+//                     ),
+//                   _ActionButton(
+//                     onTap: () => _navigateToView(context),
+//                     icon: Icons.visibility,
+//                     color: const Color(0xFF970BFB),
+//                     size: 18,
+//                   ),
+//                 ],
+//               ),
+//             ],
+//           ),
+//         ),
+//         const Divider(height: 1, color: Color(0xFFEEEEEE)),
+//       ],
+//     );
+//   }
+// }
+
 class _HistoryRow extends StatelessWidget {
   final Booking booking;
   final VoidCallback onRefresh;
-  final bool showTransferIcon; // Add this parameter
+  final bool showTransferIcon;
 
   const _HistoryRow({
     required this.booking,
     required this.onRefresh,
-    this.showTransferIcon = true, // Default to true for backward compatibility
+    this.showTransferIcon = true,
   });
 
   String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
@@ -1639,8 +2808,124 @@ class _HistoryRow extends StatelessWidget {
     }
   }
 
-  String _getFormattedAmount() {
+  String _getDisplayAmount() {
+    // Get payment history
+    final paymentHistory = booking.paymentHistory;
+
+    // If no payment history exists, show total amount
+    if (paymentHistory.isEmpty) {
+      return '₹${booking.totalAmount}';
+    }
+
+    // Check if there's any pending/partial payment in history
+    PaymentHistory? lastPendingPayment;
+    PaymentHistory? lastPartialPayment;
+
+    for (var payment in paymentHistory.reversed) {
+      if (payment.status.toLowerCase() == 'pending') {
+        lastPendingPayment = payment;
+        break;
+      } else if (payment.status.toLowerCase() == 'partial') {
+        lastPartialPayment = payment;
+        break;
+      }
+    }
+
+    // If there's a pending payment (not started yet)
+    if (lastPendingPayment != null) {
+      // Check current month payment status
+      if (booking.currentMonthPaymentStatus?.toLowerCase() == 'paid') {
+        return 'No Due';
+      } else {
+        // Show monthly advance amount
+        return 'Due';
+      }
+    }
+
+    // If there's a partial payment
+    if (lastPartialPayment != null) {
+      final remainingAmount = lastPartialPayment.remainingAmount;
+      final paidAmount = lastPartialPayment.amount;
+
+      if (remainingAmount > 0) {
+        return '₹$paidAmount / ₹${paidAmount + remainingAmount}';
+      }
+    }
+
+    // Check if all payments are completed
+    bool allPaid = paymentHistory.every(
+      (payment) => payment.status.toLowerCase() == 'paid',
+    );
+
+    if (allPaid) {
+      // Check current month status
+      if (booking.currentMonthPaymentStatus?.toLowerCase() == 'paid') {
+        return 'No Due';
+      } else {
+        // Check if it's a new month and payment not made yet
+        // Show monthly advance amount
+        return '₹${booking.monthlyAdvance}';
+      }
+    }
+
+    // Default: show total amount
     return '₹${booking.totalAmount}';
+  }
+
+  String _getDisplayAmountDetail() {
+    // Get payment history
+    final paymentHistory = booking.paymentHistory;
+
+    // If no payment history exists
+    if (paymentHistory.isEmpty) {
+      return '';
+    }
+
+    // Check if there's any pending/partial payment in history
+    PaymentHistory? lastPendingPayment;
+    PaymentHistory? lastPartialPayment;
+
+    for (var payment in paymentHistory.reversed) {
+      if (payment.status.toLowerCase() == 'pending') {
+        lastPendingPayment = payment;
+        break;
+      } else if (payment.status.toLowerCase() == 'partial') {
+        lastPartialPayment = payment;
+        break;
+      }
+    }
+
+    // If there's a pending payment (not started yet)
+    if (lastPendingPayment != null) {
+      if (booking.currentMonthPaymentStatus?.toLowerCase() != 'paid') {
+        return 'Monthly Rent: ₹${booking.monthlyAdvance}';
+      }
+      return '';
+    }
+
+    // If there's a partial payment
+    if (lastPartialPayment != null) {
+      final remainingAmount = lastPartialPayment.remainingAmount;
+      final paidAmount = lastPartialPayment.amount;
+
+      if (remainingAmount > 0) {
+        return 'Paid: ₹$paidAmount | Due: ₹$remainingAmount';
+      }
+    }
+
+    // Check if all payments are completed
+    bool allPaid = paymentHistory.every(
+      (payment) => payment.status.toLowerCase() == 'paid',
+    );
+
+    if (allPaid) {
+      if (booking.currentMonthPaymentStatus?.toLowerCase() != 'paid') {
+        return 'Next Payment: ₹${booking.monthlyAdvance}';
+      }
+      return '';
+    }
+
+    return '';
   }
 
   Future<void> _makeCall(BuildContext context) async {
@@ -1688,6 +2973,9 @@ class _HistoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final displayAmount = _getDisplayAmount();
+    final displayDetail = _getDisplayAmountDetail();
+
     return Column(
       children: [
         Padding(
@@ -1711,11 +2999,13 @@ class _HistoryRow extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      _getFormattedAmount(),
-                      style: const TextStyle(
+                      displayAmount,
+                      style: TextStyle(
                         fontSize: 11,
-                        color: Colors.black54,
                         fontWeight: FontWeight.w500,
+                        color: displayAmount == 'No Due'
+                            ? Colors.green
+                            : Colors.black54,
                       ),
                     ),
                   ],
@@ -1751,6 +3041,29 @@ class _HistoryRow extends StatelessWidget {
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
+                        if (displayDetail.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _getPaymentStatusColor(
+                                booking.currentMonthPaymentStatus,
+                              ).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              displayDetail,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w600,
+                                color: _getPaymentStatusColor(
+                                  booking.currentMonthPaymentStatus,
+                                ),
+                              ),
+                            ),
+                          ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 6,
@@ -1817,7 +3130,6 @@ class _HistoryRow extends StatelessWidget {
                     color: Colors.green,
                     size: 18,
                   ),
-                  // Conditionally show transfer button
                   if (showTransferIcon)
                     _ActionButton(
                       onTap: () => _showTransferPopup(context),

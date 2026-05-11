@@ -24,6 +24,34 @@ class CameraProvider extends ChangeNotifier {
 
   // ── Add Camera ───────────────────────────────────────────────────────────────
 
+  // Future<bool> addCamera({
+  //   required String hostelId,
+  //   required CameraPayload payload,
+  // }) async {
+  //   _setState(CameraState.loading);
+  //   try {
+  //     final response = await _service.addCamera(
+  //       hostelId: hostelId,
+  //       payload: payload,
+  //     );
+
+  //     print("pppppppppppppppppppppp${response.success}");
+  //     if (response.success) {
+  //       _cameras.add(response.camera!);
+  //       _setState(CameraState.success);
+  //       print("yyyyyyyyyyyyyyyyyyyyy${response.success}");
+
+  //       return response.success;
+  //     } else {
+  //       _setError(response.message);
+  //       return response.success;
+  //     }
+  //   } catch (e) {
+  //     _setError(e.toString());
+  //     return false;
+  //   }
+  // }
+
   Future<bool> addCamera({
     required String hostelId,
     required CameraPayload payload,
@@ -34,8 +62,42 @@ class CameraProvider extends ChangeNotifier {
         hostelId: hostelId,
         payload: payload,
       );
-      if (response.success && response.camera != null) {
-        _cameras.add(response.camera!);
+
+      print("Response success: ${response.success}");
+      print("Response message: ${response.message}");
+      print("Camera from response: ${response.camera}");
+      print("Cameras list from response: ${response.cameras.length}");
+
+      if (response.success) {
+        // Case 1: Response has cameras list
+        if (response.cameras.isNotEmpty) {
+          // Add all new cameras (avoid duplicates)
+          for (var newCamera in response.cameras) {
+            if (!_cameras.any((c) => c.cameraId == newCamera.cameraId)) {
+              _cameras.add(newCamera);
+              print(
+                "Added new camera: ${newCamera.name} - ${newCamera.cameraId}",
+              );
+            } else {
+              // Update existing camera
+              final index = _cameras.indexWhere(
+                (c) => c.cameraId == newCamera.cameraId,
+              );
+              if (index != -1) {
+                _cameras[index] = newCamera;
+                print("Updated existing camera: ${newCamera.name}");
+              }
+            }
+          }
+        }
+        // Case 2: Response has single camera
+        else if (response.camera != null) {
+          if (!_cameras.any((c) => c.cameraId == response.camera!.cameraId)) {
+            _cameras.add(response.camera!);
+            print("Added camera: ${response.camera!.name}");
+          }
+        }
+
         _setState(CameraState.success);
         return true;
       } else {
@@ -43,6 +105,7 @@ class CameraProvider extends ChangeNotifier {
         return false;
       }
     } catch (e) {
+      print("Error adding camera: $e");
       _setError(e.toString());
       return false;
     }
@@ -93,8 +156,7 @@ class CameraProvider extends ChangeNotifier {
         payload: payload,
       );
       if (response.success && response.camera != null) {
-        final index =
-            _cameras.indexWhere((c) => c.cameraId == cameraId);
+        final index = _cameras.indexWhere((c) => c.cameraId == cameraId);
         if (index != -1) {
           _cameras[index] = response.camera!;
         }
