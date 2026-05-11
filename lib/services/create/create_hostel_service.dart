@@ -6,6 +6,23 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 
 class HostelService {
+  // Future<CreateHostelResponse> createHostel(HostelRequest request) async {
+  //   final uri = Uri.parse(ApiConstant.createHostel);
+  //   final multipartRequest = http.MultipartRequest('POST', uri);
+
+  //   multipartRequest.fields.addAll(request.toFormFields());
+
+  //   await _attachImages(multipartRequest, request.imagePaths);
+
+  //   final streamedResponse = await multipartRequest.send();
+  //   final response = await http.Response.fromStream(streamedResponse);
+
+  //   _assertSuccess(response, 'createHostel');
+
+  //   final json = jsonDecode(response.body) as Map<String, dynamic>;
+  //   return CreateHostelResponse.fromJson(json);
+  // }
+
   Future<CreateHostelResponse> createHostel(HostelRequest request) async {
     final uri = Uri.parse(ApiConstant.createHostel);
     final multipartRequest = http.MultipartRequest('POST', uri);
@@ -14,8 +31,35 @@ class HostelService {
 
     await _attachImages(multipartRequest, request.imagePaths);
 
+    // 🔥 PRINT CREATE REQUEST DATA
+    print('===== CREATE HOSTEL REQUEST START =====');
+    print('METHOD: ${multipartRequest.method}');
+    print('URL: ${multipartRequest.url}');
+
+    // Print fields
+    print('FIELDS:');
+    multipartRequest.fields.forEach((key, value) {
+      print('  $key: $value');
+    });
+
+    // Print files
+    print('FILES:');
+    for (var file in multipartRequest.files) {
+      print('  Field: ${file.field}');
+      print('  File name: ${file.filename}');
+      print('  Content type: ${file.contentType}');
+      print('  Size: ${file.length}');
+    }
+    print('===== CREATE HOSTEL REQUEST END =====');
+
     final streamedResponse = await multipartRequest.send();
     final response = await http.Response.fromStream(streamedResponse);
+
+    // 🔥 PRINT CREATE RESPONSE
+    print('===== CREATE HOSTEL RESPONSE =====');
+    print('Status Code: ${response.statusCode}');
+    print('Response Body: ${response.body}');
+    print('===== CREATE HOSTEL RESPONSE END =====');
 
     _assertSuccess(response, 'createHostel');
 

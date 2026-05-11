@@ -1,55 +1,5 @@
 import 'dart:convert';
 
-// class SharingOption {
-//   final String shareType;
-//   final String? type;
-
-//   final double? monthlyPrice;
-//   final double? dailyPrice;
-
-//   final double? acMonthlyPrice;
-//   final double? acDailyPrice;
-//   final double? nonAcMonthlyPrice;
-//   final double? nonAcDailyPrice;
-
-//   const SharingOption({
-//     required this.shareType,
-//     this.type,
-//     this.monthlyPrice,
-//     this.dailyPrice,
-//     this.acMonthlyPrice,
-//     this.acDailyPrice,
-//     this.nonAcMonthlyPrice,
-//     this.nonAcDailyPrice,
-//   });
-
-//   factory SharingOption.fromJson(Map<String, dynamic> json) {
-//     return SharingOption(
-//       shareType: json['shareType'] as String? ?? '',
-//       type: json['type'] as String?,
-//       monthlyPrice: _toDouble(json['monthlyPrice']),
-//       dailyPrice: _toDouble(json['dailyPrice']),
-//       acMonthlyPrice: _toDouble(json['acMonthlyPrice']),
-//       acDailyPrice: _toDouble(json['acDailyPrice']),
-//       nonAcMonthlyPrice: _toDouble(json['nonAcMonthlyPrice']),
-//       nonAcDailyPrice: _toDouble(json['nonAcDailyPrice']),
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() {
-//     return {
-//       if (type != null) 'type': type,
-//       'shareType': shareType,
-//       if (monthlyPrice != null) 'monthlyPrice': monthlyPrice,
-//       if (dailyPrice != null) 'dailyPrice': dailyPrice,
-//       if (acMonthlyPrice != null) 'acMonthlyPrice': acMonthlyPrice,
-//       if (acDailyPrice != null) 'acDailyPrice': acDailyPrice,
-//       if (nonAcMonthlyPrice != null) 'nonAcMonthlyPrice': nonAcMonthlyPrice,
-//       if (nonAcDailyPrice != null) 'nonAcDailyPrice': nonAcDailyPrice,
-//     };
-//   }
-// }
-
 class SharingOption {
   final String shareType;
   final String? type;
@@ -131,131 +81,6 @@ class HostelRooms {
   };
 }
 
-// // ── Main Hostel model ──────────────────────────────────────────────────────
-// class Hostel {
-//   final String id;
-//   final String? categoryId;
-//   final String? adminId;
-//   final String? vendorId;
-//   final String name;
-//   final double rating;
-//   final String address;
-//   final double monthlyAdvance;
-//   final double latitude;
-//   final double longitude;
-//   final List<String> type;
-//   final List<SharingOption> sharings;
-//   final HostelRooms? rooms;
-//   final List<String> images;
-//   final DateTime? createdAt;
-//   final String? qrUrl; // ← ADDED: from API response "qrUrl" field
-//   final String? categoryName;
-
-//   const Hostel({
-//     required this.id,
-//     this.categoryId,
-//     this.adminId,
-//     this.vendorId,
-//     required this.name,
-//     required this.rating,
-//     required this.address,
-//     required this.monthlyAdvance,
-//     required this.latitude,
-//     required this.longitude,
-//     this.type = const [],
-//     this.sharings = const [],
-//     this.rooms,
-//     this.images = const [],
-//     this.createdAt,
-//     this.qrUrl, // ← ADDED
-//     this.categoryName,
-//   });
-
-//   factory Hostel.fromJson(Map<String, dynamic> json) {
-//     return Hostel(
-//       id: json['_id'] as String? ?? '',
-//       categoryId: json['categoryId'] as String?,
-//       adminId: json['adminId'] as String?,
-//       vendorId: json['vendorId'] as String?,
-//       name: json['name'] as String? ?? '',
-//       rating: _toDouble(json['rating']) ?? 0.0,
-//       address: json['address'] as String? ?? '',
-//       monthlyAdvance: _toDouble(json['monthlyAdvance']) ?? 0.0,
-//       latitude: _toDouble(json['latitude']) ?? 0.0,
-//       longitude: _toDouble(json['longitude']) ?? 0.0,
-//       type: _parseStringList(json['type']),
-//       sharings: _parseSharings(json['sharings']),
-//       rooms: json['rooms'] != null
-//           ? HostelRooms.fromJson(json['rooms'] as Map<String, dynamic>)
-//           : null,
-//       images: _parseStringList(json['images']),
-//       createdAt: json['createdAt'] != null
-//           ? DateTime.tryParse(json['createdAt'] as String)
-//           : null,
-//       qrUrl: json['qrUrl'] as String?, // ← ADDED
-//       categoryName: json['categoryName'] ?? '',
-//     );
-//   }
-
-//   Map<String, dynamic> toJson() => {
-//     '_id': id,
-//     if (categoryId != null) 'categoryId': categoryId,
-//     if (adminId != null) 'adminId': adminId,
-//     if (vendorId != null) 'vendorId': vendorId,
-//     'name': name,
-//     'rating': rating,
-//     'address': address,
-//     'monthlyAdvance': monthlyAdvance,
-//     'latitude': latitude,
-//     'longitude': longitude,
-//     if (type.isNotEmpty) 'type': type,
-//     if (sharings.isNotEmpty)
-//       'sharings': sharings.map((e) => e.toJson()).toList(),
-//     if (rooms != null) 'rooms': rooms!.toJson(),
-//     'images': images,
-//     if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
-//     if (qrUrl != null) 'qrUrl': qrUrl, // ← ADDED
-//   };
-
-//   Hostel copyWith({
-//     String? id,
-//     String? categoryId,
-//     String? adminId,
-//     String? vendorId,
-//     String? name,
-//     double? rating,
-//     String? address,
-//     double? monthlyAdvance,
-//     double? latitude,
-//     double? longitude,
-//     List<String>? type,
-//     List<SharingOption>? sharings,
-//     HostelRooms? rooms,
-//     List<String>? images,
-//     DateTime? createdAt,
-//     String? qrUrl, // ← ADDED
-//   }) {
-//     return Hostel(
-//       id: id ?? this.id,
-//       categoryId: categoryId ?? this.categoryId,
-//       adminId: adminId ?? this.adminId,
-//       vendorId: vendorId ?? this.vendorId,
-//       name: name ?? this.name,
-//       rating: rating ?? this.rating,
-//       address: address ?? this.address,
-//       monthlyAdvance: monthlyAdvance ?? this.monthlyAdvance,
-//       latitude: latitude ?? this.latitude,
-//       longitude: longitude ?? this.longitude,
-//       type: type ?? this.type,
-//       sharings: sharings ?? this.sharings,
-//       rooms: rooms ?? this.rooms,
-//       images: images ?? this.images,
-//       createdAt: createdAt ?? this.createdAt,
-//       qrUrl: qrUrl ?? this.qrUrl, // ← ADDED
-//     );
-//   }
-// }
-
 class Hostel {
   final String id;
   final String name;
@@ -273,6 +98,7 @@ class Hostel {
   final String furnishing; // Add this
   final String qrUrl; // Add if not present
   final HostelRooms? rooms;
+  final List<String> roomNumbers;
 
   Hostel({
     required this.id,
@@ -291,6 +117,7 @@ class Hostel {
     this.furnishing = '', // Default empty string
     this.qrUrl = '',
     this.rooms,
+    this.roomNumbers = const [], // Default empty list
   });
 
   factory Hostel.fromJson(Map<String, dynamic> json) {
@@ -313,6 +140,14 @@ class Hostel {
       }
     }
 
+    // Parse roomNumbers
+    List<String> roomNumbersList = [];
+    if (json['roomNumbers'] != null) {
+      if (json['roomNumbers'] is List) {
+        roomNumbersList = List<String>.from(json['roomNumbers']);
+      }
+    }
+
     return Hostel(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
@@ -332,6 +167,7 @@ class Hostel {
       rooms: json['rooms'] != null
           ? HostelRooms.fromJson(json['rooms'] as Map<String, dynamic>)
           : null,
+      roomNumbers: roomNumbersList, // Add this line
     );
   }
 
@@ -417,6 +253,7 @@ class HostelRequest {
   final List<String> imagePaths;
   final List<String> features;
   final String furnishing;
+  final List<String> roomNumbers;
 
   const HostelRequest({
     required this.categoryId,
@@ -432,6 +269,7 @@ class HostelRequest {
     this.imagePaths = const [],
     this.features = const [],
     this.furnishing = '',
+    this.roomNumbers = const [],
   });
 
   Map<String, String> toFormFields() {
@@ -450,6 +288,7 @@ class HostelRequest {
       'sharings': _sharingListToJsonString(sharings),
       'features': jsonEncode(features),
       'furnishing': furnishing,
+      'roomNumbers': jsonEncode(roomNumbers), // Add this line
     };
   }
 

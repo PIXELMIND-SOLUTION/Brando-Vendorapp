@@ -709,6 +709,10 @@ class _HomeScreenState extends State<HomeScreen> {
       MaterialPageRoute(
         builder: (_) => HifiDetailsScreen(
           onSave: (request) async {
+            print(
+              '🔴 DEBUG: request.roomNumbers in create = ${request.roomNumbers}',
+            ); // Add this
+
             final vendorId = await SharedPreferenceHelper.getVendorId();
             if (vendorId == null) return;
             final finalRequest = HostelRequest(
@@ -725,7 +729,12 @@ class _HomeScreenState extends State<HomeScreen> {
               imagePaths: request.imagePaths,
               features: request.features, // Add this
               furnishing: request.furnishing, // Add this
+              roomNumbers: request.roomNumbers, // ⬅️ ADD THIS LINE
             );
+            print(
+              '🔴 DEBUG: finalRequest.roomNumbers = ${finalRequest.roomNumbers}',
+            ); // Add this
+
             if (!mounted) return;
             final success = await context.read<HostelProvider>().createHostel(
               finalRequest,
@@ -763,6 +772,7 @@ class _HomeScreenState extends State<HomeScreen> {
               imagePaths: request.imagePaths,
               features: request.features, // Add this
               furnishing: request.furnishing, // Add this
+              roomNumbers: request.roomNumbers,
             );
 
             final success = await context.read<HostelProvider>().updateHostel(
@@ -5668,6 +5678,39 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
   final List<XFile> _hostelImages = [];
   final ImagePicker _picker = ImagePicker();
 
+  final List<String> _roomNumbers = [];
+  final TextEditingController _roomNumberController = TextEditingController();
+  String _selectedPrefix = ''; // For alphabet prefix like 'A', 'B', 'C'
+  final List<String> _alphabetOptions = [
+    '',
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H',
+    'I',
+    'J',
+    'K',
+    'L',
+    'M',
+    'N',
+    'O',
+    'P',
+    'Q',
+    'R',
+    'S',
+    'T',
+    'U',
+    'V',
+    'W',
+    'X',
+    'Y',
+    'Z',
+  ];
+
   late TextEditingController _titleController,
       _addressController,
       _advanceController,
@@ -5831,6 +5874,248 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     _loadCategories();
   }
 
+  void _addRoomNumber() {
+    final input = _roomNumberController.text.trim();
+    if (input.isEmpty) return;
+
+    // Check if it's a range (contains '-')
+    if (input.contains('-')) {
+      _addRoomRange(input);
+    } else {
+      // Single room number
+      final roomNumber = _selectedPrefix.isNotEmpty
+          ? '${_selectedPrefix}$input'
+          : input;
+      if (!_roomNumbers.contains(roomNumber)) {
+        setState(() {
+          _roomNumbers.add(roomNumber);
+          _roomNumberController.clear();
+        });
+      } else {
+        _showSnackBar('Room number already exists');
+      }
+    }
+  }
+
+  void _addRoomRange(String range) {
+    final parts = range.split('-');
+    if (parts.length != 2) {
+      _showSnackBar('Invalid range format. Use format: 101-118');
+      return;
+    }
+
+    final startStr = parts[0].trim();
+    final endStr = parts[1].trim();
+
+    // Try to parse as numbers
+    final startNum = int.tryParse(startStr);
+    final endNum = int.tryParse(endStr);
+
+    if (startNum != null && endNum != null) {
+      // Numeric range
+      if (startNum >= endNum) {
+        _showSnackBar('Start number must be less than end number');
+        return;
+      }
+
+      if (endNum - startNum > 100) {
+        _showSnackBar('Cannot add more than 100 rooms at once');
+        return;
+      }
+
+      final newRooms = <String>[];
+      for (int i = startNum; i <= endNum; i++) {
+        final roomNumber = _selectedPrefix.isNotEmpty
+            ? '${_selectedPrefix}$i'
+            : i.toString();
+        if (!_roomNumbers.contains(roomNumber) &&
+            !newRooms.contains(roomNumber)) {
+          newRooms.add(roomNumber);
+        }
+      }
+
+      if (newRooms.isNotEmpty) {
+        setState(() {
+          _roomNumbers.addAll(newRooms);
+          _roomNumberController.clear();
+        });
+        _showSnackBar('Added ${newRooms.length} rooms');
+      } else {
+        _showSnackBar('No new rooms added (all already exist)');
+      }
+    } else {
+      // Handle alphanumeric or alphabet range (e.g., A1-A10 or G1-G20)
+      _addAlphaNumericRange(startStr, endStr);
+    }
+  }
+
+  void _addAlphaNumericRange(String start, String end) {
+    // Extract prefix and number from start and end
+    final startMatch = RegExp(r'([A-Za-z]*)(\d+)').firstMatch(start);
+    final endMatch = RegExp(r'([A-Za-z]*)(\d+)').firstMatch(end);
+
+    if (startMatch == null || endMatch == null) {
+      _showSnackBar('Invalid range format. Use format: 101-118 or A1-A10');
+      return;
+    }
+
+    final startPrefix = startMatch.group(1) ?? '';
+    final startNum = int.tryParse(startMatch.group(2)!);
+    final endPrefix = endMatch.group(1) ?? '';
+    final endNum = int.tryParse(endMatch.group(2)!);
+
+    if (startNum == null || endNum == null) {
+      _showSnackBar('Invalid number format in range');
+      return;
+    }
+
+    if (startPrefix != endPrefix) {
+      _showSnackBar('Prefixes must match in range (e.g., A1-A10)');
+      return;
+    }
+
+    if (startNum >= endNum) {
+      _showSnackBar('Start number must be less than end number');
+      return;
+    }
+
+    if (endNum - startNum > 100) {
+      _showSnackBar('Cannot add more than 100 rooms at once');
+      return;
+    }
+
+    final newRooms = <String>[];
+    for (int i = startNum; i <= endNum; i++) {
+      final roomNumber = '$startPrefix$i';
+      if (!_roomNumbers.contains(roomNumber) &&
+          !newRooms.contains(roomNumber)) {
+        newRooms.add(roomNumber);
+      }
+    }
+
+    if (newRooms.isNotEmpty) {
+      setState(() {
+        _roomNumbers.addAll(newRooms);
+        _roomNumberController.clear();
+      });
+      _showSnackBar('Added ${newRooms.length} rooms');
+    } else {
+      _showSnackBar('No new rooms added (all already exist)');
+    }
+  }
+
+  void _addBatchRoomNumbers() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Multiple Rooms'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Enter room numbers separated by commas:'),
+            const SizedBox(height: 8),
+            TextField(
+              controller: TextEditingController(),
+              decoration: const InputDecoration(
+                hintText: 'e.g., 101, 102, 103, 201, 202',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: (value) {
+                final rooms = value
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList();
+                final newRooms = <String>[];
+                for (var room in rooms) {
+                  final finalRoom = _selectedPrefix.isNotEmpty
+                      ? '${_selectedPrefix}$room'
+                      : room;
+                  if (!_roomNumbers.contains(finalRoom)) {
+                    newRooms.add(finalRoom);
+                  }
+                }
+                if (newRooms.isNotEmpty) {
+                  setState(() {
+                    _roomNumbers.addAll(newRooms);
+                  });
+                  _showSnackBar('Added ${newRooms.length} rooms');
+                }
+                Navigator.pop(ctx);
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+        backgroundColor: message.contains('Added') ? Colors.green : Colors.red,
+      ),
+    );
+  }
+
+  void _removeRoomNumber(String roomNumber) {
+    setState(() {
+      _roomNumbers.remove(roomNumber);
+    });
+  }
+
+  // Future<void> _loadCategories() async {
+  //   setState(() => _isLoadingCategories = true);
+  //   final categoryProvider = Provider.of<CategoryProvider>(
+  //     context,
+  //     listen: false,
+  //   );
+  //   await categoryProvider.fetchCategories();
+
+  //   if (widget.existingHostel != null && mounted) {
+  //     final category = categoryProvider.categories.firstWhere(
+  //       (cat) => cat.id == widget.existingHostel!.categoryId,
+  //       orElse: () => categoryProvider.categories.isNotEmpty
+  //           ? categoryProvider.categories.first
+  //           : throw Exception('No categories'),
+  //     );
+  //     setState(() {
+  //       _selectedCategory = category;
+  //       _rebuildPriceControllers();
+  //     });
+
+  //     // Load features and furnishing AFTER category is set - use actual API values
+  //     if (_shouldShowFurnishingAndFeatures) {
+  //       setState(() {
+  //         // Load existing features from API
+  //         if (widget.existingHostel!.features.isNotEmpty) {
+  //           _features.clear();
+  //           _features.addAll(widget.existingHostel!.features);
+  //         } else {
+  //           _features.clear();
+  //         }
+
+  //         // Load existing furnishing from API (not default)
+  //         if (widget.existingHostel!.furnishing.isNotEmpty) {
+  //           _selectedFurnishing = widget.existingHostel!.furnishing;
+  //         } else {
+  //           _selectedFurnishing = ''; // Empty, will show nothing selected
+  //         }
+  //       });
+  //     }
+  //   }
+
+  //   if (mounted) setState(() => _isLoadingCategories = false);
+  // }
+
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
     final categoryProvider = Provider.of<CategoryProvider>(
@@ -5850,6 +6135,15 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         _selectedCategory = category;
         _rebuildPriceControllers();
       });
+
+      // Load room numbers from existing hostel
+      if (widget.existingHostel!.roomNumbers != null &&
+          widget.existingHostel!.roomNumbers.isNotEmpty) {
+        setState(() {
+          _roomNumbers.clear();
+          _roomNumbers.addAll(widget.existingHostel!.roomNumbers);
+        });
+      }
 
       // Load features and furnishing AFTER category is set - use actual API values
       if (_shouldShowFurnishingAndFeatures) {
@@ -5874,6 +6168,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
     if (mounted) setState(() => _isLoadingCategories = false);
   }
+
   // Future<void> _loadCategories() async {
   //   setState(() => _isLoadingCategories = true);
   //   final categoryProvider = Provider.of<CategoryProvider>(
@@ -5970,6 +6265,8 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     _latController.dispose();
     _lngController.dispose();
     _featureController.dispose();
+    _roomNumberController.dispose(); // Add this line
+
     for (var c in [
       ..._monthlyNonAc.values,
       ..._monthlyAc.values,
@@ -6006,6 +6303,80 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       _features.remove(feature);
     });
   }
+
+  // void _saveAndGoBack() {
+  //   if (_selectedCategory == null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please select a category'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   // Build sharings based on category type
+  //   final List<SharingOption> sharings = [];
+
+  //   for (var key in _shareKeys) {
+  //     final acMonthly = _parsePrice(_monthlyAc[key]);
+  //     final acDaily = _parsePrice(_dailyAc[key]);
+  //     final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
+  //     final nonAcDaily = _parsePrice(_dailyNonAc[key]);
+
+  //     // Add AC sharing if any AC price is set
+  //     if (acMonthly > 0 || acDaily > 0) {
+  //       sharings.add(
+  //         SharingOption(
+  //           shareType: key,
+  //           type: 'AC',
+  //           acMonthlyPrice: acMonthly,
+  //           acDailyPrice: acDaily,
+  //           nonAcMonthlyPrice: 0,
+  //           nonAcDailyPrice: 0,
+  //           monthlyPrice: acMonthly,
+  //           dailyPrice: acDaily,
+  //         ),
+  //       );
+  //     }
+
+  //     // Add Non-AC sharing if any Non-AC price is set
+  //     if (nonAcMonthly > 0 || nonAcDaily > 0) {
+  //       sharings.add(
+  //         SharingOption(
+  //           shareType: key,
+  //           type: 'Non-AC',
+  //           acMonthlyPrice: 0,
+  //           acDailyPrice: 0,
+  //           nonAcMonthlyPrice: nonAcMonthly,
+  //           nonAcDailyPrice: nonAcDaily,
+  //           monthlyPrice: nonAcMonthly,
+  //           dailyPrice: nonAcDaily,
+  //         ),
+  //       );
+  //     }
+  //   }
+
+  //   final imagePaths = _hostelImages.map((x) => x.path).toList();
+  //   final request = HostelRequest(
+  //     categoryId: _selectedCategory!.id,
+  //     vendorId: '',
+  //     name: _titleController.text.trim(),
+  //     rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
+  //     address: _addressController.text.trim(),
+  //     monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
+  //     latitude: double.tryParse(_latController.text.trim()) ?? 0,
+  //     longitude: double.tryParse(_lngController.text.trim()) ?? 0,
+  //     isAc: false,
+  //     sharings: sharings,
+  //     imagePaths: imagePaths,
+  //     features: _shouldShowFurnishingAndFeatures ? _features : [],
+  //     furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
+  //   );
+
+  //   widget.onSave(request);
+  //   Navigator.pop(context);
+  // }
 
   void _saveAndGoBack() {
     if (_selectedCategory == null) {
@@ -6075,6 +6446,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       imagePaths: imagePaths,
       features: _shouldShowFurnishingAndFeatures ? _features : [],
       furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
+      roomNumbers: _roomNumbers, // Add this line
     );
 
     widget.onSave(request);
@@ -6707,7 +7079,479 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
               ),
             ),
 
-            // ── Image picker ──────────────────────────────────────
+            // // ── Image picker ──────────────────────────────────────
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            //   child: SizedBox(
+            //     height: 80,
+            //     child: ListView(
+            //       scrollDirection: Axis.horizontal,
+            //       children: [
+            //         ..._hostelImages.map(
+            //           (img) => Stack(
+            //             children: [
+            //               Padding(
+            //                 padding: const EdgeInsets.only(right: 8),
+            //                 child: ClipRRect(
+            //                   borderRadius: BorderRadius.circular(8),
+            //                   child: Image.file(
+            //                     File(img.path),
+            //                     width: 80,
+            //                     height: 80,
+            //                     fit: BoxFit.cover,
+            //                   ),
+            //                 ),
+            //               ),
+            //               Positioned(
+            //                 right: 10,
+            //                 top: 2,
+            //                 child: GestureDetector(
+            //                   onTap: () =>
+            //                       setState(() => _hostelImages.remove(img)),
+            //                   child: Container(
+            //                     decoration: const BoxDecoration(
+            //                       color: Colors.red,
+            //                       shape: BoxShape.circle,
+            //                     ),
+            //                     child: const Icon(
+            //                       Icons.close,
+            //                       color: Colors.white,
+            //                       size: 14,
+            //                     ),
+            //                   ),
+            //                 ),
+            //               ),
+            //             ],
+            //           ),
+            //         ),
+            //         if (widget.existingHostel != null)
+            //           ...widget.existingHostel!.images.map(
+            //             (url) => Padding(
+            //               padding: const EdgeInsets.only(right: 8),
+            //               child: ClipRRect(
+            //                 borderRadius: BorderRadius.circular(8),
+            //                 child: Image.network(
+            //                   url,
+            //                   width: 80,
+            //                   height: 80,
+            //                   fit: BoxFit.cover,
+            //                   errorBuilder: (_, __, ___) => Container(
+            //                     width: 80,
+            //                     height: 80,
+            //                     color: Colors.grey.shade200,
+            //                     child: const Icon(
+            //                       Icons.broken_image,
+            //                       color: Colors.grey,
+            //                     ),
+            //                   ),
+            //                 ),
+            //               ),
+            //             ),
+            //           ),
+
+            //         // ── Room Numbers section ──────────────────────────────────────
+            //         Padding(
+            //           padding: const EdgeInsets.symmetric(
+            //             horizontal: 16,
+            //             vertical: 8,
+            //           ),
+            //           child: Column(
+            //             crossAxisAlignment: CrossAxisAlignment.start,
+            //             children: [
+            //               const Text(
+            //                 'Room Numbers',
+            //                 style: TextStyle(
+            //                   fontWeight: FontWeight.bold,
+            //                   fontSize: 14,
+            //                   color: Color(0xFFE53935),
+            //                 ),
+            //               ),
+            //               const SizedBox(height: 8),
+            //               Row(
+            //                 children: [
+            //                   Expanded(
+            //                     child: TextField(
+            //                       controller: _roomNumberController,
+            //                       decoration: InputDecoration(
+            //                         hintText: 'e.g., 101, 102, G1, 202',
+            //                         hintStyle: const TextStyle(fontSize: 13),
+            //                         contentPadding: const EdgeInsets.symmetric(
+            //                           horizontal: 12,
+            //                           vertical: 12,
+            //                         ),
+            //                         enabledBorder: OutlineInputBorder(
+            //                           borderRadius: BorderRadius.circular(8),
+            //                           borderSide: BorderSide(
+            //                             color: Colors.grey.shade300,
+            //                           ),
+            //                         ),
+            //                         focusedBorder: OutlineInputBorder(
+            //                           borderRadius: BorderRadius.circular(8),
+            //                           borderSide: const BorderSide(
+            //                             color: Color(0xFFE53935),
+            //                           ),
+            //                         ),
+            //                       ),
+            //                       onSubmitted: (_) => _addRoomNumber(),
+            //                     ),
+            //                   ),
+            //                   const SizedBox(width: 8),
+            //                   GestureDetector(
+            //                     onTap: _addRoomNumber,
+            //                     child: Container(
+            //                       padding: const EdgeInsets.all(12),
+            //                       decoration: BoxDecoration(
+            //                         color: const Color(0xFFE53935),
+            //                         borderRadius: BorderRadius.circular(8),
+            //                       ),
+            //                       child: const Icon(
+            //                         Icons.add,
+            //                         color: Colors.white,
+            //                         size: 24,
+            //                       ),
+            //                     ),
+            //                   ),
+            //                 ],
+            //               ),
+            //               const SizedBox(height: 12),
+            //               if (_roomNumbers.isNotEmpty)
+            //                 Wrap(
+            //                   spacing: 8,
+            //                   runSpacing: 8,
+            //                   children: _roomNumbers.map((roomNumber) {
+            //                     return Container(
+            //                       padding: const EdgeInsets.symmetric(
+            //                         horizontal: 10,
+            //                         vertical: 5,
+            //                       ),
+            //                       decoration: BoxDecoration(
+            //                         color: const Color(0xFFFFF0F0),
+            //                         borderRadius: BorderRadius.circular(16),
+            //                         border: Border.all(
+            //                           color: const Color(0xFFFFCDD2),
+            //                         ),
+            //                       ),
+            //                       child: Row(
+            //                         mainAxisSize: MainAxisSize.min,
+            //                         children: [
+            //                           const Icon(
+            //                             Icons.meeting_room,
+            //                             size: 14,
+            //                             color: Color(0xFFE53935),
+            //                           ),
+            //                           const SizedBox(width: 6),
+            //                           Text(
+            //                             roomNumber,
+            //                             style: const TextStyle(
+            //                               fontSize: 12,
+            //                               color: Color(0xFFE53935),
+            //                             ),
+            //                           ),
+            //                           const SizedBox(width: 6),
+            //                           GestureDetector(
+            //                             onTap: () =>
+            //                                 _removeRoomNumber(roomNumber),
+            //                             child: const Icon(
+            //                               Icons.close,
+            //                               size: 14,
+            //                               color: Colors.grey,
+            //                             ),
+            //                           ),
+            //                         ],
+            //                       ),
+            //                     );
+            //                   }).toList(),
+            //                 ),
+            //               // Add a hint when no room numbers
+            //               if (_roomNumbers.isEmpty)
+            //                 Padding(
+            //                   padding: const EdgeInsets.only(top: 8),
+            //                   child: Text(
+            //                     widget.existingHostel != null &&
+            //                             _roomNumbers.isEmpty
+            //                         ? 'No room numbers added yet. Add room numbers above.'
+            //                         : 'Add room numbers using the + button above.',
+            //                     style: TextStyle(
+            //                       fontSize: 12,
+            //                       color: Colors.grey.shade500,
+            //                       fontStyle: FontStyle.italic,
+            //                     ),
+            //                   ),
+            //                 ),
+            //             ],
+            //           ),
+            //         ),
+            //         const Divider(height: 16, thickness: 1),
+            //         GestureDetector(
+            //           onTap: _pickHostelImage,
+            //           child: Container(
+            //             width: 80,
+            //             height: 80,
+            //             decoration: BoxDecoration(
+            //               color: Colors.grey.shade100,
+            //               borderRadius: BorderRadius.circular(8),
+            //               border: Border.all(color: Colors.grey.shade300),
+            //             ),
+            //             child: const Column(
+            //               mainAxisAlignment: MainAxisAlignment.center,
+            //               children: [
+            //                 Icon(
+            //                   Icons.add_a_photo,
+            //                   size: 24,
+            //                   color: Colors.black54,
+            //                 ),
+            //                 SizedBox(height: 4),
+            //                 Text(
+            //                   'Add Image',
+            //                   style: TextStyle(
+            //                     fontSize: 10,
+            //                     color: Colors.black54,
+            //                   ),
+            //                 ),
+            //               ],
+            //             ),
+            //           ),
+            //         ),
+            //       ],
+            //     ),
+            //   ),
+            // ),
+
+            // ── Room Numbers section (Enhanced) ──────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Room Numbers',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Color(0xFFE53935),
+                        ),
+                      ),
+                      // Batch add button
+                      GestureDetector(
+                        onTap: _addBatchRoomNumbers,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.queue,
+                                size: 14,
+                                color: Colors.blue.shade700,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Batch Add',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Colors.blue.shade700,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Alphabet prefix dropdown (optional)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: _selectedPrefix.isEmpty ? null : _selectedPrefix,
+                        hint: const Text(
+                          'Optional: Select alphabet prefix (A, B, C...)',
+                        ),
+                        items: _alphabetOptions.map((prefix) {
+                          return DropdownMenuItem<String>(
+                            value: prefix.isEmpty ? null : prefix,
+                            child: Text(prefix.isEmpty ? 'None' : prefix),
+                          );
+                        }).toList(),
+                        onChanged: (String? value) {
+                          setState(() {
+                            _selectedPrefix = value ?? '';
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 4),
+
+                  // Input field with hint text showing examples
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            TextField(
+                              controller: _roomNumberController,
+                              decoration: InputDecoration(
+                                hintText: _selectedPrefix.isNotEmpty
+                                    ? 'e.g., ${_selectedPrefix}101, 101-118, or A1-A10'
+                                    : 'e.g., 101, 101-118, or A1-A10',
+                                hintStyle: const TextStyle(fontSize: 12),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 12,
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFE53935),
+                                  ),
+                                ),
+                              ),
+                              onSubmitted: (_) => _addRoomNumber(),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '💡 Tip: Use range like 101-118 to add multiple rooms',
+                              style: TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey.shade500,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _addRoomNumber,
+                        child: Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE53935),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Display room numbers as chips
+                  if (_roomNumbers.isNotEmpty)
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _roomNumbers.map((roomNumber) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF0F0),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFFFCDD2)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.meeting_room,
+                                size: 14,
+                                color: Color(0xFFE53935),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                roomNumber,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFFE53935),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              GestureDetector(
+                                onTap: () => _removeRoomNumber(roomNumber),
+                                child: const Icon(
+                                  Icons.close,
+                                  size: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+
+                  // Counter for total rooms
+                  if (_roomNumbers.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        'Total rooms: ${_roomNumbers.length}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+
+                  // Add a hint when no room numbers
+                  if (_roomNumbers.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Text(
+                        widget.existingHostel != null && _roomNumbers.isEmpty
+                            ? 'No room numbers added yet. Add room numbers above.'
+                            : 'Add room numbers using the + button above.\nSupports: Single (101), Range (101-118), Batch (comma-separated)',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade500,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const Divider(height: 16, thickness: 1),
+
+            // ── Image picker section ──────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: SizedBox(
