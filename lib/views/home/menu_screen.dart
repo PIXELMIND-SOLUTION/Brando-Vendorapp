@@ -1,6 +1,8 @@
 import 'package:brando_vendor/helper/shared_preference.dart';
 import 'package:brando_vendor/model/history_model.dart';
 import 'package:brando_vendor/provider/history/history_provider.dart';
+import 'package:brando_vendor/views/home/analysis.dart';
+import 'package:brando_vendor/views/navbar/navbar_screen.dart';
 import 'package:brando_vendor/widgets/app_back_control.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -462,7 +464,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                   ),
                                 ),
                                 DropdownMenuItem(
-                                  value: 'overdue',
+                                  value: 'partial',
                                   child: Row(
                                     children: [
                                       Container(
@@ -474,7 +476,7 @@ class _MenuScreenState extends State<MenuScreen> {
                                         ),
                                       ),
                                       const SizedBox(width: 8),
-                                      const Text('Overdue'),
+                                      const Text('Partial'),
                                     ],
                                   ),
                                 ),
@@ -625,7 +627,9 @@ class _MenuScreenState extends State<MenuScreen> {
         // Search text filter
         if (matches && _searchQuery.isNotEmpty) {
           bool nameMatch =
-              booking.userId?.name?.toLowerCase().contains(_searchQuery) ??
+              booking.personalDetails?.name?.toLowerCase().contains(
+                _searchQuery,
+              ) ??
               false;
           bool roomMatch = booking.roomNo.toLowerCase().contains(_searchQuery);
           bool refMatch = booking.bookingReference.toLowerCase().contains(
@@ -764,7 +768,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 CellIndex.indexByColumnRow(columnIndex: 2, rowIndex: rowIndex),
               )
               .value = TextCellValue(
-            booking.userId?.name ?? 'Unknown',
+            booking.personalDetails?.name ?? 'Unknown',
           );
 
           sheetObject
@@ -772,7 +776,7 @@ class _MenuScreenState extends State<MenuScreen> {
                 CellIndex.indexByColumnRow(columnIndex: 3, rowIndex: rowIndex),
               )
               .value = TextCellValue(
-            booking.userId?.mobileNumber.toString() ?? 'N/A',
+            booking.personalDetails?.mobileNumber.toString() ?? 'N/A',
           );
 
           sheetObject
@@ -923,6 +927,39 @@ class _MenuScreenState extends State<MenuScreen> {
             ),
           ),
           actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => Analysis()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF4CAF50),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14),
+                  elevation: 0,
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.analytics, size: 16),
+                    SizedBox(width: 4),
+                    Text(
+                      'Analysiis',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             // Refresh Button
             Padding(
               padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
@@ -2003,7 +2040,9 @@ class _MenuScreenState extends State<MenuScreen> {
 
             for (var booking in roomData.bookings) {
               // Check if search matches user name, hostel name, or category
-              if (booking.userId?.name?.toLowerCase().contains(_searchQuery) ==
+              if (booking.personalDetails?.name?.toLowerCase().contains(
+                        _searchQuery,
+                      ) ==
                       true ||
                   booking.hostelId?.name?.toLowerCase().contains(
                         _searchQuery,
@@ -2898,7 +2937,7 @@ class _HistoryRow extends StatelessWidget {
     // If there's a pending payment (not started yet)
     if (lastPendingPayment != null) {
       if (booking.currentMonthPaymentStatus?.toLowerCase() != 'paid') {
-        return 'Monthly Rent: ₹${booking.monthlyAdvance}';
+        return 'Monthly Rent: ₹${booking.totalAmount}';
       }
       return '';
     }
@@ -2929,10 +2968,10 @@ class _HistoryRow extends StatelessWidget {
   }
 
   Future<void> _makeCall(BuildContext context) async {
-    if (booking.userId != null) {
+    if (booking.personalDetails != null) {
       final Uri callUri = Uri(
         scheme: 'tel',
-        path: booking.userId!.mobileNumber.toString(),
+        path: booking.personalDetails!.mobileNumber.toString(),
       );
       if (await canLaunchUrl(callUri)) {
         await launchUrl(callUri);
@@ -2940,7 +2979,9 @@ class _HistoryRow extends StatelessWidget {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Could not call ${booking.userId!.mobileNumber}'),
+              content: Text(
+                'Could not call ${booking.personalDetails!.mobileNumber}',
+              ),
               backgroundColor: const Color(0xFFE53935),
             ),
           );
@@ -2954,10 +2995,11 @@ class _HistoryRow extends StatelessWidget {
       context: context,
       barrierColor: Colors.black26,
       builder: (_) => TransferPopup(
-        tenantName: booking.userId?.name ?? 'Tenant',
+        tenantName: booking.personalDetails?.name ?? 'Tenant',
         currentRoom: booking.roomNo,
         bookingId: booking.id,
         onTransferComplete: onRefresh,
+        hostelId: booking.hostelId?.id ?? '', // Pass the hostelId here
       ),
     );
   }
@@ -3019,7 +3061,7 @@ class _HistoryRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      booking.userId?.name ?? 'Unknown',
+                      booking.personalDetails?.name ?? 'Unknown',
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.black87,
@@ -3333,7 +3375,7 @@ class _AddFirstPaymentScreenState extends State<AddFirstPaymentScreen>
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Text(
-          'Add First Payment - ${widget.booking.userId?.name ?? 'Tenant'}',
+          'Add First Payment - ${widget.booking.personalDetails?.name ?? 'Tenant'}',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -4446,7 +4488,7 @@ class _EditPaymentScreenState extends State<EditPaymentScreen>
           leading: const BackButton(color: Colors.black),
           centerTitle: true,
           title: Text(
-            'Payment Details - ${widget.booking.userId?.name ?? 'Tenant'}',
+            'Payment Details - ${widget.booking.personalDetails?.name ?? 'Tenant'}',
             style: const TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.w600,
@@ -4499,7 +4541,7 @@ class _EditPaymentScreenState extends State<EditPaymentScreen>
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Text(
-          'Edit Payment - ${widget.booking.userId?.name ?? 'Tenant'}',
+          'Edit Payment - ${widget.booking.personalDetails?.name ?? 'Tenant'}',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -4973,10 +5015,217 @@ class DeleteConfirmationDialog extends StatelessWidget {
   }
 }
 
+// class TransferPopup extends StatefulWidget {
+//   final String tenantName;
+//   final String currentRoom;
+//   final String bookingId;
+//   final VoidCallback onTransferComplete;
+
+//   const TransferPopup({
+//     super.key,
+//     required this.tenantName,
+//     required this.currentRoom,
+//     required this.bookingId,
+//     required this.onTransferComplete,
+//   });
+
+//   @override
+//   State<TransferPopup> createState() => _TransferPopupState();
+// }
+
+// class _TransferPopupState extends State<TransferPopup> {
+//   final TextEditingController _roomController = TextEditingController();
+//   bool _isLoading = false;
+
+//   @override
+//   void dispose() {
+//     _roomController.dispose();
+//     super.dispose();
+//   }
+
+//   Future<void> _transferRoom() async {
+//     final newRoomNo = _roomController.text.trim();
+
+//     if (newRoomNo.isEmpty) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('Please enter a room number'),
+//           backgroundColor: Color(0xFFE53935),
+//         ),
+//       );
+//       return;
+//     }
+
+//     if (newRoomNo == widget.currentRoom) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('New room number is same as current room'),
+//           backgroundColor: Color(0xFFE53935),
+//         ),
+//       );
+//       return;
+//     }
+
+//     setState(() {
+//       _isLoading = true;
+//     });
+
+//     try {
+//       final response = await http.put(
+//         Uri.parse(
+//           'http://187.127.146.52:2003/api/vendors/changebookingroomno/${widget.bookingId}',
+//         ),
+//         headers: {'Content-Type': 'application/json'},
+//         body: jsonEncode({'roomNo': newRoomNo}),
+//       );
+
+//       if (response.statusCode == 200) {
+//         if (mounted) {
+//           Navigator.pop(context);
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(
+//               content: Text(
+//                 '${widget.tenantName} transferred from Room ${widget.currentRoom} to Room $newRoomNo',
+//               ),
+//               backgroundColor: Colors.green,
+//             ),
+//           );
+//           // Refresh the history
+//           widget.onTransferComplete();
+//         }
+//       } else {
+//         throw Exception('Failed to transfer room');
+//       }
+//     } catch (e) {
+//       if (mounted) {
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text('Error transferring room: $e'),
+//             backgroundColor: const Color(0xFFE53935),
+//           ),
+//         );
+//       }
+//     } finally {
+//       if (mounted) {
+//         setState(() {
+//           _isLoading = false;
+//         });
+//       }
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Dialog(
+//       backgroundColor: Colors.white,
+//       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+//       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+//       child: Padding(
+//         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             const Text(
+//               'Transfer Room',
+//               style: TextStyle(
+//                 color: Color(0xFFF80500),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 20,
+//               ),
+//             ),
+//             const SizedBox(height: 8),
+//             Text(
+//               '${widget.tenantName} - Current Room: ${widget.currentRoom}',
+//               style: const TextStyle(color: Colors.black54, fontSize: 13),
+//             ),
+//             const SizedBox(height: 24),
+//             const Text(
+//               'Enter New Room Number',
+//               style: TextStyle(
+//                 fontWeight: FontWeight.w600,
+//                 fontSize: 14,
+//                 color: Colors.black87,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             TextField(
+//               controller: _roomController,
+//               keyboardType: TextInputType.number,
+//               decoration: InputDecoration(
+//                 hintText: 'Enter room number',
+//                 hintStyle: const TextStyle(fontSize: 14, color: Colors.black54),
+//                 prefixIcon: const Icon(
+//                   Icons.meeting_room,
+//                   size: 20,
+//                   color: Color(0xFFE53935),
+//                 ),
+//                 contentPadding: const EdgeInsets.symmetric(
+//                   horizontal: 16,
+//                   vertical: 14,
+//                 ),
+//                 enabledBorder: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(10),
+//                   borderSide: const BorderSide(
+//                     color: Color(0xFFE0E0E0),
+//                     width: 1,
+//                   ),
+//                 ),
+//                 focusedBorder: OutlineInputBorder(
+//                   borderRadius: BorderRadius.circular(10),
+//                   borderSide: const BorderSide(
+//                     color: Color(0xFFE53935),
+//                     width: 1.5,
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 32),
+//             SizedBox(
+//               width: double.infinity,
+//               height: 48,
+//               child: ElevatedButton(
+//                 onPressed: _isLoading ? null : _transferRoom,
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: const Color(0xFFF80500),
+//                   disabledBackgroundColor: const Color(0xFFCCCCCC),
+//                   foregroundColor: Colors.white,
+//                   shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(10),
+//                   ),
+//                   elevation: 0,
+//                 ),
+//                 child: _isLoading
+//                     ? const SizedBox(
+//                         height: 20,
+//                         width: 20,
+//                         child: CircularProgressIndicator(
+//                           strokeWidth: 2,
+//                           valueColor: AlwaysStoppedAnimation<Color>(
+//                             Colors.white,
+//                           ),
+//                         ),
+//                       )
+//                     : const Text(
+//                         'Transfer',
+//                         style: TextStyle(
+//                           fontSize: 15,
+//                           fontWeight: FontWeight.w600,
+//                         ),
+//                       ),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 class TransferPopup extends StatefulWidget {
   final String tenantName;
   final String currentRoom;
   final String bookingId;
+  final String hostelId;
   final VoidCallback onTransferComplete;
 
   const TransferPopup({
@@ -4984,6 +5233,7 @@ class TransferPopup extends StatefulWidget {
     required this.tenantName,
     required this.currentRoom,
     required this.bookingId,
+    required this.hostelId,
     required this.onTransferComplete,
   });
 
@@ -4992,29 +5242,112 @@ class TransferPopup extends StatefulWidget {
 }
 
 class _TransferPopupState extends State<TransferPopup> {
-  final TextEditingController _roomController = TextEditingController();
-  bool _isLoading = false;
+  String? _selectedRoomNo;
+  String? _selectedRoomType; // AC or Non-AC
+  String? _selectedShareType;
+  List<String> _roomNumbers = [];
+  List<Map<String, dynamic>> _sharings = [];
+  List<String> _availableShareTypes = [];
+  bool _isLoadingRooms = true;
+  bool _isTransferring = false;
+  String? _error;
 
   @override
-  void dispose() {
-    _roomController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchRoomNumbers();
+  }
+
+  Future<void> _fetchRoomNumbers() async {
+    setState(() {
+      _isLoadingRooms = true;
+      _error = null;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://187.127.146.52:2003/api/admin/hostel-room-sharing/${widget.hostelId}',
+        ),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          setState(() {
+            _roomNumbers = List<String>.from(data['roomNumbers'] ?? []);
+            _sharings = List<Map<String, dynamic>>.from(data['sharings'] ?? []);
+            _isLoadingRooms = false;
+          });
+        } else {
+          setState(() {
+            _error = data['message'] ?? 'Failed to load rooms';
+            _isLoadingRooms = false;
+          });
+        }
+      } else {
+        setState(() {
+          _error = 'Failed to load rooms. Please try again.';
+          _isLoadingRooms = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _error = 'Network error. Please try again.';
+        _isLoadingRooms = false;
+      });
+    }
+  }
+
+  // Get unique room types from sharings
+  List<String> get _roomTypes {
+    return _sharings.map((s) => s['type'] as String).toSet().toList();
+  }
+
+  // Filter share types based on selected room type
+  void _updateShareTypes() {
+    if (_selectedRoomType != null) {
+      _availableShareTypes = _sharings
+          .where((s) => s['type'] == _selectedRoomType)
+          .map((s) => s['shareType'] as String)
+          .toList();
+    } else {
+      _availableShareTypes = [];
+    }
   }
 
   Future<void> _transferRoom() async {
-    final newRoomNo = _roomController.text.trim();
-
-    if (newRoomNo.isEmpty) {
+    if (_selectedRoomNo == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please enter a room number'),
+          content: Text('Please select a room number'),
           backgroundColor: Color(0xFFE53935),
         ),
       );
       return;
     }
 
-    if (newRoomNo == widget.currentRoom) {
+    if (_selectedRoomType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select room type (AC/Non-AC)'),
+          backgroundColor: Color(0xFFE53935),
+        ),
+      );
+      return;
+    }
+
+    if (_selectedShareType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select share type'),
+          backgroundColor: Color(0xFFE53935),
+        ),
+      );
+      return;
+    }
+
+    if (_selectedRoomNo == widget.currentRoom) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('New room number is same as current room'),
@@ -5025,7 +5358,7 @@ class _TransferPopupState extends State<TransferPopup> {
     }
 
     setState(() {
-      _isLoading = true;
+      _isTransferring = true;
     });
 
     try {
@@ -5034,7 +5367,11 @@ class _TransferPopupState extends State<TransferPopup> {
           'http://187.127.146.52:2003/api/vendors/changebookingroomno/${widget.bookingId}',
         ),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'roomNo': newRoomNo}),
+        body: jsonEncode({
+          'roomNo': _selectedRoomNo,
+          'roomType': _selectedRoomType,
+          'shareType': _selectedShareType,
+        }),
       );
 
       if (response.statusCode == 200) {
@@ -5043,12 +5380,11 @@ class _TransferPopupState extends State<TransferPopup> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                '${widget.tenantName} transferred from Room ${widget.currentRoom} to Room $newRoomNo',
+                '${widget.tenantName} transferred from Room ${widget.currentRoom} to Room $_selectedRoomNo ($_selectedRoomType - $_selectedShareType)',
               ),
               backgroundColor: Colors.green,
             ),
           );
-          // Refresh the history
           widget.onTransferComplete();
         }
       } else {
@@ -5066,7 +5402,7 @@ class _TransferPopupState extends State<TransferPopup> {
     } finally {
       if (mounted) {
         setState(() {
-          _isLoading = false;
+          _isTransferring = false;
         });
       }
     }
@@ -5078,108 +5414,1878 @@ class _TransferPopupState extends State<TransferPopup> {
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Transfer Room',
-              style: TextStyle(
-                color: Color(0xFFF80500),
-                fontWeight: FontWeight.w700,
-                fontSize: 20,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '${widget.tenantName} - Current Room: ${widget.currentRoom}',
-              style: const TextStyle(color: Colors.black54, fontSize: 13),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Enter New Room Number',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-                color: Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _roomController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                hintText: 'Enter room number',
-                hintStyle: const TextStyle(fontSize: 14, color: Colors.black54),
-                prefixIcon: const Icon(
-                  Icons.meeting_room,
-                  size: 20,
-                  color: Color(0xFFE53935),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE0E0E0),
-                    width: 1,
-                  ),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(
-                    color: Color(0xFFE53935),
-                    width: 1.5,
-                  ),
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Transfer Room',
+                style: TextStyle(
+                  color: Color(0xFFF80500),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 20,
                 ),
               ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _transferRoom,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFF80500),
-                  disabledBackgroundColor: const Color(0xFFCCCCCC),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  elevation: 0,
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            Colors.white,
-                          ),
-                        ),
-                      )
-                    : const Text(
-                        'Transfer',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+              const SizedBox(height: 8),
+              Text(
+                '${widget.tenantName} - Current Room: ${widget.currentRoom}',
+                style: const TextStyle(color: Colors.black54, fontSize: 13),
+              ),
+              const SizedBox(height: 24),
+
+              if (_isLoadingRooms)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: CircularProgressIndicator(color: Color(0xFFE53935)),
+                )
+              else if (_error != null)
+                Column(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      color: Color(0xFFE53935),
+                      size: 48,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _error!,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.black54,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _fetchRoomNumbers,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE53935),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  children: [
+                    // Room Number Dropdown
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Select New Room Number',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        DropdownButtonFormField<String>(
+                          value: _selectedRoomNo,
+                          hint: const Text('Select room number'),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(
+                              Icons.meeting_room,
+                              size: 20,
+                              color: Color(0xFFE53935),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE0E0E0),
+                                width: 1,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(10),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE53935),
+                                width: 1.5,
+                              ),
+                            ),
+                          ),
+                          items: _roomNumbers
+                              .where((room) => room != widget.currentRoom)
+                              .map<DropdownMenuItem<String>>((room) {
+                                return DropdownMenuItem<String>(
+                                  value: room,
+                                  child: Text(room),
+                                );
+                              })
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedRoomNo = value;
+                              _selectedRoomType = null;
+                              _selectedShareType = null;
+                              _availableShareTypes = [];
+                            });
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Room Type Dropdown (AC/Non-AC)
+                    if (_selectedRoomNo != null && _roomTypes.isNotEmpty) ...[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Select Room Type',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _selectedRoomType,
+                            hint: const Text('Select AC or Non-AC'),
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(
+                                Icons.ac_unit,
+                                size: 20,
+                                color: Color(0xFFE53935),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE0E0E0),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE53935),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            items: _roomTypes.map<DropdownMenuItem<String>>((
+                              type,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: type,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      type == 'AC'
+                                          ? Icons.ac_unit
+                                          : Icons.thermostat,
+                                      size: 16,
+                                      color: Color(0xFFE53935),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(type ?? 'Unknown'),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedRoomType = value;
+                                _selectedShareType = null;
+                                _updateShareTypes();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    // Share Type Dropdown
+                    if (_selectedRoomType != null &&
+                        _availableShareTypes.isNotEmpty) ...[
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Select Share Type',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: _selectedShareType,
+                            hint: const Text('Select share type'),
+                            decoration: InputDecoration(
+                              prefixIcon: const Icon(
+                                Icons.people_outline,
+                                size: 20,
+                                color: Color(0xFFE53935),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE0E0E0),
+                                  width: 1,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE53935),
+                                  width: 1.5,
+                                ),
+                              ),
+                            ),
+                            items: _availableShareTypes
+                                .map<DropdownMenuItem<String>>((shareType) {
+                                  return DropdownMenuItem<String>(
+                                    value: shareType,
+                                    child: Text(shareType),
+                                  );
+                                })
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedShareType = value;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                  ],
+                ),
+
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed:
+                      (_isLoadingRooms ||
+                          _isTransferring ||
+                          _selectedRoomNo == null ||
+                          _selectedRoomType == null ||
+                          _selectedShareType == null)
+                      ? null
+                      : _transferRoom,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF80500),
+                    disabledBackgroundColor: const Color(0xFFCCCCCC),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: _isTransferring
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
+                          ),
+                        )
+                      : const Text(
+                          'Transfer',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class TenantViewScreen extends StatelessWidget {
+// class TenantViewScreen extends StatelessWidget {
+//   final Booking booking;
+//   final VoidCallback onUpdate;
+
+//   const TenantViewScreen({
+//     super.key,
+//     required this.booking,
+//     required this.onUpdate,
+//   });
+
+//   String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
+
+//   String _formatDateFromString(String dateStr) {
+//     try {
+//       final date = DateTime.parse(dateStr);
+//       return '${date.day}/${date.month}/${date.year}';
+//     } catch (e) {
+//       return dateStr.split('T')[0];
+//     }
+//   }
+
+//   Color _getPaymentStatusColor(String? status) {
+//     switch (status?.toLowerCase()) {
+//       case 'paid':
+//         return const Color(0xFF4CAF50);
+//       case 'pending':
+//         return const Color(0xFFFF9800);
+//       case 'overdue':
+//         return const Color(0xFFE53935);
+//       default:
+//         return const Color(0xFF9E9E9E);
+//     }
+//   }
+
+//   void _navigateToEditPayment(BuildContext context, PaymentHistory payment) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => EditPaymentScreen(
+//           booking: booking,
+//           payment: payment,
+//           onUpdate: () {
+//             // Trigger refresh after update
+//             onUpdate();
+//             // Pop back to history screen after update
+//             Navigator.pop(context);
+//             Navigator.pop(context);
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _navigateToAddFirstPayment(BuildContext context) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => AddFirstPaymentScreen(
+//           booking: booking,
+//           onUpdate: () {
+//             // Trigger refresh after update
+//             onUpdate();
+//             // Pop back to history screen after update
+//             Navigator.pop(context);
+//             Navigator.pop(context);
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // final user = booking.userId;
+//     final personalInfo = booking.personalDetails;
+
+//     final hostel = booking.hostelId;
+
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//         leading: const BackButton(color: Colors.black),
+//         centerTitle: true,
+//         title: Text(
+//           personalInfo?.name ?? 'Tenant Details',
+//           style: const TextStyle(
+//             color: Colors.black,
+//             fontWeight: FontWeight.w600,
+//             fontSize: 20,
+//           ),
+//         ),
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             if (hostel != null)
+//               Container(
+//                 width: double.infinity,
+//                 padding: const EdgeInsets.all(16),
+//                 decoration: BoxDecoration(
+//                   color: const Color(0xFFFFF5F5),
+//                   borderRadius: BorderRadius.circular(12),
+//                   border: Border.all(color: const Color(0xFFFFE0E0)),
+//                 ),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text(
+//                       'Hostel Information',
+//                       style: TextStyle(
+//                         color: Color(0xFFE53935),
+//                         fontWeight: FontWeight.w700,
+//                         fontSize: 14,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Text(
+//                       hostel.name,
+//                       style: const TextStyle(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.black87,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       hostel.address,
+//                       style: const TextStyle(
+//                         fontSize: 13,
+//                         color: Colors.black54,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Personal Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(label: 'Name', value: personalInfo?.name ?? 'N/A'),
+//             _DetailRow(
+//               label: 'Mobile Number',
+//               value: personalInfo?.mobileNumber.toString() ?? 'N/A',
+//             ),
+//             _DetailRow(
+//               label: 'Emergency Number',
+//               value: personalInfo?.emergencyNumber.toString() ?? 'N/A',
+//             ),
+//             _DetailRow(
+//               label: 'Booking Reference',
+//               value: booking.bookingReference,
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Stay Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(label: 'Room No', value: booking.roomNo),
+//             _DetailRow(label: 'Room Type', value: booking.roomType),
+//             _DetailRow(label: 'Share Type', value: booking.shareType),
+//             _DetailRow(label: 'Booking Type', value: booking.bookingType),
+//             _DetailRow(
+//               label: 'Start Date',
+//               value: _formatDate(booking.startDate),
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Payment Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(label: 'Total Amount', value: '₹${booking.totalAmount}'),
+//             _DetailRow(label: 'Advance', value: '₹${booking.monthlyAdvance}'),
+//             _DetailRow(label: 'Status', value: booking.status.toUpperCase()),
+//             const SizedBox(height: 12),
+//             Container(
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: _getPaymentStatusColor(
+//                   booking.currentMonthPaymentStatus,
+//                 ).withOpacity(0.1),
+//                 borderRadius: BorderRadius.circular(10),
+//                 border: Border.all(
+//                   color: _getPaymentStatusColor(
+//                     booking.currentMonthPaymentStatus,
+//                   ).withOpacity(0.3),
+//                 ),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Icon(
+//                     booking.currentMonthPaymentStatus?.toLowerCase() == 'paid'
+//                         ? Icons.check_circle
+//                         : Icons.pending,
+//                     color: _getPaymentStatusColor(
+//                       booking.currentMonthPaymentStatus,
+//                     ),
+//                     size: 20,
+//                   ),
+//                   const SizedBox(width: 12),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         const Text(
+//                           'Current Month Payment Status',
+//                           style: TextStyle(fontSize: 12, color: Colors.black54),
+//                         ),
+//                         Text(
+//                           booking.currentMonthPaymentStatus?.toUpperCase() ??
+//                               'N/A',
+//                           style: TextStyle(
+//                             fontSize: 14,
+//                             fontWeight: FontWeight.w600,
+//                             color: _getPaymentStatusColor(
+//                               booking.currentMonthPaymentStatus,
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             // Payment History Section
+//             const SizedBox(height: 20),
+//             Row(
+//               children: [
+//                 const Text(
+//                   'Payment History',
+//                   style: TextStyle(
+//                     color: Color(0xFFE53935),
+//                     fontWeight: FontWeight.w700,
+//                     fontSize: 16,
+//                   ),
+//                 ),
+//                 const Spacer(),
+//                 // Show Add First Payment button only when payment history is empty
+//                 if (booking.paymentHistory.isEmpty)
+//                   IconButton(
+//                     onPressed: () => _navigateToAddFirstPayment(context),
+//                     icon: const Icon(
+//                       Icons.add_circle_outline,
+//                       color: Color(0xFF4CAF50),
+//                       size: 28,
+//                     ),
+//                     tooltip: 'Add First Payment',
+//                   ),
+//               ],
+//             ),
+//             const SizedBox(height: 12),
+
+//             if (booking.paymentHistory.isEmpty)
+//               Center(
+//                 child: Container(
+//                   padding: const EdgeInsets.all(32),
+//                   decoration: BoxDecoration(
+//                     border: Border.all(color: const Color(0xFFEEEEEE)),
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Column(
+//                     children: [
+//                       const Icon(
+//                         Icons.payment_outlined,
+//                         size: 48,
+//                         color: Colors.black26,
+//                       ),
+//                       const SizedBox(height: 12),
+//                       Text(
+//                         'No payment records found',
+//                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+//                       ),
+//                       const SizedBox(height: 8),
+//                       Text(
+//                         'Tap the + button to add first payment',
+//                         style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               )
+//             else
+//               Container(
+//                 decoration: BoxDecoration(
+//                   border: Border.all(color: const Color(0xFFEEEEEE)),
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: Column(
+//                   children: [
+//                     // Payment History Header
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 12,
+//                       ),
+//                       decoration: const BoxDecoration(
+//                         color: Color(0xFFFFF5F5),
+//                         borderRadius: BorderRadius.only(
+//                           topLeft: Radius.circular(12),
+//                           topRight: Radius.circular(12),
+//                         ),
+//                       ),
+//                       child: const Row(
+//                         children: [
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Date',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Amount',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Status',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Remaining',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           SizedBox(width: 40),
+//                         ],
+//                       ),
+//                     ),
+//                     // Payment History List
+//                     ...booking.paymentHistory.map((payment) {
+//                       return Container(
+//                         padding: const EdgeInsets.symmetric(
+//                           horizontal: 16,
+//                           vertical: 12,
+//                         ),
+//                         decoration: const BoxDecoration(
+//                           border: Border(
+//                             top: BorderSide(color: Color(0xFFEEEEEE)),
+//                           ),
+//                         ),
+//                         child: Row(
+//                           children: [
+//                             Expanded(
+//                               flex: 2,
+//                               child: Text(
+//                                 _formatDateFromString(payment.date),
+//                                 style: const TextStyle(
+//                                   fontSize: 12,
+//                                   color: Colors.black87,
+//                                 ),
+//                               ),
+//                             ),
+//                             Expanded(
+//                               flex: 2,
+//                               child: Text(
+//                                 '₹${payment.amount}',
+//                                 style: const TextStyle(
+//                                   fontSize: 12,
+//                                   fontWeight: FontWeight.w600,
+//                                   color: Color(0xFF4CAF50),
+//                                 ),
+//                               ),
+//                             ),
+//                             Expanded(
+//                               flex: 2,
+//                               child: Container(
+//                                 padding: const EdgeInsets.symmetric(
+//                                   horizontal: 8,
+//                                   vertical: 4,
+//                                 ),
+//                                 decoration: BoxDecoration(
+//                                   color: payment.status == 'paid'
+//                                       ? Colors.green.withOpacity(0.1)
+//                                       : Colors.orange.withOpacity(0.1),
+//                                   borderRadius: BorderRadius.circular(12),
+//                                 ),
+//                                 child: Text(
+//                                   payment.status.toUpperCase(),
+//                                   textAlign: TextAlign.center,
+//                                   style: TextStyle(
+//                                     fontSize: 11,
+//                                     fontWeight: FontWeight.w600,
+//                                     color: payment.status == 'paid'
+//                                         ? Colors.green
+//                                         : Colors.orange,
+//                                   ),
+//                                 ),
+//                               ),
+//                             ),
+//                             Expanded(
+//                               flex: 2,
+//                               child: Text(
+//                                 payment.remainingAmount > 0
+//                                     ? '₹${payment.remainingAmount}'
+//                                     : '₹0',
+//                                 style: TextStyle(
+//                                   fontSize: 12,
+//                                   fontWeight: FontWeight.w600,
+//                                   color: payment.remainingAmount > 0
+//                                       ? const Color(0xFFE53935)
+//                                       : Colors.green,
+//                                 ),
+//                               ),
+//                             ),
+//                             // Edit Button - Only show if payment status is not 'paid'
+//                             if (payment.status.toLowerCase() != 'paid')
+//                               IconButton(
+//                                 onPressed: () =>
+//                                     _navigateToEditPayment(context, payment),
+//                                 icon: const Icon(
+//                                   Icons.edit,
+//                                   color: Color(0xFFFF9800),
+//                                   size: 20,
+//                                 ),
+//                                 constraints: const BoxConstraints(),
+//                                 padding: EdgeInsets.zero,
+//                                 splashRadius: 20,
+//                               )
+//                             else
+//                               const SizedBox(width: 40),
+//                           ],
+//                         ),
+//                       );
+//                     }).toList(),
+//                   ],
+//                 ),
+//               ),
+
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Booking Timeline',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(
+//               label: 'Created At',
+//               value: _formatDate(booking.createdAt),
+//             ),
+//             _DetailRow(
+//               label: 'Last Updated',
+//               value: _formatDate(booking.updatedAt),
+//             ),
+//             const SizedBox(height: 80),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+// class _DetailRow extends StatelessWidget {
+//   final String label;
+//   final String value;
+//   const _DetailRow({required this.label, required this.value});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(vertical: 6),
+//       child: Row(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           SizedBox(
+//             width: 120,
+//             child: Text(
+//               label,
+//               style: const TextStyle(
+//                 fontSize: 13.5,
+//                 color: Colors.black54,
+//                 fontWeight: FontWeight.w500,
+//               ),
+//             ),
+//           ),
+//           const SizedBox(width: 8),
+//           Expanded(
+//             child: Text(
+//               value,
+//               style: const TextStyle(
+//                 fontSize: 13.5,
+//                 color: Colors.black87,
+//                 fontWeight: FontWeight.w500,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+// class TenantViewScreen extends StatelessWidget {
+//   final Booking booking;
+//   final VoidCallback onUpdate;
+
+//   const TenantViewScreen({
+//     super.key,
+//     required this.booking,
+//     required this.onUpdate,
+//   });
+
+//   String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
+
+//   String _formatDateFromString(String dateStr) {
+//     try {
+//       final date = DateTime.parse(dateStr);
+//       return '${date.day}/${date.month}/${date.year}';
+//     } catch (e) {
+//       return dateStr.split('T')[0];
+//     }
+//   }
+
+//   Color _getPaymentStatusColor(String? status) {
+//     switch (status?.toLowerCase()) {
+//       case 'paid':
+//         return const Color(0xFF4CAF50);
+//       case 'pending':
+//         return const Color(0xFFFF9800);
+//       case 'overdue':
+//         return const Color(0xFFE53935);
+//       default:
+//         return const Color(0xFF9E9E9E);
+//     }
+//   }
+
+//   void _navigateToEditPayment(BuildContext context, PaymentHistory payment) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => EditPaymentScreen(
+//           booking: booking,
+//           payment: payment,
+//           onUpdate: () {
+//             onUpdate();
+//             Navigator.pop(context);
+//             Navigator.pop(context);
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _navigateToAddFirstPayment(BuildContext context) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (_) => AddFirstPaymentScreen(
+//           booking: booking,
+//           onUpdate: () {
+//             onUpdate();
+//             Navigator.pop(context);
+//             Navigator.pop(context);
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _showEditTotalAmountDialog(BuildContext context) {
+//     final TextEditingController amountController = TextEditingController(
+//       text: booking.totalAmount.toString(),
+//     );
+
+//     showDialog(
+//       context: context,
+//       builder: (context) => StatefulBuilder(
+//         builder: (context, setDialogState) {
+//           return AlertDialog(
+//             title: const Text('Edit Total Amount'),
+//             content: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 const Text(
+//                   'Enter new total amount for this booking',
+//                   style: TextStyle(fontSize: 13, color: Colors.black54),
+//                 ),
+//                 const SizedBox(height: 16),
+//                 TextField(
+//                   controller: amountController,
+//                   keyboardType: TextInputType.number,
+//                   decoration: InputDecoration(
+//                     prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+//                     hintText: 'Enter amount',
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             actions: [
+//               TextButton(
+//                 onPressed: () => Navigator.pop(context),
+//                 child: const Text(
+//                   'Cancel',
+//                   style: TextStyle(color: Colors.grey),
+//                 ),
+//               ),
+//               ElevatedButton(
+//                 onPressed: () async {
+//                   final newAmount = double.tryParse(
+//                     amountController.text.trim(),
+//                   );
+//                   if (newAmount == null || newAmount <= 0) {
+//                     ScaffoldMessenger.of(context).showSnackBar(
+//                       const SnackBar(
+//                         content: Text('Please enter a valid amount'),
+//                         backgroundColor: Color(0xFFE53935),
+//                       ),
+//                     );
+//                     return;
+//                   }
+//                   Navigator.pop(context);
+//                   await _updateTotalAmount(context, newAmount);
+//                 },
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: const Color(0xFFE53935),
+//                 ),
+//                 child: const Text('Update'),
+//               ),
+//             ],
+//           );
+//         },
+//       ),
+//     );
+//   }
+
+//   void _showEditMonthlyAdvanceDialog(BuildContext context) {
+//     final TextEditingController amountController = TextEditingController(
+//       text: booking.monthlyAdvance.toString(),
+//     );
+
+//     showDialog(
+//       context: context,
+//       builder: (context) => StatefulBuilder(
+//         builder: (context, setDialogState) {
+//           return AlertDialog(
+//             title: const Text('Edit Monthly Advance'),
+//             content: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 const Text(
+//                   'Enter new monthly advance amount for this booking',
+//                   style: TextStyle(fontSize: 13, color: Colors.black54),
+//                 ),
+//                 const SizedBox(height: 16),
+//                 TextField(
+//                   controller: amountController,
+//                   keyboardType: TextInputType.number,
+//                   decoration: InputDecoration(
+//                     prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+//                     hintText: 'Enter amount',
+//                     border: OutlineInputBorder(
+//                       borderRadius: BorderRadius.circular(10),
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             actions: [
+//               TextButton(
+//                 onPressed: () => Navigator.pop(context),
+//                 child: const Text(
+//                   'Cancel',
+//                   style: TextStyle(color: Colors.grey),
+//                 ),
+//               ),
+//               ElevatedButton(
+//                 onPressed: () async {
+//                   final newAmount = double.tryParse(
+//                     amountController.text.trim(),
+//                   );
+//                   if (newAmount == null || newAmount <= 0) {
+//                     ScaffoldMessenger.of(context).showSnackBar(
+//                       const SnackBar(
+//                         content: Text('Please enter a valid amount'),
+//                         backgroundColor: Color(0xFFE53935),
+//                       ),
+//                     );
+//                     return;
+//                   }
+//                   Navigator.pop(context);
+//                   await _updateMonthlyAdvance(context, newAmount);
+//                 },
+//                 style: ElevatedButton.styleFrom(
+//                   backgroundColor: const Color(0xFFE53935),
+//                 ),
+//                 child: const Text('Update'),
+//               ),
+//             ],
+//           );
+//         },
+//       ),
+//     );
+//   }
+
+//   Future<void> _updateTotalAmount(
+//     BuildContext context,
+//     double newAmount,
+//   ) async {
+//     try {
+//       final response = await http.put(
+//         Uri.parse(
+//           'http://187.127.146.52:2003/api/vendors/update-booking-total-amount/${booking.id}',
+//         ),
+//         headers: {'Content-Type': 'application/json'},
+//         body: jsonEncode({'totalAmount': newAmount}),
+//       );
+
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Total amount updated successfully!'),
+//             backgroundColor: Colors.green,
+//           ),
+//         );
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (context) => NavbarScreen(initialIndex: 1),
+//           ),
+//         );
+//         // onUpdate();
+//       } else {
+//         throw Exception('Failed to update total amount');
+//       }
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Error: $e'),
+//           backgroundColor: const Color(0xFFE53935),
+//         ),
+//       );
+//     }
+//   }
+
+//   Future<void> _updateMonthlyAdvance(
+//     BuildContext context,
+//     double newAmount,
+//   ) async {
+//     try {
+//       final response = await http.put(
+//         Uri.parse(
+//           'http://187.127.146.52:2003/api/vendors/update-monthly-advance/${booking.id}',
+//         ),
+//         headers: {'Content-Type': 'application/json'},
+//         body: jsonEncode({'amount': newAmount}),
+//       );
+
+//       if (response.statusCode == 200) {
+//         final data = jsonDecode(response.body);
+
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(
+//             content: Text('Monthly advance updated successfully!'),
+//             backgroundColor: Colors.green,
+//           ),
+//         );
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (context) => NavbarScreen(initialIndex: 1),
+//           ),
+//         );
+//         // onUpdate();
+//       } else {
+//         throw Exception('Failed to update monthly advance');
+//       }
+//     } catch (e) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Error: $e'),
+//           backgroundColor: const Color(0xFFE53935),
+//         ),
+//       );
+//     }
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final personalInfo = booking.personalDetails;
+//     final hostel = booking.hostelId;
+
+//     return Scaffold(
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//         leading: const BackButton(color: Colors.black),
+//         centerTitle: true,
+//         title: Text(
+//           personalInfo?.name ?? 'Tenant Details',
+//           style: const TextStyle(
+//             color: Colors.black,
+//             fontWeight: FontWeight.w600,
+//             fontSize: 20,
+//           ),
+//         ),
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             if (hostel != null)
+//               Container(
+//                 width: double.infinity,
+//                 padding: const EdgeInsets.all(16),
+//                 decoration: BoxDecoration(
+//                   color: const Color(0xFFFFF5F5),
+//                   borderRadius: BorderRadius.circular(12),
+//                   border: Border.all(color: const Color(0xFFFFE0E0)),
+//                 ),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text(
+//                       'Hostel Information',
+//                       style: TextStyle(
+//                         color: Color(0xFFE53935),
+//                         fontWeight: FontWeight.w700,
+//                         fontSize: 14,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Text(
+//                       hostel.name,
+//                       style: const TextStyle(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.w600,
+//                         color: Colors.black87,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       hostel.address,
+//                       style: const TextStyle(
+//                         fontSize: 13,
+//                         color: Colors.black54,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Personal Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+
+//             // User Image - Display above name
+//             if (personalInfo?.profileImage != null &&
+//                 personalInfo!.profileImage.isNotEmpty)
+//               Center(
+//                 child: Container(
+//                   width: 100,
+//                   height: 100,
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     border: Border.all(
+//                       color: const Color(0xFFE53935),
+//                       width: 2,
+//                     ),
+//                     boxShadow: [
+//                       BoxShadow(
+//                         color: Colors.black.withOpacity(0.1),
+//                         blurRadius: 8,
+//                         offset: const Offset(0, 2),
+//                       ),
+//                     ],
+//                   ),
+//                   child: ClipOval(
+//                     child: Image.network(
+//                       personalInfo.profileImage,
+//                       fit: BoxFit.cover,
+//                       loadingBuilder: (context, child, loadingProgress) {
+//                         if (loadingProgress == null) return child;
+//                         return Center(
+//                           child: CircularProgressIndicator(
+//                             color: const Color(0xFFE53935),
+//                             value: loadingProgress.expectedTotalBytes != null
+//                                 ? loadingProgress.cumulativeBytesLoaded /
+//                                       loadingProgress.expectedTotalBytes!
+//                                 : null,
+//                           ),
+//                         );
+//                       },
+//                       errorBuilder: (context, error, stackTrace) {
+//                         return Container(
+//                           color: Colors.grey.shade200,
+//                           child: const Icon(
+//                             Icons.person,
+//                             size: 50,
+//                             color: Colors.grey,
+//                           ),
+//                         );
+//                       },
+//                     ),
+//                   ),
+//                 ),
+//               )
+//             else
+//               Center(
+//                 child: Container(
+//                   width: 100,
+//                   height: 100,
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     color: Colors.grey.shade200,
+//                     border: Border.all(
+//                       color: const Color(0xFFE53935),
+//                       width: 2,
+//                     ),
+//                   ),
+//                   child: const Icon(Icons.person, size: 50, color: Colors.grey),
+//                 ),
+//               ),
+
+//             const SizedBox(height: 16),
+
+//             _DetailRow(label: 'Name', value: personalInfo?.name ?? 'N/A'),
+//             _DetailRow(
+//               label: 'Mobile Number',
+//               value: personalInfo?.mobileNumber.toString() ?? 'N/A',
+//             ),
+//             _DetailRow(
+//               label: 'Emergency Number',
+//               value: personalInfo?.emergencyNumber.toString() ?? 'N/A',
+//             ),
+//             _DetailRow(
+//               label: 'Booking Reference',
+//               value: booking.bookingReference,
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Stay Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(label: 'Room No', value: booking.roomNo),
+//             _DetailRow(label: 'Room Type', value: booking.roomType),
+//             _DetailRow(label: 'Share Type', value: booking.shareType),
+//             _DetailRow(label: 'Booking Type', value: booking.bookingType),
+//             _DetailRow(
+//               label: 'Start Date',
+//               value: _formatDate(booking.startDate),
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Payment Details',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+
+//             // Total Amount Row with Edit Icon
+//             _DetailRowWithEdit(
+//               label: 'Total Amount',
+//               value: '₹${booking.totalAmount}',
+//               onEdit: () => _showEditTotalAmountDialog(context),
+//             ),
+
+//             // Monthly Advance Row with Edit Icon
+//             _DetailRowWithEdit(
+//               label: 'Monthly Advance',
+//               value: '₹${booking.monthlyAdvance}',
+//               onEdit: () => _showEditMonthlyAdvanceDialog(context),
+//             ),
+
+//             // Monthly Advance Row with Edit Icon
+//             _DetailRow(
+//               label: 'Remaining Advance',
+//               value: '₹${booking.remainingMonthlyAdvance}',
+//             ),
+
+//             _DetailRow(label: 'Status', value: booking.status.toUpperCase()),
+
+//             // Monthly Advance Status Row
+//             _DetailRow(
+//               label: 'Advance Status',
+//               value: booking.monthlyAdvanceStatus?.toUpperCase() ?? 'N/A',
+//               valueColor: booking.monthlyAdvanceStatus?.toLowerCase() == 'paid'
+//                   ? Colors.green
+//                   : Colors.orange,
+//             ),
+
+//             const SizedBox(height: 12),
+//             Container(
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: _getPaymentStatusColor(
+//                   booking.currentMonthPaymentStatus,
+//                 ).withOpacity(0.1),
+//                 borderRadius: BorderRadius.circular(10),
+//                 border: Border.all(
+//                   color: _getPaymentStatusColor(
+//                     booking.currentMonthPaymentStatus,
+//                   ).withOpacity(0.3),
+//                 ),
+//               ),
+//               child: Row(
+//                 children: [
+//                   Icon(
+//                     booking.currentMonthPaymentStatus?.toLowerCase() == 'paid'
+//                         ? Icons.check_circle
+//                         : Icons.pending,
+//                     color: _getPaymentStatusColor(
+//                       booking.currentMonthPaymentStatus,
+//                     ),
+//                     size: 20,
+//                   ),
+//                   const SizedBox(width: 12),
+//                   Expanded(
+//                     child: Column(
+//                       crossAxisAlignment: CrossAxisAlignment.start,
+//                       children: [
+//                         const Text(
+//                           'Current Month Payment Status',
+//                           style: TextStyle(fontSize: 12, color: Colors.black54),
+//                         ),
+//                         Text(
+//                           booking.currentMonthPaymentStatus?.toUpperCase() ??
+//                               'N/A',
+//                           style: TextStyle(
+//                             fontSize: 14,
+//                             fontWeight: FontWeight.w600,
+//                             color: _getPaymentStatusColor(
+//                               booking.currentMonthPaymentStatus,
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             // Payment History Section
+//             const SizedBox(height: 20),
+//             Row(
+//               children: [
+//                 const Text(
+//                   'Payment History',
+//                   style: TextStyle(
+//                     color: Color(0xFFE53935),
+//                     fontWeight: FontWeight.w700,
+//                     fontSize: 16,
+//                   ),
+//                 ),
+//                 const Spacer(),
+//                 if (booking.paymentHistory.isEmpty)
+//                   IconButton(
+//                     onPressed: () => _navigateToAddFirstPayment(context),
+//                     icon: const Icon(
+//                       Icons.add_circle_outline,
+//                       color: Color(0xFF4CAF50),
+//                       size: 28,
+//                     ),
+//                     tooltip: 'Add First Payment',
+//                   ),
+//               ],
+//             ),
+//             const SizedBox(height: 12),
+
+//             if (booking.paymentHistory.isEmpty)
+//               Center(
+//                 child: Container(
+//                   padding: const EdgeInsets.all(32),
+//                   decoration: BoxDecoration(
+//                     border: Border.all(color: const Color(0xFFEEEEEE)),
+//                     borderRadius: BorderRadius.circular(12),
+//                   ),
+//                   child: Column(
+//                     children: [
+//                       const Icon(
+//                         Icons.payment_outlined,
+//                         size: 48,
+//                         color: Colors.black26,
+//                       ),
+//                       const SizedBox(height: 12),
+//                       Text(
+//                         'No payment records found',
+//                         style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+//                       ),
+//                       const SizedBox(height: 8),
+//                       Text(
+//                         'Tap the + button to add first payment',
+//                         style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+//                       ),
+//                     ],
+//                   ),
+//                 ),
+//               )
+//             else
+//               Container(
+//                 decoration: BoxDecoration(
+//                   border: Border.all(color: const Color(0xFFEEEEEE)),
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: Column(
+//                   children: [
+//                     Container(
+//                       padding: const EdgeInsets.symmetric(
+//                         horizontal: 16,
+//                         vertical: 12,
+//                       ),
+//                       decoration: const BoxDecoration(
+//                         color: Color(0xFFFFF5F5),
+//                         borderRadius: BorderRadius.only(
+//                           topLeft: Radius.circular(12),
+//                           topRight: Radius.circular(12),
+//                         ),
+//                       ),
+//                       child: const Row(
+//                         children: [
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Date',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Amount',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Status',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           Expanded(
+//                             flex: 2,
+//                             child: Text(
+//                               'Remaining',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.w600,
+//                                 fontSize: 13,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                           ),
+//                           SizedBox(width: 40),
+//                         ],
+//                       ),
+//                     ),
+
+//                     // ...booking.paymentHistory.map((payment) {
+//                     //   return Container(
+//                     //     padding: const EdgeInsets.symmetric(
+//                     //       horizontal: 16,
+//                     //       vertical: 12,
+//                     //     ),
+//                     //     decoration: const BoxDecoration(
+//                     //       border: Border(
+//                     //         top: BorderSide(color: Color(0xFFEEEEEE)),
+//                     //       ),
+//                     //     ),
+//                     //     child: Row(
+//                     //       children: [
+//                     //         Expanded(
+//                     //           flex: 2,
+//                     //           child: Text(
+//                     //             _formatDateFromString(payment.date),
+//                     //             style: const TextStyle(
+//                     //               fontSize: 12,
+//                     //               color: Colors.black87,
+//                     //             ),
+//                     //           ),
+//                     //         ),
+//                     //         Expanded(
+//                     //           flex: 2,
+//                     //           child: Text(
+//                     //             '₹${payment.amount}',
+//                     //             style: const TextStyle(
+//                     //               fontSize: 12,
+//                     //               fontWeight: FontWeight.w600,
+//                     //               color: Color(0xFF4CAF50),
+//                     //             ),
+//                     //           ),
+//                     //         ),
+//                     //         Expanded(
+//                     //           flex: 2,
+//                     //           child: Container(
+//                     //             padding: const EdgeInsets.symmetric(
+//                     //               horizontal: 8,
+//                     //               vertical: 4,
+//                     //             ),
+//                     //             decoration: BoxDecoration(
+//                     //               color: payment.status == 'paid'
+//                     //                   ? Colors.green.withOpacity(0.1)
+//                     //                   : Colors.orange.withOpacity(0.1),
+//                     //               borderRadius: BorderRadius.circular(12),
+//                     //             ),
+//                     //             child: Text(
+//                     //               payment.status.toUpperCase(),
+//                     //               textAlign: TextAlign.center,
+//                     //               style: TextStyle(
+//                     //                 fontSize: 11,
+//                     //                 fontWeight: FontWeight.w600,
+//                     //                 color: payment.status == 'paid'
+//                     //                     ? Colors.green
+//                     //                     : Colors.orange,
+//                     //               ),
+//                     //             ),
+//                     //           ),
+//                     //         ),
+//                     //         Expanded(
+//                     //           flex: 2,
+//                     //           child: Text(
+//                     //             payment.remainingAmount > 0
+//                     //                 ? '₹${payment.remainingAmount}'
+//                     //                 : '₹0',
+//                     //             style: TextStyle(
+//                     //               fontSize: 12,
+//                     //               fontWeight: FontWeight.w600,
+//                     //               color: payment.remainingAmount > 0
+//                     //                   ? const Color(0xFFE53935)
+//                     //                   : Colors.green,
+//                     //             ),
+//                     //           ),
+//                     //         ),
+//                     //         if (payment.status.toLowerCase() != 'paid')
+//                     //           IconButton(
+//                     //             onPressed: () =>
+//                     //                 _navigateToEditPayment(context, payment),
+//                     //             icon: const Icon(
+//                     //               Icons.edit,
+//                     //               color: Color(0xFFFF9800),
+//                     //               size: 20,
+//                     //             ),
+//                     //             constraints: const BoxConstraints(),
+//                     //             padding: EdgeInsets.zero,
+//                     //             splashRadius: 20,
+//                     //           )
+//                     //         else
+//                     //           const SizedBox(width: 40),
+//                     //       ],
+//                     //     ),
+//                     //   );
+//                     // }).toList(),
+
+//                     // In the Payment History section, replace the payment history list with this:
+//                     ...booking.paymentHistory.map((payment) {
+//                       return Column(
+//                         children: [
+//                           // Main payment row
+//                           Container(
+//                             padding: const EdgeInsets.symmetric(
+//                               horizontal: 16,
+//                               vertical: 12,
+//                             ),
+//                             decoration: const BoxDecoration(
+//                               border: Border(
+//                                 top: BorderSide(color: Color(0xFFEEEEEE)),
+//                               ),
+//                             ),
+//                             child: Row(
+//                               children: [
+//                                 Expanded(
+//                                   flex: 2,
+//                                   child: Text(
+//                                     _formatDateFromString(payment.date),
+//                                     style: const TextStyle(
+//                                       fontSize: 12,
+//                                       color: Colors.black87,
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 Expanded(
+//                                   flex: 2,
+//                                   child: Text(
+//                                     '₹${payment.amount}',
+//                                     style: const TextStyle(
+//                                       fontSize: 12,
+//                                       fontWeight: FontWeight.w600,
+//                                       color: Color(0xFF4CAF50),
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 Expanded(
+//                                   flex: 2,
+//                                   child: Container(
+//                                     padding: const EdgeInsets.symmetric(
+//                                       horizontal: 8,
+//                                       vertical: 4,
+//                                     ),
+//                                     decoration: BoxDecoration(
+//                                       color: payment.status == 'paid'
+//                                           ? Colors.green.withOpacity(0.1)
+//                                           : Colors.orange.withOpacity(0.1),
+//                                       borderRadius: BorderRadius.circular(12),
+//                                     ),
+//                                     child: Text(
+//                                       payment.status.toUpperCase(),
+//                                       textAlign: TextAlign.center,
+//                                       style: TextStyle(
+//                                         fontSize: 11,
+//                                         fontWeight: FontWeight.w600,
+//                                         color: payment.status == 'paid'
+//                                             ? Colors.green
+//                                             : Colors.orange,
+//                                       ),
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 Expanded(
+//                                   flex: 2,
+//                                   child: Text(
+//                                     payment.remainingAmount > 0
+//                                         ? '₹${payment.remainingAmount}'
+//                                         : '₹0',
+//                                     style: TextStyle(
+//                                       fontSize: 12,
+//                                       fontWeight: FontWeight.w600,
+//                                       color: payment.remainingAmount > 0
+//                                           ? const Color(0xFFE53935)
+//                                           : Colors.green,
+//                                     ),
+//                                   ),
+//                                 ),
+//                                 if (payment.status.toLowerCase() != 'paid')
+//                                   IconButton(
+//                                     onPressed: () => _navigateToEditPayment(
+//                                       context,
+//                                       payment,
+//                                     ),
+//                                     icon: const Icon(
+//                                       Icons.edit,
+//                                       color: Color(0xFFFF9800),
+//                                       size: 20,
+//                                     ),
+//                                     constraints: const BoxConstraints(),
+//                                     padding: EdgeInsets.zero,
+//                                     splashRadius: 20,
+//                                   )
+//                                 else
+//                                   const SizedBox(width: 40),
+//                               ],
+//                             ),
+//                           ),
+
+//                           // Partial Details Section - Show if partialDetails array is not empty
+//                           if (payment.partialDetails != null &&
+//                               payment.partialDetails.isNotEmpty)
+//                             Container(
+//                               padding: const EdgeInsets.only(
+//                                 left: 40,
+//                                 right: 16,
+//                                 bottom: 12,
+//                               ),
+//                               child: Column(
+//                                 crossAxisAlignment: CrossAxisAlignment.start,
+//                                 children: [
+//                                   const Divider(
+//                                     height: 1,
+//                                     color: Color(0xFFEEEEEE),
+//                                   ),
+//                                   const SizedBox(height: 8),
+//                                   const Text(
+//                                     'Partial Payments',
+//                                     style: TextStyle(
+//                                       fontSize: 11,
+//                                       fontWeight: FontWeight.w600,
+//                                       color: Color(0xFFFF9800),
+//                                     ),
+//                                   ),
+//                                   const SizedBox(height: 8),
+//                                   ...payment.partialDetails.map((partial) {
+//                                     return Container(
+//                                       margin: const EdgeInsets.only(bottom: 6),
+//                                       padding: const EdgeInsets.symmetric(
+//                                         horizontal: 12,
+//                                         vertical: 8,
+//                                       ),
+//                                       decoration: BoxDecoration(
+//                                         color: const Color(0xFFFFF5F5),
+//                                         borderRadius: BorderRadius.circular(8),
+//                                         border: Border.all(
+//                                           color: const Color(0xFFFFE0E0),
+//                                         ),
+//                                       ),
+//                                       child: Row(
+//                                         children: [
+//                                           Container(
+//                                             width: 3,
+//                                             height: 20,
+//                                             decoration: BoxDecoration(
+//                                               color: const Color(0xFFE53935),
+//                                               borderRadius:
+//                                                   BorderRadius.circular(2),
+//                                             ),
+//                                           ),
+//                                           const SizedBox(width: 12),
+//                                           Expanded(
+//                                             child: Column(
+//                                               crossAxisAlignment:
+//                                                   CrossAxisAlignment.start,
+//                                               children: [
+//                                                 Text(
+//                                                   _formatDateFromString(
+//                                                     partial.date,
+//                                                   ),
+//                                                   style: const TextStyle(
+//                                                     fontSize: 11,
+//                                                     color: Colors.black54,
+//                                                   ),
+//                                                 ),
+//                                                 const SizedBox(height: 2),
+//                                                 Text(
+//                                                   'Amount: ₹${partial.amount}',
+//                                                   style: const TextStyle(
+//                                                     fontSize: 13,
+//                                                     fontWeight: FontWeight.w600,
+//                                                     color: Colors.black87,
+//                                                   ),
+//                                                 ),
+//                                               ],
+//                                             ),
+//                                           ),
+//                                           Container(
+//                                             padding: const EdgeInsets.symmetric(
+//                                               horizontal: 8,
+//                                               vertical: 3,
+//                                             ),
+//                                             decoration: BoxDecoration(
+//                                               color: const Color(
+//                                                 0xFFFF9800,
+//                                               ).withOpacity(0.1),
+//                                               borderRadius:
+//                                                   BorderRadius.circular(10),
+//                                             ),
+//                                             child: const Text(
+//                                               'PARTIAL',
+//                                               style: TextStyle(
+//                                                 fontSize: 9,
+//                                                 fontWeight: FontWeight.w600,
+//                                                 color: Color(0xFFFF9800),
+//                                               ),
+//                                             ),
+//                                           ),
+//                                         ],
+//                                       ),
+//                                     );
+//                                   }).toList(),
+//                                 ],
+//                               ),
+//                             ),
+//                         ],
+//                       );
+//                     }).toList(),
+//                   ],
+//                 ),
+//               ),
+
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Booking Timeline',
+//               style: TextStyle(
+//                 color: Color(0xFFE53935),
+//                 fontWeight: FontWeight.w700,
+//                 fontSize: 16,
+//               ),
+//             ),
+//             const SizedBox(height: 12),
+//             _DetailRow(
+//               label: 'Created At',
+//               value: _formatDate(booking.createdAt),
+//             ),
+//             _DetailRow(
+//               label: 'Last Updated',
+//               value: _formatDate(booking.updatedAt),
+//             ),
+//             const SizedBox(height: 80),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+class TenantViewScreen extends StatefulWidget {
   final Booking booking;
   final VoidCallback onUpdate;
 
@@ -5188,6 +7294,102 @@ class TenantViewScreen extends StatelessWidget {
     required this.booking,
     required this.onUpdate,
   });
+
+  @override
+  State<TenantViewScreen> createState() => _TenantViewScreenState();
+}
+
+class _TenantViewScreenState extends State<TenantViewScreen> {
+  String? _selectedMonthFilter;
+  List<String> _availableMonths = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _extractAvailableMonths();
+  }
+
+  void _extractAvailableMonths() {
+    Set<String> months = {};
+
+    for (var payment in widget.booking.paymentHistory) {
+      try {
+        final date = DateTime.parse(payment.date);
+        final monthYear = '${_getMonthName(date.month)} ${date.year}';
+        months.add(monthYear);
+      } catch (e) {
+        // Handle date parsing error
+      }
+    }
+
+    setState(() {
+      _availableMonths = months.toList();
+      // Sort months chronologically
+      _availableMonths.sort((a, b) {
+        final aParts = a.split(' ');
+        final bParts = b.split(' ');
+        final aMonth = _getMonthNumber(aParts[0]);
+        final bMonth = _getMonthNumber(bParts[0]);
+        final aYear = int.parse(aParts[1]);
+        final bYear = int.parse(bParts[1]);
+
+        if (aYear != bYear) return aYear.compareTo(bYear);
+        return aMonth.compareTo(bMonth);
+      });
+    });
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month - 1];
+  }
+
+  int _getMonthNumber(String monthName) {
+    const months = {
+      'Jan': 1,
+      'Feb': 2,
+      'Mar': 3,
+      'Apr': 4,
+      'May': 5,
+      'Jun': 6,
+      'Jul': 7,
+      'Aug': 8,
+      'Sep': 9,
+      'Oct': 10,
+      'Nov': 11,
+      'Dec': 12,
+    };
+    return months[monthName] ?? 1;
+  }
+
+  List<PaymentHistory> _getFilteredPayments() {
+    if (_selectedMonthFilter == null) {
+      return widget.booking.paymentHistory;
+    }
+
+    return widget.booking.paymentHistory.where((payment) {
+      try {
+        final date = DateTime.parse(payment.date);
+        final monthYear = '${_getMonthName(date.month)} ${date.year}';
+        return monthYear == _selectedMonthFilter;
+      } catch (e) {
+        return false;
+      }
+    }).toList();
+  }
 
   String _formatDate(DateTime dt) => '${dt.day}/${dt.month}/${dt.year}';
 
@@ -5218,12 +7420,10 @@ class TenantViewScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => EditPaymentScreen(
-          booking: booking,
+          booking: widget.booking,
           payment: payment,
           onUpdate: () {
-            // Trigger refresh after update
-            onUpdate();
-            // Pop back to history screen after update
+            widget.onUpdate();
             Navigator.pop(context);
             Navigator.pop(context);
           },
@@ -5237,11 +7437,9 @@ class TenantViewScreen extends StatelessWidget {
       context,
       MaterialPageRoute(
         builder: (_) => AddFirstPaymentScreen(
-          booking: booking,
+          booking: widget.booking,
           onUpdate: () {
-            // Trigger refresh after update
-            onUpdate();
-            // Pop back to history screen after update
+            widget.onUpdate();
             Navigator.pop(context);
             Navigator.pop(context);
           },
@@ -5250,10 +7448,227 @@ class TenantViewScreen extends StatelessWidget {
     );
   }
 
+  void _showEditTotalAmountDialog(BuildContext context) {
+    final TextEditingController amountController = TextEditingController(
+      text: widget.booking.totalAmount.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit Total Amount'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Enter new total amount for this booking',
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+                    hintText: 'Enter amount',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newAmount = double.tryParse(
+                    amountController.text.trim(),
+                  );
+                  if (newAmount == null || newAmount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid amount'),
+                        backgroundColor: Color(0xFFE53935),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context);
+                  await _updateTotalAmount(context, newAmount);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE53935),
+                ),
+                child: const Text('Update'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEditMonthlyAdvanceDialog(BuildContext context) {
+    final TextEditingController amountController = TextEditingController(
+      text: widget.booking.monthlyAdvance.toString(),
+    );
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          return AlertDialog(
+            title: const Text('Edit Monthly Advance'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Enter new monthly advance amount for this booking',
+                  style: TextStyle(fontSize: 13, color: Colors.black54),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: amountController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    prefixIcon: const Icon(Icons.currency_rupee, size: 20),
+                    hintText: 'Enter amount',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text(
+                  'Cancel',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final newAmount = double.tryParse(
+                    amountController.text.trim(),
+                  );
+                  if (newAmount == null || newAmount <= 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a valid amount'),
+                        backgroundColor: Color(0xFFE53935),
+                      ),
+                    );
+                    return;
+                  }
+                  Navigator.pop(context);
+                  await _updateMonthlyAdvance(context, newAmount);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE53935),
+                ),
+                child: const Text('Update'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Future<void> _updateTotalAmount(
+    BuildContext context,
+    double newAmount,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+          'http://187.127.146.52:2003/api/vendors/update-booking-total-amount/${widget.booking.id}',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'totalAmount': newAmount}),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Total amount updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NavbarScreen(initialIndex: 1),
+          ),
+        );
+      } else {
+        throw Exception('Failed to update total amount');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: const Color(0xFFE53935),
+        ),
+      );
+    }
+  }
+
+  Future<void> _updateMonthlyAdvance(
+    BuildContext context,
+    double newAmount,
+  ) async {
+    try {
+      final response = await http.put(
+        Uri.parse(
+          'http://187.127.146.52:2003/api/vendors/update-monthly-advance/${widget.booking.id}',
+        ),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'amount': newAmount}),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Monthly advance updated successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => NavbarScreen(initialIndex: 1),
+          ),
+        );
+      } else {
+        throw Exception('Failed to update monthly advance');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: const Color(0xFFE53935),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final user = booking.userId;
-    final hostel = booking.hostelId;
+    final personalInfo = widget.booking.personalDetails;
+    final hostel = widget.booking.hostelId;
+    final filteredPayments = _getFilteredPayments();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -5263,7 +7678,7 @@ class TenantViewScreen extends StatelessWidget {
         leading: const BackButton(color: Colors.black),
         centerTitle: true,
         title: Text(
-          user?.name ?? 'Tenant Details',
+          personalInfo?.name ?? 'Tenant Details',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.w600,
@@ -5326,14 +7741,89 @@ class TenantViewScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Name', value: user?.name ?? 'N/A'),
+
+            // User Image
+            if (personalInfo?.profileImage != null &&
+                personalInfo!.profileImage.isNotEmpty)
+              Center(
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: const Color(0xFFE53935),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: ClipOval(
+                    child: Image.network(
+                      personalInfo.profileImage,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: const Color(0xFFE53935),
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: Colors.grey.shade200,
+                          child: const Icon(
+                            Icons.person,
+                            size: 50,
+                            color: Colors.grey,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              )
+            else
+              Center(
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.grey.shade200,
+                    border: Border.all(
+                      color: const Color(0xFFE53935),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(Icons.person, size: 50, color: Colors.grey),
+                ),
+              ),
+
+            const SizedBox(height: 16),
+
+            _DetailRow(label: 'Name', value: personalInfo?.name ?? 'N/A'),
             _DetailRow(
               label: 'Mobile Number',
-              value: user?.mobileNumber.toString() ?? 'N/A',
+              value: personalInfo?.mobileNumber.toString() ?? 'N/A',
+            ),
+            _DetailRow(
+              label: 'Emergency Number',
+              value: personalInfo?.emergencyNumber.toString() ?? 'N/A',
             ),
             _DetailRow(
               label: 'Booking Reference',
-              value: booking.bookingReference,
+              value: widget.booking.bookingReference,
             ),
             const SizedBox(height: 20),
             const Text(
@@ -5345,13 +7835,16 @@ class TenantViewScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Room No', value: booking.roomNo),
-            _DetailRow(label: 'Room Type', value: booking.roomType),
-            _DetailRow(label: 'Share Type', value: booking.shareType),
-            _DetailRow(label: 'Booking Type', value: booking.bookingType),
+            _DetailRow(label: 'Room No', value: widget.booking.roomNo),
+            _DetailRow(label: 'Room Type', value: widget.booking.roomType),
+            _DetailRow(label: 'Share Type', value: widget.booking.shareType),
+            _DetailRow(
+              label: 'Booking Type',
+              value: widget.booking.bookingType,
+            ),
             _DetailRow(
               label: 'Start Date',
-              value: _formatDate(booking.startDate),
+              value: _formatDate(widget.booking.startDate),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -5363,34 +7856,58 @@ class TenantViewScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _DetailRow(label: 'Total Amount', value: '₹${booking.totalAmount}'),
-            _DetailRow(
-              label: 'Monthly Advance',
-              value: '₹${booking.monthlyAdvance}',
+
+            _DetailRowWithEdit(
+              label: 'Total Amount',
+              value: '₹${widget.booking.totalAmount}',
+              onEdit: () => _showEditTotalAmountDialog(context),
             ),
-            _DetailRow(label: 'Status', value: booking.status.toUpperCase()),
+            _DetailRowWithEdit(
+              label: 'Monthly Advance',
+              value: '₹${widget.booking.monthlyAdvance}',
+              onEdit: () => _showEditMonthlyAdvanceDialog(context),
+            ),
+            _DetailRow(
+              label: 'Remaining Advance',
+              value: '₹${widget.booking.remainingMonthlyAdvance}',
+            ),
+            _DetailRow(
+              label: 'Status',
+              value: widget.booking.status.toUpperCase(),
+            ),
+            _DetailRow(
+              label: 'Advance Status',
+              value:
+                  widget.booking.monthlyAdvanceStatus?.toUpperCase() ?? 'N/A',
+              valueColor:
+                  widget.booking.monthlyAdvanceStatus?.toLowerCase() == 'paid'
+                  ? Colors.green
+                  : Colors.orange,
+            ),
+
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _getPaymentStatusColor(
-                  booking.currentMonthPaymentStatus,
+                  widget.booking.currentMonthPaymentStatus,
                 ).withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: _getPaymentStatusColor(
-                    booking.currentMonthPaymentStatus,
+                    widget.booking.currentMonthPaymentStatus,
                   ).withOpacity(0.3),
                 ),
               ),
               child: Row(
                 children: [
                   Icon(
-                    booking.currentMonthPaymentStatus?.toLowerCase() == 'paid'
+                    widget.booking.currentMonthPaymentStatus?.toLowerCase() ==
+                            'paid'
                         ? Icons.check_circle
                         : Icons.pending,
                     color: _getPaymentStatusColor(
-                      booking.currentMonthPaymentStatus,
+                      widget.booking.currentMonthPaymentStatus,
                     ),
                     size: 20,
                   ),
@@ -5404,13 +7921,14 @@ class TenantViewScreen extends StatelessWidget {
                           style: TextStyle(fontSize: 12, color: Colors.black54),
                         ),
                         Text(
-                          booking.currentMonthPaymentStatus?.toUpperCase() ??
+                          widget.booking.currentMonthPaymentStatus
+                                  ?.toUpperCase() ??
                               'N/A',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: _getPaymentStatusColor(
-                              booking.currentMonthPaymentStatus,
+                              widget.booking.currentMonthPaymentStatus,
                             ),
                           ),
                         ),
@@ -5434,8 +7952,7 @@ class TenantViewScreen extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                // Show Add First Payment button only when payment history is empty
-                if (booking.paymentHistory.isEmpty)
+                if (widget.booking.paymentHistory.isEmpty)
                   IconButton(
                     onPressed: () => _navigateToAddFirstPayment(context),
                     icon: const Icon(
@@ -5449,31 +7966,141 @@ class TenantViewScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            if (booking.paymentHistory.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  border: Border.all(color: const Color(0xFFEEEEEE)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
+            // Month Filter Chips
+            if (_availableMonths.isNotEmpty) ...[
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
                   children: [
-                    const Icon(
-                      Icons.payment_outlined,
-                      size: 48,
-                      color: Colors.black26,
+                    // "All" chip
+                    FilterChip(
+                      label: const Text('All'),
+                      selected: _selectedMonthFilter == null,
+                      onSelected: (selected) {
+                        setState(() {
+                          _selectedMonthFilter = null;
+                        });
+                      },
+                      backgroundColor: Colors.grey.shade100,
+                      selectedColor: const Color(0xFFE53935),
+                      labelStyle: TextStyle(
+                        color: _selectedMonthFilter == null
+                            ? Colors.white
+                            : Colors.black87,
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: _selectedMonthFilter == null
+                              ? const Color(0xFFE53935)
+                              : Colors.grey.shade300,
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No payment records found',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Tap the + button to add first payment',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                    ),
+                    const SizedBox(width: 8),
+                    // Month chips
+                    ..._availableMonths.map((month) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: FilterChip(
+                          label: Text(month),
+                          selected: _selectedMonthFilter == month,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedMonthFilter = selected ? month : null;
+                            });
+                          },
+                          backgroundColor: Colors.grey.shade100,
+                          selectedColor: const Color(0xFFE53935),
+                          labelStyle: TextStyle(
+                            color: _selectedMonthFilter == month
+                                ? Colors.white
+                                : Colors.black87,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 12,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            side: BorderSide(
+                              color: _selectedMonthFilter == month
+                                  ? const Color(0xFFE53935)
+                                  : Colors.grey.shade300,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
+
+            if (widget.booking.paymentHistory.isEmpty)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFFEEEEEE)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.payment_outlined,
+                        size: 48,
+                        color: Colors.black26,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No payment records found',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Tap the + button to add first payment',
+                        style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            else if (filteredPayments.isEmpty)
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0xFFEEEEEE)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.filter_alt_off,
+                        size: 48,
+                        color: Colors.black26,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No payments found for $_selectedMonthFilter',
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            _selectedMonthFilter = null;
+                          });
+                        },
+                        child: const Text(
+                          'Clear filter',
+                          style: TextStyle(color: Color(0xFFE53935)),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else
@@ -5484,7 +8111,6 @@ class TenantViewScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    // Payment History Header
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -5547,100 +8173,211 @@ class TenantViewScreen extends StatelessWidget {
                         ],
                       ),
                     ),
-                    // Payment History List
-                    ...booking.paymentHistory.map((payment) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: const BoxDecoration(
-                          border: Border(
-                            top: BorderSide(color: Color(0xFFEEEEEE)),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                _formatDateFromString(payment.date),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.black87,
-                                ),
+
+                    ...filteredPayments.map((payment) {
+                      return Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Color(0xFFEEEEEE)),
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                '₹${payment.amount}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF4CAF50),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: payment.status == 'paid'
-                                      ? Colors.green.withOpacity(0.1)
-                                      : Colors.orange.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  payment.status.toUpperCase(),
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: payment.status == 'paid'
-                                        ? Colors.green
-                                        : Colors.orange,
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    _formatDateFromString(payment.date),
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.black87,
+                                    ),
                                   ),
                                 ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    '₹${payment.amount}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFF4CAF50),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: payment.status == 'paid'
+                                          ? Colors.green.withOpacity(0.1)
+                                          : Colors.orange.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      payment.status.toUpperCase(),
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: payment.status == 'paid'
+                                            ? Colors.green
+                                            : Colors.orange,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    payment.remainingAmount > 0
+                                        ? '₹${payment.remainingAmount}'
+                                        : '₹0',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: payment.remainingAmount > 0
+                                          ? const Color(0xFFE53935)
+                                          : Colors.green,
+                                    ),
+                                  ),
+                                ),
+                                if (payment.status.toLowerCase() != 'paid')
+                                  IconButton(
+                                    onPressed: () => _navigateToEditPayment(
+                                      context,
+                                      payment,
+                                    ),
+                                    icon: const Icon(
+                                      Icons.edit,
+                                      color: Color(0xFFFF9800),
+                                      size: 20,
+                                    ),
+                                    constraints: const BoxConstraints(),
+                                    padding: EdgeInsets.zero,
+                                    splashRadius: 20,
+                                  )
+                                else
+                                  const SizedBox(width: 40),
+                              ],
+                            ),
+                          ),
+
+                          if (payment.partialDetails != null &&
+                              payment.partialDetails.isNotEmpty)
+                            Container(
+                              padding: const EdgeInsets.only(
+                                left: 40,
+                                right: 16,
+                                bottom: 12,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Divider(
+                                    height: 1,
+                                    color: Color(0xFFEEEEEE),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  const Text(
+                                    'Partial Payments',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(0xFFFF9800),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  ...payment.partialDetails.map((partial) {
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 6),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF5F5),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(0xFFFFE0E0),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 3,
+                                            height: 20,
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE53935),
+                                              borderRadius:
+                                                  BorderRadius.circular(2),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  _formatDateFromString(
+                                                    partial.date,
+                                                  ),
+                                                  style: const TextStyle(
+                                                    fontSize: 11,
+                                                    color: Colors.black54,
+                                                  ),
+                                                ),
+                                                const SizedBox(height: 2),
+                                                Text(
+                                                  'Amount: ₹${partial.amount}',
+                                                  style: const TextStyle(
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 3,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFFFF9800,
+                                              ).withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: const Text(
+                                              'PARTIAL',
+                                              style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFFFF9800),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
                               ),
                             ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                payment.remainingAmount > 0
-                                    ? '₹${payment.remainingAmount}'
-                                    : '₹0',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: payment.remainingAmount > 0
-                                      ? const Color(0xFFE53935)
-                                      : Colors.green,
-                                ),
-                              ),
-                            ),
-                            // Edit Button - Only show if payment status is not 'paid'
-                            if (payment.status.toLowerCase() != 'paid')
-                              IconButton(
-                                onPressed: () =>
-                                    _navigateToEditPayment(context, payment),
-                                icon: const Icon(
-                                  Icons.edit,
-                                  color: Color(0xFFFF9800),
-                                  size: 20,
-                                ),
-                                constraints: const BoxConstraints(),
-                                padding: EdgeInsets.zero,
-                                splashRadius: 20,
-                              )
-                            else
-                              const SizedBox(width: 40),
-                          ],
-                        ),
+                        ],
                       );
                     }).toList(),
                   ],
@@ -5659,11 +8396,11 @@ class TenantViewScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _DetailRow(
               label: 'Created At',
-              value: _formatDate(booking.createdAt),
+              value: _formatDate(widget.booking.createdAt),
             ),
             _DetailRow(
               label: 'Last Updated',
-              value: _formatDate(booking.updatedAt),
+              value: _formatDate(widget.booking.updatedAt),
             ),
             const SizedBox(height: 80),
           ],
@@ -5673,10 +8410,69 @@ class TenantViewScreen extends StatelessWidget {
   }
 }
 
+// New Detail Row with Edit Icon
+class _DetailRowWithEdit extends StatelessWidget {
+  final String label;
+  final String value;
+  final VoidCallback onEdit;
+  final Color? valueColor;
+
+  const _DetailRowWithEdit({
+    required this.label,
+    required this.value,
+    required this.onEdit,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 120,
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                color: Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 13.5,
+                color: valueColor ?? Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit, size: 18, color: Color(0xFFFF9800)),
+            constraints: const BoxConstraints(),
+            padding: EdgeInsets.zero,
+            splashRadius: 20,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Updated Detail Row with optional value color
 class _DetailRow extends StatelessWidget {
   final String label;
   final String value;
-  const _DetailRow({required this.label, required this.value});
+  final Color? valueColor;
+
+  const _DetailRow({required this.label, required this.value, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
@@ -5700,9 +8496,9 @@ class _DetailRow extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13.5,
-                color: Colors.black87,
+                color: valueColor ?? Colors.black87,
                 fontWeight: FontWeight.w500,
               ),
             ),

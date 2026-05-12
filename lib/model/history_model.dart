@@ -52,6 +52,8 @@ class Booking {
   final String id;
   final HostelInfo? hostelId;
   final UserInfo? userId;
+  final PersonalDetails? personalDetails;
+
   final String roomType;
   final String shareType;
   final String isTrue;
@@ -69,11 +71,14 @@ class Booking {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String currentMonthPaymentStatus;
+  final String monthlyAdvanceStatus;
+  final dynamic remainingMonthlyAdvance;
 
   Booking({
     required this.id,
     this.hostelId,
     this.userId,
+    this.personalDetails,
     required this.roomType,
     required this.shareType,
     required this.isTrue,
@@ -91,6 +96,8 @@ class Booking {
     required this.createdAt,
     required this.updatedAt,
     required this.currentMonthPaymentStatus,
+    required this.monthlyAdvanceStatus,
+    required this.remainingMonthlyAdvance,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -100,6 +107,10 @@ class Booking {
           ? HostelInfo.fromJson(json['hostelId'])
           : null,
       userId: json['userId'] != null ? UserInfo.fromJson(json['userId']) : null,
+      personalDetails: json['personalDetails'] != null
+          ? PersonalDetails.fromJson(json['personalDetails'])
+          : null,
+
       roomType: json['roomType'] ?? '',
       shareType: json['shareType'] ?? '',
       isTrue: json['isTrue'] ?? '',
@@ -123,6 +134,8 @@ class Booking {
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
       currentMonthPaymentStatus: json['currentMonthPaymentStatus'] ?? 'pending',
+      remainingMonthlyAdvance: json['remainingMonthlyAdvance'] ?? '',
+      monthlyAdvanceStatus: json['monthlyAdvanceStatus'] ?? 0,
     );
   }
 }
@@ -180,6 +193,29 @@ class UserInfo {
   }
 }
 
+class PersonalDetails {
+  final String name;
+  final String mobileNumber;
+  final String emergencyNumber;
+  final String profileImage;
+
+  PersonalDetails({
+    required this.name,
+    required this.mobileNumber,
+    required this.emergencyNumber,
+    required this.profileImage,
+  });
+
+  factory PersonalDetails.fromJson(Map<String, dynamic> json) {
+    return PersonalDetails(
+      name: json['name'] ?? '',
+      mobileNumber: json['mobileNumber'] ?? '',
+      emergencyNumber: json['emergencyNumber'] ?? '',
+      profileImage: json['profileImage'] ?? '',
+    );
+  }
+}
+
 // Add PaymentHistory model
 class PaymentHistory {
   final String id;
@@ -187,6 +223,7 @@ class PaymentHistory {
   final int amount;
   final String status;
   final dynamic remainingAmount;
+  final List<PartialDetails> partialDetails; // Changed from List<dynamic>
 
   PaymentHistory({
     required this.id,
@@ -194,6 +231,7 @@ class PaymentHistory {
     required this.amount,
     required this.status,
     required this.remainingAmount,
+    required this.partialDetails,
   });
 
   factory PaymentHistory.fromJson(Map<String, dynamic> json) {
@@ -203,6 +241,27 @@ class PaymentHistory {
       amount: json['amount'] ?? 0,
       status: json['status'] ?? '',
       remainingAmount: json['remainingAmount'] ?? 0,
+      partialDetails:
+          (json['partialDetails'] as List?)
+              ?.map((e) => PartialDetails.fromJson(e))
+              .toList() ??
+          [],
+    );
+  }
+}
+
+class PartialDetails {
+  final String id;
+  final String date;
+  final int amount;
+
+  PartialDetails({required this.id, required this.date, required this.amount});
+
+  factory PartialDetails.fromJson(Map<String, dynamic> json) {
+    return PartialDetails(
+      id: json['_id'] ?? '',
+      date: json['date'] ?? '',
+      amount: json['amount'] ?? 0,
     );
   }
 }
