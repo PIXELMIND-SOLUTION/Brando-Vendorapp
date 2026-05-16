@@ -51,6 +51,8 @@ dependencies:
   excel: ^4.0.6
   permission_handler: ^12.0.1
   share_plus: ^12.0.2
+  excel_table_plus: ^0.0.4
+  flutter_spreadsheet_table: ^0.0.1
 
 dev_dependencies:
   flutter_test:
@@ -90,6 +92,7 @@ flutter:
     - assets\profile.png
     - assets\qrimage.png
     - assets\appstore.jpg
+    - assets\home.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

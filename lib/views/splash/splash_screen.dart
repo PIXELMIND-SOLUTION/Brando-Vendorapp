@@ -178,6 +178,7 @@ class _SplashScreenState extends State<SplashScreen>
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
+        top: false,
         child: Stack(
           children: [
             Positioned.fill(
@@ -213,7 +214,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
                         Positioned(
-                          bottom: -size.height * 0.02,
+                          bottom: -size.height * 0.001,
                           left: -size.width * 0.06,
                           child: _buildBlob(
                             opacity: _bottomLeftOpacity,
@@ -226,7 +227,7 @@ class _SplashScreenState extends State<SplashScreen>
                           ),
                         ),
                         Positioned(
-                          top: size.height * 0.03,
+                          top: size.height * 0.16,
                           left: 0,
                           right: 0,
                           child: AnimatedBuilder(
@@ -245,49 +246,54 @@ class _SplashScreenState extends State<SplashScreen>
                                     child: Center(
                                       child: SizedBox(
                                         width: size.width * 0.62,
-                                        height: size.height * 0.42,
+                                        height:
+                                            size.width *
+                                            0.62, // Make height equal to width for perfect circle
                                         child: Stack(
                                           children: [
-                                            Positioned(
-                                              top: size.height * 0.01,
-                                              left: -6,
-                                              right: -6,
-                                              bottom: -size.height * 0.025,
-                                              child: AnimatedBuilder(
-                                                animation: _pulseController,
-                                                builder: (_, __) => Transform.scale(
-                                                  scale: _pulse.value,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            999,
-                                                          ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(999),
+                                            // Pulsing effect background
+                                            // Positioned.fill(
+                                            //   child: AnimatedBuilder(
+                                            //     animation: _pulseController,
+                                            //     builder: (_, __) =>
+                                            //         Transform.scale(
+                                            //           scale: _pulse.value,
+                                            //           child: Container(
+                                            //             decoration: BoxDecoration(
+                                            //               shape:
+                                            //                   BoxShape.circle,
+                                            //               boxShadow: [
+                                            //                 BoxShadow(
+                                            //                   color:
+                                            //                       const Color(
+                                            //                         0xFFE53935,
+                                            //                       ).withOpacity(
+                                            //                         0.3,
+                                            //                       ),
+                                            //                   blurRadius: 30,
+                                            //                   spreadRadius: 5,
+                                            //                 ),
+                                            //               ],
+                                            //             ),
+                                            //           ),
+                                            //         ),
+                                            //   ),
+                                            // ),
+                                            // Circular image
+                                            ClipOval(
                                               child: Image.asset(
-                                                'assets/splash.png',
+                                                'assets/appstore.jpg',
                                                 width: size.width * 0.62,
-                                                height: size.height * 0.42,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
-                                                    Container(
+                                                height: size.width * 0.62,
+                                                fit: BoxFit
+                                                    .cover, // Use cover to fill circle properly
+                                                errorBuilder:
+                                                    (_, __, ___) => Container(
                                                       width: size.width * 0.62,
-                                                      height:
-                                                          size.height * 0.42,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              999,
-                                                            ),
-                                                        gradient:
-                                                            const LinearGradient(
+                                                      height: size.width * 0.62,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                            gradient: LinearGradient(
                                                               begin: Alignment
                                                                   .topLeft,
                                                               end: Alignment
@@ -301,7 +307,7 @@ class _SplashScreenState extends State<SplashScreen>
                                                                 ),
                                                               ],
                                                             ),
-                                                      ),
+                                                          ),
                                                       child: const Center(
                                                         child: Icon(
                                                           Icons.hotel,
@@ -483,7 +489,7 @@ class _SplashScreenState extends State<SplashScreen>
                   borderRadius: borderRadius,
                   child: Image.asset(
                     'assets/splash.png',
-                    fit: BoxFit.cover,
+                    fit: BoxFit.fill,
                     errorBuilder: (_, __, ___) => Container(
                       decoration: BoxDecoration(
                         borderRadius: borderRadius,

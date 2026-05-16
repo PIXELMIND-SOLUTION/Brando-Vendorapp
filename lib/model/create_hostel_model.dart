@@ -1,5 +1,66 @@
 import 'dart:convert';
 
+// class SharingOption {
+//   final String shareType;
+//   final String? type;
+//   final double? monthlyPrice;
+//   final double? dailyPrice;
+//   final double? acMonthlyPrice;
+//   final double? acDailyPrice;
+//   final double? nonAcMonthlyPrice;
+//   final double? nonAcDailyPrice;
+
+//   SharingOption({
+//     required this.shareType,
+//     this.type,
+//     this.monthlyPrice,
+//     this.dailyPrice,
+//     this.acMonthlyPrice,
+//     this.acDailyPrice,
+//     this.nonAcMonthlyPrice,
+//     this.nonAcDailyPrice,
+//   });
+
+//   // Add fromJson if needed
+//   factory SharingOption.fromJson(Map<String, dynamic> json) {
+//     final type = (json['type'] as String? ?? '').toUpperCase();
+//     final monthlyPrice = (json['monthlyPrice'] ?? 0).toDouble();
+//     final dailyPrice = (json['dailyPrice'] ?? 0).toDouble();
+//     final shareType = json['shareType'] ?? '';
+
+//     // Determine if this entry is AC or Non-AC
+//     final isAc = type == 'AC';
+//     final isNonAc = type == 'NON-AC';
+
+//     return SharingOption(
+//       shareType: shareType,
+//       type: type,
+//       monthlyPrice: monthlyPrice,
+//       dailyPrice: dailyPrice,
+//       // Set AC prices only if this is an AC entry
+//       acMonthlyPrice: isAc ? monthlyPrice : 0,
+//       acDailyPrice: isAc ? dailyPrice : 0,
+//       // Set Non-AC prices only if this is a Non-AC entry
+//       nonAcMonthlyPrice: isNonAc ? monthlyPrice : 0,
+//       nonAcDailyPrice: isNonAc ? dailyPrice : 0,
+//     );
+//   }
+
+//   // Add toJson if needed
+//   Map<String, dynamic> toJson() {
+//     return {
+//       'shareType': shareType,
+//       'type': type,
+//       'monthlyPrice': monthlyPrice?.toInt(),
+//       'dailyPrice': dailyPrice?.toInt(),
+//       'acMonthlyPrice': acMonthlyPrice?.toInt(),
+//       'acDailyPrice': acDailyPrice?.toInt(),
+//       'nonAcMonthlyPrice': nonAcMonthlyPrice?.toInt(),
+//       'nonAcDailyPrice': nonAcDailyPrice?.toInt(),
+//     };
+//   }
+// }
+
 class SharingOption {
   final String shareType;
   final String? type;
@@ -9,6 +70,7 @@ class SharingOption {
   final double? acDailyPrice;
   final double? nonAcMonthlyPrice;
   final double? nonAcDailyPrice;
+  final List<String> roomNumbers; // Add this field
 
   SharingOption({
     required this.shareType,
@@ -19,14 +81,23 @@ class SharingOption {
     this.acDailyPrice,
     this.nonAcMonthlyPrice,
     this.nonAcDailyPrice,
+    this.roomNumbers = const [], // Default to empty list
   });
 
-  // Add fromJson if needed
+  // Update fromJson
   factory SharingOption.fromJson(Map<String, dynamic> json) {
     final type = (json['type'] as String? ?? '').toUpperCase();
     final monthlyPrice = (json['monthlyPrice'] ?? 0).toDouble();
     final dailyPrice = (json['dailyPrice'] ?? 0).toDouble();
     final shareType = json['shareType'] ?? '';
+
+    // Parse roomNumbers
+    List<String> roomNumbersList = [];
+    if (json['roomNumbers'] != null) {
+      if (json['roomNumbers'] is List) {
+        roomNumbersList = List<String>.from(json['roomNumbers']);
+      }
+    }
 
     // Determine if this entry is AC or Non-AC
     final isAc = type == 'AC';
@@ -37,16 +108,15 @@ class SharingOption {
       type: type,
       monthlyPrice: monthlyPrice,
       dailyPrice: dailyPrice,
-      // Set AC prices only if this is an AC entry
       acMonthlyPrice: isAc ? monthlyPrice : 0,
       acDailyPrice: isAc ? dailyPrice : 0,
-      // Set Non-AC prices only if this is a Non-AC entry
       nonAcMonthlyPrice: isNonAc ? monthlyPrice : 0,
       nonAcDailyPrice: isNonAc ? dailyPrice : 0,
+      roomNumbers: roomNumbersList,
     );
   }
 
-  // Add toJson if needed
+  // Update toJson
   Map<String, dynamic> toJson() {
     return {
       'shareType': shareType,
@@ -57,7 +127,33 @@ class SharingOption {
       'acDailyPrice': acDailyPrice?.toInt(),
       'nonAcMonthlyPrice': nonAcMonthlyPrice?.toInt(),
       'nonAcDailyPrice': nonAcDailyPrice?.toInt(),
+      'roomNumbers': roomNumbers, // Add this line
     };
+  }
+
+  // Add copyWith method for creating modified copies
+  SharingOption copyWith({
+    String? shareType,
+    String? type,
+    double? monthlyPrice,
+    double? dailyPrice,
+    double? acMonthlyPrice,
+    double? acDailyPrice,
+    double? nonAcMonthlyPrice,
+    double? nonAcDailyPrice,
+    List<String>? roomNumbers,
+  }) {
+    return SharingOption(
+      shareType: shareType ?? this.shareType,
+      type: type ?? this.type,
+      monthlyPrice: monthlyPrice ?? this.monthlyPrice,
+      dailyPrice: dailyPrice ?? this.dailyPrice,
+      acMonthlyPrice: acMonthlyPrice ?? this.acMonthlyPrice,
+      acDailyPrice: acDailyPrice ?? this.acDailyPrice,
+      nonAcMonthlyPrice: nonAcMonthlyPrice ?? this.nonAcMonthlyPrice,
+      nonAcDailyPrice: nonAcDailyPrice ?? this.nonAcDailyPrice,
+      roomNumbers: roomNumbers ?? this.roomNumbers,
+    );
   }
 }
 
@@ -98,7 +194,6 @@ class Hostel {
   final String furnishing; // Add this
   final String qrUrl; // Add if not present
   final HostelRooms? rooms;
-  final List<String> roomNumbers;
 
   Hostel({
     required this.id,
@@ -117,7 +212,6 @@ class Hostel {
     this.furnishing = '', // Default empty string
     this.qrUrl = '',
     this.rooms,
-    this.roomNumbers = const [], // Default empty list
   });
 
   factory Hostel.fromJson(Map<String, dynamic> json) {
@@ -140,14 +234,6 @@ class Hostel {
       }
     }
 
-    // Parse roomNumbers
-    List<String> roomNumbersList = [];
-    if (json['roomNumbers'] != null) {
-      if (json['roomNumbers'] is List) {
-        roomNumbersList = List<String>.from(json['roomNumbers']);
-      }
-    }
-
     return Hostel(
       id: json['_id'] ?? json['id'] ?? '',
       name: json['name'] ?? '',
@@ -167,7 +253,6 @@ class Hostel {
       rooms: json['rooms'] != null
           ? HostelRooms.fromJson(json['rooms'] as Map<String, dynamic>)
           : null,
-      roomNumbers: roomNumbersList, // Add this line
     );
   }
 
@@ -253,7 +338,6 @@ class HostelRequest {
   final List<String> imagePaths;
   final List<String> features;
   final String furnishing;
-  final List<String> roomNumbers;
 
   const HostelRequest({
     required this.categoryId,
@@ -269,7 +353,6 @@ class HostelRequest {
     this.imagePaths = const [],
     this.features = const [],
     this.furnishing = '',
-    this.roomNumbers = const [],
   });
 
   Map<String, String> toFormFields() {
@@ -288,7 +371,6 @@ class HostelRequest {
       'sharings': _sharingListToJsonString(sharings),
       'features': jsonEncode(features),
       'furnishing': furnishing,
-      'roomNumbers': jsonEncode(roomNumbers), // Add this line
     };
   }
 
@@ -305,6 +387,7 @@ class HostelRequest {
         'acDailyPrice': sharing.acDailyPrice?.toInt() ?? 0,
         'nonAcMonthlyPrice': sharing.nonAcMonthlyPrice?.toInt() ?? 0,
         'nonAcDailyPrice': sharing.nonAcDailyPrice?.toInt() ?? 0,
+        'roomNumbers': sharing.roomNumbers, // Add this line
       });
     }
 

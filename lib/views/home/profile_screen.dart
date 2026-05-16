@@ -616,6 +616,14 @@ class ProfileScreen extends StatelessWidget {
                 GestureDetector(
                   onTap: () => Navigator.push(
                     context,
+                    MaterialPageRoute(builder: (_) => OrderHistoryScreen()),
+                  ),
+                  child: _buildTile(Icons.history, "My Orders"),
+                ),
+
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
                     MaterialPageRoute(builder: (_) => EditProfile()),
                   ),
                   child: _buildTile(
@@ -649,14 +657,6 @@ class ProfileScreen extends StatelessWidget {
                     );
                   },
                   child: _buildTile(Icons.help_outline, "Need Help?"),
-                ),
-
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => AllHostelScreen()),
-                  ),
-                  child: _buildTile(Icons.hotel, "All Bookings"),
                 ),
 
                 GestureDetector(

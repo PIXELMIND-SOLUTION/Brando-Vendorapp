@@ -703,16 +703,57 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) setState(() => _showSuccessOverlay = false);
   }
 
+  // Future<void> _openCreateHostel() async {
+  //   await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => HifiDetailsScreen(
+  //         onSave: (request) async {
+  //           print(
+  //             '🔴 DEBUG: request.roomNumbers in create = ${request.roomNumbers}',
+  //           ); // Add this
+
+  //           final vendorId = await SharedPreferenceHelper.getVendorId();
+  //           if (vendorId == null) return;
+  //           final finalRequest = HostelRequest(
+  //             categoryId: request.categoryId,
+  //             vendorId: vendorId,
+  //             name: request.name,
+  //             rating: request.rating,
+  //             address: request.address,
+  //             monthlyAdvance: request.monthlyAdvance,
+  //             latitude: request.latitude,
+  //             longitude: request.longitude,
+  //             isAc: request.isAc,
+  //             sharings: request.sharings,
+  //             imagePaths: request.imagePaths,
+  //             features: request.features, // Add this
+  //             furnishing: request.furnishing, // Add this
+  //             roomNumbers: request.roomNumbers, // ⬅️ ADD THIS LINE
+  //           );
+  //           print(
+  //             '🔴 DEBUG: finalRequest.roomNumbers = ${finalRequest.roomNumbers}',
+  //           ); // Add this
+
+  //           if (!mounted) return;
+  //           final success = await context.read<HostelProvider>().createHostel(
+  //             finalRequest,
+  //           );
+  //           if (mounted && success) {
+  //             _showSuccess('Hostel Created!');
+  //           }
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Future<void> _openCreateHostel() async {
     await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => HifiDetailsScreen(
           onSave: (request) async {
-            print(
-              '🔴 DEBUG: request.roomNumbers in create = ${request.roomNumbers}',
-            ); // Add this
-
             final vendorId = await SharedPreferenceHelper.getVendorId();
             if (vendorId == null) return;
             final finalRequest = HostelRequest(
@@ -727,13 +768,10 @@ class _HomeScreenState extends State<HomeScreen> {
               isAc: request.isAc,
               sharings: request.sharings,
               imagePaths: request.imagePaths,
-              features: request.features, // Add this
-              furnishing: request.furnishing, // Add this
-              roomNumbers: request.roomNumbers, // ⬅️ ADD THIS LINE
+              features: request.features,
+              furnishing: request.furnishing,
+              // REMOVE: roomNumbers: request.roomNumbers,
             );
-            print(
-              '🔴 DEBUG: finalRequest.roomNumbers = ${finalRequest.roomNumbers}',
-            ); // Add this
 
             if (!mounted) return;
             final success = await context.read<HostelProvider>().createHostel(
@@ -770,9 +808,9 @@ class _HomeScreenState extends State<HomeScreen> {
               isAc: request.isAc,
               sharings: request.sharings,
               imagePaths: request.imagePaths,
-              features: request.features, // Add this
-              furnishing: request.furnishing, // Add this
-              roomNumbers: request.roomNumbers,
+              features: request.features,
+              furnishing: request.furnishing,
+              // REMOVE: roomNumbers: request.roomNumbers,
             );
 
             final success = await context.read<HostelProvider>().updateHostel(
@@ -800,6 +838,59 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
+  // Future<void> _openEditHostel(Hostel hostel) async {
+  //   await Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (_) => HifiDetailsScreen(
+  //         existingHostel: hostel,
+  //         onSave: (request) async {
+  //           if (!mounted) return;
+  //           final vendorId = await SharedPreferenceHelper.getVendorId();
+
+  //           final updatedRequest = HostelRequest(
+  //             categoryId: request.categoryId,
+  //             vendorId: vendorId,
+  //             name: request.name,
+  //             rating: request.rating,
+  //             address: request.address,
+  //             monthlyAdvance: request.monthlyAdvance,
+  //             latitude: request.latitude,
+  //             longitude: request.longitude,
+  //             isAc: request.isAc,
+  //             sharings: request.sharings,
+  //             imagePaths: request.imagePaths,
+  //             features: request.features, // Add this
+  //             furnishing: request.furnishing, // Add this
+  //             roomNumbers: request.roomNumbers,
+  //           );
+
+  //           final success = await context.read<HostelProvider>().updateHostel(
+  //             hostelId: hostel.id,
+  //             request: updatedRequest,
+  //           );
+  //           if (mounted) {
+  //             if (success) {
+  //               _showSuccess('Hostel Updated!');
+  //               await _refreshHostelsData();
+  //             } else {
+  //               ScaffoldMessenger.of(context).showSnackBar(
+  //                 SnackBar(
+  //                   content: Text(
+  //                     context.read<HostelProvider>().errorMessage ??
+  //                         'Failed to update hostel',
+  //                   ),
+  //                   backgroundColor: Colors.red,
+  //                 ),
+  //               );
+  //             }
+  //           }
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Future<void> _refreshHostelsData() async {
     final vendorId = await SharedPreferenceHelper.getVendorId();
@@ -1372,291 +1463,290 @@ class _HomeScreenState extends State<HomeScreen> {
                           // ),
 
                           // ── Camera Capturing section ──────────────────────
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 4,
-                            ),
-                            child: RichText(
-                              text: const TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: 'Camera ',
-                                    style: TextStyle(
-                                      color: Color(0xFFE53935),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: 'Capturing',
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          // Padding(
+                          //   padding: const EdgeInsets.symmetric(
+                          //     horizontal: 16,
+                          //     vertical: 4,
+                          //   ),
+                          //   child: RichText(
+                          //     text: const TextSpan(
+                          //       children: [
+                          //         TextSpan(
+                          //           text: 'Camera ',
+                          //           style: TextStyle(
+                          //             color: Color(0xFFE53935),
+                          //             fontWeight: FontWeight.bold,
+                          //             fontSize: 16,
+                          //           ),
+                          //         ),
+                          //         TextSpan(
+                          //           text: 'Capturing',
+                          //           style: TextStyle(
+                          //             color: Colors.black,
+                          //             fontWeight: FontWeight.bold,
+                          //             fontSize: 16,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // ),
+                          // Consumer<HostelProvider>(
+                          //   builder: (context, hostelProvider, _) {
+                          //     final hostels = hostelProvider.hostels;
+                          //     if (hostels.isEmpty) {
+                          //       return Padding(
+                          //         padding: const EdgeInsets.symmetric(
+                          //           horizontal: 16,
+                          //           vertical: 8,
+                          //         ),
+                          //         child: _AddCameraCard(
+                          //           onTap: null,
+                          //           label: 'Add a hostel first to add cameras',
+                          //         ),
+                          //       );
+                          //     }
 
-                          Consumer<HostelProvider>(
-                            builder: (context, hostelProvider, _) {
-                              final hostels = hostelProvider.hostels;
-                              if (hostels.isEmpty) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  child: _AddCameraCard(
-                                    onTap: null,
-                                    label: 'Add a hostel first to add cameras',
-                                  ),
-                                );
-                              }
+                          //     // Set default selected hostel if none selected
+                          //     if (_selectedHostelId == null &&
+                          //         hostels.isNotEmpty) {
+                          //       WidgetsBinding.instance.addPostFrameCallback((
+                          //         _,
+                          //       ) {
+                          //         setState(() {
+                          //           _selectedHostelId = hostels.first.id;
+                          //         });
+                          //         _loadCamerasForHostel(hostels.first.id);
+                          //       });
+                          //     }
 
-                              // Set default selected hostel if none selected
-                              if (_selectedHostelId == null &&
-                                  hostels.isNotEmpty) {
-                                WidgetsBinding.instance.addPostFrameCallback((
-                                  _,
-                                ) {
-                                  setState(() {
-                                    _selectedHostelId = hostels.first.id;
-                                  });
-                                  _loadCamerasForHostel(hostels.first.id);
-                                });
-                              }
+                          //     return Column(
+                          //       crossAxisAlignment: CrossAxisAlignment.start,
+                          //       children: [
+                          //         // Hostel Selector Dropdown
+                          //         Padding(
+                          //           padding: const EdgeInsets.symmetric(
+                          //             horizontal: 16,
+                          //             vertical: 8,
+                          //           ),
+                          //           child: Container(
+                          //             padding: const EdgeInsets.symmetric(
+                          //               horizontal: 12,
+                          //             ),
+                          //             decoration: BoxDecoration(
+                          //               border: Border.all(
+                          //                 color: Colors.grey.shade300,
+                          //               ),
+                          //               borderRadius: BorderRadius.circular(10),
+                          //               color: Colors.white,
+                          //             ),
+                          //             child: DropdownButtonHideUnderline(
+                          //               child: DropdownButton<String>(
+                          //                 isExpanded: true,
+                          //                 hint: const Text('Select Hostel'),
+                          //                 value: _selectedHostelId,
+                          //                 items: hostels.map((hostel) {
+                          //                   return DropdownMenuItem<String>(
+                          //                     value: hostel.id,
+                          //                     child: Row(
+                          //                       children: [
+                          //                         Container(
+                          //                           width: 8,
+                          //                           height: 8,
+                          //                           decoration: BoxDecoration(
+                          //                             color: const Color(
+                          //                               0xFFE53935,
+                          //                             ),
+                          //                             shape: BoxShape.circle,
+                          //                           ),
+                          //                         ),
+                          //                         const SizedBox(width: 8),
+                          //                         Expanded(
+                          //                           child: Text(
+                          //                             hostel.name,
+                          //                             style: const TextStyle(
+                          //                               fontSize: 14,
+                          //                             ),
+                          //                             overflow:
+                          //                                 TextOverflow.ellipsis,
+                          //                           ),
+                          //                         ),
+                          //                       ],
+                          //                     ),
+                          //                   );
+                          //                 }).toList(),
+                          //                 onChanged: (String? newValue) {
+                          //                   if (newValue != null) {
+                          //                     setState(() {
+                          //                       _selectedHostelId = newValue;
+                          //                     });
+                          //                     _loadCamerasForHostel(newValue);
+                          //                   }
+                          //                 },
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         ),
 
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Hostel Selector Dropdown
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 8,
-                                    ),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border.all(
-                                          color: Colors.grey.shade300,
-                                        ),
-                                        borderRadius: BorderRadius.circular(10),
-                                        color: Colors.white,
-                                      ),
-                                      child: DropdownButtonHideUnderline(
-                                        child: DropdownButton<String>(
-                                          isExpanded: true,
-                                          hint: const Text('Select Hostel'),
-                                          value: _selectedHostelId,
-                                          items: hostels.map((hostel) {
-                                            return DropdownMenuItem<String>(
-                                              value: hostel.id,
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 8,
-                                                    height: 8,
-                                                    decoration: BoxDecoration(
-                                                      color: const Color(
-                                                        0xFFE53935,
-                                                      ),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      hostel.name,
-                                                      style: const TextStyle(
-                                                        fontSize: 14,
-                                                      ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }).toList(),
-                                          onChanged: (String? newValue) {
-                                            if (newValue != null) {
-                                              setState(() {
-                                                _selectedHostelId = newValue;
-                                              });
-                                              _loadCamerasForHostel(newValue);
-                                            }
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                  ),
+                          //         // Cameras Grid/List
+                          //         Consumer2<
+                          //           CameraProvider,
+                          //           StreamCameraProvider
+                          //         >(
+                          //           builder: (context, cameraProvider, streamProvider, _) {
+                          //             if (cameraProvider.isLoading) {
+                          //               return const Padding(
+                          //                 padding: EdgeInsets.all(20),
+                          //                 child: Center(
+                          //                   child: CircularProgressIndicator(),
+                          //                 ),
+                          //               );
+                          //             }
 
-                                  // Cameras Grid/List
-                                  Consumer2<
-                                    CameraProvider,
-                                    StreamCameraProvider
-                                  >(
-                                    builder: (context, cameraProvider, streamProvider, _) {
-                                      if (cameraProvider.isLoading) {
-                                        return const Padding(
-                                          padding: EdgeInsets.all(20),
-                                          child: Center(
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        );
-                                      }
+                          //             final cameras = cameraProvider.cameras;
 
-                                      final cameras = cameraProvider.cameras;
+                          //             if (cameras.isEmpty) {
+                          //               return Center(
+                          //                 child: Padding(
+                          //                   padding: const EdgeInsets.symmetric(
+                          //                     horizontal: 16,
+                          //                     vertical: 8,
+                          //                   ),
+                          //                   child: Container(
+                          //                     padding: const EdgeInsets.all(20),
+                          //                     decoration: BoxDecoration(
+                          //                       color: Colors.grey.shade50,
+                          //                       borderRadius:
+                          //                           BorderRadius.circular(12),
+                          //                       border: Border.all(
+                          //                         color: Colors.grey.shade200,
+                          //                       ),
+                          //                     ),
+                          //                     child: Column(
+                          //                       children: [
+                          //                         const Icon(
+                          //                           Icons.videocam_off_outlined,
+                          //                           size: 48,
+                          //                           color: Colors.grey,
+                          //                         ),
+                          //                         const SizedBox(height: 8),
+                          //                         Text(
+                          //                           'No cameras added yet',
+                          //                           style: TextStyle(
+                          //                             color:
+                          //                                 Colors.grey.shade600,
+                          //                           ),
+                          //                         ),
+                          //                         const SizedBox(height: 8),
+                          //                         Text(
+                          //                           'Tap "Add Your Camera" to add one',
+                          //                           style: TextStyle(
+                          //                             fontSize: 12,
+                          //                             color:
+                          //                                 Colors.grey.shade500,
+                          //                           ),
+                          //                         ),
+                          //                       ],
+                          //                     ),
+                          //                   ),
+                          //                 ),
+                          //               );
+                          //             }
 
-                                      if (cameras.isEmpty) {
-                                        return Center(
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            child: Container(
-                                              padding: const EdgeInsets.all(20),
-                                              decoration: BoxDecoration(
-                                                color: Colors.grey.shade50,
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: Colors.grey.shade200,
-                                                ),
-                                              ),
-                                              child: Column(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.videocam_off_outlined,
-                                                    size: 48,
-                                                    color: Colors.grey,
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Text(
-                                                    'No cameras added yet',
-                                                    style: TextStyle(
-                                                      color:
-                                                          Colors.grey.shade600,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 8),
-                                                  Text(
-                                                    'Tap "Add Your Camera" to add one',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color:
-                                                          Colors.grey.shade500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        );
-                                      }
-
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 4,
-                                            ),
-                                            child: Text(
-                                              'Cameras (${cameras.length})',
-                                              style: const TextStyle(
-                                                fontSize: 13,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: 100,
-                                            child: ListView.builder(
-                                              scrollDirection: Axis.horizontal,
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 16,
-                                                  ),
-                                              itemCount: cameras.length,
-                                              itemBuilder: (_, i) {
-                                                final cam = cameras[i];
-                                                final streamData =
-                                                    streamProvider
-                                                        .getStreamForCamera(
-                                                          cam.cameraId,
-                                                        );
-                                                return GestureDetector(
-                                                  onTap: () {
-                                                    cameraProvider
-                                                        .getSingleCamera(
-                                                          hostelId:
-                                                              _selectedHostelId!,
-                                                          cameraId:
-                                                              cam.cameraId,
-                                                        );
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder: (_) => MultiProvider(
-                                                          providers: [
-                                                            ChangeNotifierProvider.value(
-                                                              value:
-                                                                  cameraProvider,
-                                                            ),
-                                                            ChangeNotifierProvider.value(
-                                                              value:
-                                                                  streamProvider,
-                                                            ),
-                                                          ],
-                                                          child: CameraDetailsScreen(
-                                                            hostelId:
-                                                                _selectedHostelId!,
-                                                            camera: cam,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    );
-                                                  },
-                                                  child: _CameraThumbCard(
-                                                    camera: cam,
-                                                    streamData: streamData,
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(height: 12),
-                                          _LiveStreamCompactPanel(
-                                            hostelId: _selectedHostelId!,
-                                            cameras: cameras,
-                                            streamProvider: streamProvider,
-                                          ),
-                                          const SizedBox(height: 10),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                  _AddCameraCard(
-                                    onTap: () =>
-                                        _openAddCameraSheet(_selectedHostelId!),
-                                    label: 'Add Your Camera',
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
+                          //             return Column(
+                          //               crossAxisAlignment:
+                          //                   CrossAxisAlignment.start,
+                          //               children: [
+                          //                 Padding(
+                          //                   padding: const EdgeInsets.symmetric(
+                          //                     horizontal: 16,
+                          //                     vertical: 4,
+                          //                   ),
+                          //                   child: Text(
+                          //                     'Cameras (${cameras.length})',
+                          //                     style: const TextStyle(
+                          //                       fontSize: 13,
+                          //                       fontWeight: FontWeight.w600,
+                          //                       color: Colors.black54,
+                          //                     ),
+                          //                   ),
+                          //                 ),
+                          //                 SizedBox(
+                          //                   height: 100,
+                          //                   child: ListView.builder(
+                          //                     scrollDirection: Axis.horizontal,
+                          //                     padding:
+                          //                         const EdgeInsets.symmetric(
+                          //                           horizontal: 16,
+                          //                         ),
+                          //                     itemCount: cameras.length,
+                          //                     itemBuilder: (_, i) {
+                          //                       final cam = cameras[i];
+                          //                       final streamData =
+                          //                           streamProvider
+                          //                               .getStreamForCamera(
+                          //                                 cam.cameraId,
+                          //                               );
+                          //                       return GestureDetector(
+                          //                         onTap: () {
+                          //                           cameraProvider
+                          //                               .getSingleCamera(
+                          //                                 hostelId:
+                          //                                     _selectedHostelId!,
+                          //                                 cameraId:
+                          //                                     cam.cameraId,
+                          //                               );
+                          //                           Navigator.push(
+                          //                             context,
+                          //                             MaterialPageRoute(
+                          //                               builder: (_) => MultiProvider(
+                          //                                 providers: [
+                          //                                   ChangeNotifierProvider.value(
+                          //                                     value:
+                          //                                         cameraProvider,
+                          //                                   ),
+                          //                                   ChangeNotifierProvider.value(
+                          //                                     value:
+                          //                                         streamProvider,
+                          //                                   ),
+                          //                                 ],
+                          //                                 child: CameraDetailsScreen(
+                          //                                   hostelId:
+                          //                                       _selectedHostelId!,
+                          //                                   camera: cam,
+                          //                                 ),
+                          //                               ),
+                          //                             ),
+                          //                           );
+                          //                         },
+                          //                         child: _CameraThumbCard(
+                          //                           camera: cam,
+                          //                           streamData: streamData,
+                          //                         ),
+                          //                       );
+                          //                     },
+                          //                   ),
+                          //                 ),
+                          //                 const SizedBox(height: 12),
+                          //                 _LiveStreamCompactPanel(
+                          //                   hostelId: _selectedHostelId!,
+                          //                   cameras: cameras,
+                          //                   streamProvider: streamProvider,
+                          //                 ),
+                          //                 const SizedBox(height: 10),
+                          //               ],
+                          //             );
+                          //           },
+                          //         ),
+                          //         _AddCameraCard(
+                          //           onTap: () =>
+                          //               _openAddCameraSheet(_selectedHostelId!),
+                          //           label: 'Add Your Camera',
+                          //         ),
+                          //       ],
+                          //     );
+                          //   },
+                          // ),
 
                           // ── Hifi heading + Monthly/Daily toggle ───────────
                           Padding(
@@ -5669,6 +5759,2611 @@ class HifiDetailsScreen extends StatefulWidget {
   State<HifiDetailsScreen> createState() => _HifiDetailsScreenState();
 }
 
+// class _HifiDetailsScreenState extends State<HifiDetailsScreen>
+//     with SingleTickerProviderStateMixin {
+//   late TabController _tabController;
+
+//   late DateTime _selectedDate;
+//   late List<Map<String, dynamic>> _dates;
+//   final List<XFile> _hostelImages = [];
+//   final ImagePicker _picker = ImagePicker();
+
+//   late Map<String, List<String>> _roomNumbersMap;
+//   late Map<String, TextEditingController> _roomNumberControllers;
+//   late Map<String, String> _selectedPrefixes;
+//   final List<String> _alphabetOptions = [
+//     '',
+//     'A',
+//     'B',
+//     'C',
+//     'D',
+//     'E',
+//     'F',
+//     'G',
+//     'H',
+//     'I',
+//     'J',
+//     'K',
+//     'L',
+//     'M',
+//     'N',
+//     'O',
+//     'P',
+//     'Q',
+//     'R',
+//     'S',
+//     'T',
+//     'U',
+//     'V',
+//     'W',
+//     'X',
+//     'Y',
+//     'Z',
+//   ];
+
+//   late TextEditingController _titleController,
+//       _addressController,
+//       _advanceController,
+//       _ratingController,
+//       _latController,
+//       _lngController;
+
+//   // Furnishing selection (only shown for BHK/RK categories)
+//   String _selectedFurnishing = 'Unfurnished';
+//   final List<String> _furnishingOptions = [
+//     'Unfurnished',
+//     'Semi Furnished',
+//     'Fully Furnished',
+//   ];
+
+//   // Features list (only shown for BHK/RK categories)
+//   final List<String> _features = [];
+//   final TextEditingController _featureController = TextEditingController();
+
+//   // Price controllers
+//   late Map<String, TextEditingController> _monthlyNonAc;
+//   late Map<String, TextEditingController> _monthlyAc;
+//   late Map<String, TextEditingController> _dailyNonAc;
+//   late Map<String, TextEditingController> _dailyAc;
+
+//   // Default share keys (for normal categories: Mens/Womens/Coliving)
+//   final List<String> _defaultShareKeys = [
+//     '1 Share',
+//     '2 Share',
+//     '3 Share',
+//     '4 Share',
+//     '5 Share',
+//     '6 Share',
+//   ];
+
+//   // BHK share keys
+//   final List<String> _bhkShareKeys = ['1BHK', '2BHK', '3BHK', '4BHK'];
+
+//   // RK share key
+//   final List<String> _rkShareKeys = ['RK'];
+
+//   List<Map<String, dynamic>> _buildDates() {
+//     const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+//     final today = DateTime.now();
+//     return List.generate(6, (i) {
+//       final d = today.add(Duration(days: i));
+//       return {'day': dayNames[d.weekday - 1], 'date': d.day, 'fullDate': d};
+//     });
+//   }
+
+//   Category? _selectedCategory;
+//   bool _isLoadingCategories = true;
+
+//   // Get share keys based on selected category
+//   List<String> get _shareKeys {
+//     if (_selectedCategory == null) return _defaultShareKeys;
+
+//     final categoryName = _selectedCategory!.name.toLowerCase();
+
+//     if (categoryName.contains('bhk')) {
+//       return _bhkShareKeys;
+//     } else if (categoryName.contains('rk')) {
+//       return _rkShareKeys;
+//     } else {
+//       return _defaultShareKeys;
+//     }
+//   }
+
+//   // Check if current category is BHK
+//   bool get _isBHKCategory {
+//     if (_selectedCategory == null) return false;
+//     return _selectedCategory!.name.toLowerCase().contains('bhk');
+//   }
+
+//   // Check if current category is RK
+//   bool get _isRKCategory {
+//     if (_selectedCategory == null) return false;
+//     return _selectedCategory!.name.toLowerCase().contains('rk');
+//   }
+
+//   // Should show furnishing and features (only for BHK/RK categories)
+//   bool get _shouldShowFurnishingAndFeatures {
+//     return _isBHKCategory || _isRKCategory;
+//   }
+
+//   // @override
+//   // void initState() {
+//   //   super.initState();
+//   //   _tabController = TabController(length: 2, vsync: this);
+//   //   _dates = _buildDates();
+//   //   _selectedDate = _dates.first['fullDate'] as DateTime;
+
+//   //   final h = widget.existingHostel;
+
+//   //   _titleController = TextEditingController(text: h?.name ?? '');
+//   //   _addressController = TextEditingController(text: h?.address ?? '');
+//   //   _advanceController = TextEditingController(
+//   //     text: h != null ? h.monthlyAdvance.toStringAsFixed(0) : '',
+//   //   );
+//   //   _ratingController = TextEditingController(
+//   //     text: h != null ? h.rating.toString() : '4.5',
+//   //   );
+//   //   _latController = TextEditingController(
+//   //     text: h != null ? h.latitude.toString() : '',
+//   //   );
+//   //   _lngController = TextEditingController(
+//   //     text: h != null ? h.longitude.toString() : '',
+//   //   );
+
+//   //   // Only load features and furnishing if we have data AND it's BHK/RK category
+//   //   if (widget.existingHostel != null) {
+//   //     // Load existing features
+//   //     if (h?.features != null && h!.features.isNotEmpty) {
+//   //       _features.addAll(h.features);
+//   //     }
+//   //     // Load existing furnishing
+//   //     if (h?.furnishing != null && h!.furnishing.isNotEmpty) {
+//   //       _selectedFurnishing = h.furnishing;
+//   //     }
+//   //   }
+
+//   //   // Initialize empty price controllers
+//   //   _monthlyNonAc = {};
+//   //   _monthlyAc = {};
+//   //   _dailyNonAc = {};
+//   //   _dailyAc = {};
+
+//   //   _loadCategories();
+//   // }
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _tabController = TabController(length: 2, vsync: this);
+//     _dates = _buildDates();
+//     _selectedDate = _dates.first['fullDate'] as DateTime;
+
+//     // Initialize room numbers map
+//     _roomNumbersMap = {};
+//     _roomNumberControllers = {};
+//     _selectedPrefixes = {};
+
+//     final h = widget.existingHostel;
+
+//     _titleController = TextEditingController(text: h?.name ?? '');
+//     _addressController = TextEditingController(text: h?.address ?? '');
+//     _advanceController = TextEditingController(
+//       text: h != null ? h.monthlyAdvance.toStringAsFixed(0) : '',
+//     );
+//     _ratingController = TextEditingController(
+//       text: h != null ? h.rating.toString() : '4.5',
+//     );
+//     _latController = TextEditingController(
+//       text: h != null ? h.latitude.toString() : '',
+//     );
+//     _lngController = TextEditingController(
+//       text: h != null ? h.longitude.toString() : '',
+//     );
+
+//     // Initialize empty price controllers
+//     _monthlyNonAc = {};
+//     _monthlyAc = {};
+//     _dailyNonAc = {};
+//     _dailyAc = {};
+
+//     _loadCategories();
+//   }
+
+//   // Helper method to get the key for room numbers map
+//   String _getRoomKey(String shareType, bool isAc) {
+//     return "${shareType}_${isAc ? 'AC' : 'NON-AC'}";
+//   }
+
+//   // Add room number for specific sharing option
+//   void _addRoomNumberForSharing(String shareKey, bool isAc) {
+//     final controller = _roomNumberControllers[_getRoomKey(shareKey, isAc)];
+//     if (controller == null) return;
+
+//     final input = controller.text.trim();
+//     if (input.isEmpty) return;
+
+//     final roomKey = _getRoomKey(shareKey, isAc);
+//     final prefix = _selectedPrefixes[roomKey] ?? '';
+//     List<String> currentRooms = _roomNumbersMap[roomKey] ?? [];
+
+//     // Check if it's a range (contains '-')
+//     if (input.contains('-')) {
+//       _addRoomRangeForSharing(shareKey, isAc, input, prefix, currentRooms);
+//     } else {
+//       // Single room number
+//       final roomNumber = prefix.isNotEmpty ? '$prefix$input' : input;
+//       if (!currentRooms.contains(roomNumber)) {
+//         setState(() {
+//           currentRooms.add(roomNumber);
+//           _roomNumbersMap[roomKey] = currentRooms;
+//           controller.clear();
+//         });
+//       } else {
+//         _showSnackBar(
+//           'Room number already exists for $shareKey ${isAc ? 'AC' : 'Non-AC'}',
+//         );
+//       }
+//     }
+//   }
+
+//   void _addRoomRangeForSharing(
+//     String shareKey,
+//     bool isAc,
+//     String range,
+//     String prefix,
+//     List<String> currentRooms,
+//   ) {
+//     final parts = range.split('-');
+//     if (parts.length != 2) {
+//       _showSnackBar('Invalid range format. Use format: 101-118');
+//       return;
+//     }
+
+//     final startStr = parts[0].trim();
+//     final endStr = parts[1].trim();
+
+//     final startNum = int.tryParse(startStr);
+//     final endNum = int.tryParse(endStr);
+
+//     if (startNum != null && endNum != null) {
+//       if (startNum >= endNum) {
+//         _showSnackBar('Start number must be less than end number');
+//         return;
+//       }
+
+//       if (endNum - startNum > 100) {
+//         _showSnackBar('Cannot add more than 100 rooms at once');
+//         return;
+//       }
+
+//       final newRooms = <String>[];
+//       for (int i = startNum; i <= endNum; i++) {
+//         final roomNumber = prefix.isNotEmpty ? '$prefix$i' : i.toString();
+//         if (!currentRooms.contains(roomNumber) &&
+//             !newRooms.contains(roomNumber)) {
+//           newRooms.add(roomNumber);
+//         }
+//       }
+
+//       if (newRooms.isNotEmpty) {
+//         setState(() {
+//           currentRooms.addAll(newRooms);
+//           _roomNumbersMap[_getRoomKey(shareKey, isAc)] = currentRooms;
+//           _roomNumberControllers[_getRoomKey(shareKey, isAc)]?.clear();
+//         });
+//         _showSnackBar(
+//           'Added ${newRooms.length} rooms for $shareKey ${isAc ? 'AC' : 'Non-AC'}',
+//         );
+//       }
+//     }
+//   }
+
+//   void _removeRoomNumberForSharing(
+//     String shareKey,
+//     bool isAc,
+//     String roomNumber,
+//   ) {
+//     setState(() {
+//       final roomKey = _getRoomKey(shareKey, isAc);
+//       final rooms = _roomNumbersMap[roomKey] ?? [];
+//       rooms.remove(roomNumber);
+//       if (rooms.isEmpty) {
+//         _roomNumbersMap.remove(roomKey);
+//       } else {
+//         _roomNumbersMap[roomKey] = rooms;
+//       }
+//     });
+//   }
+
+//   // Update _rebuildPriceControllers to load room numbers from existing sharing options
+//   void _rebuildPriceControllers() {
+//     // Save old values if they exist
+//     final oldMonthlyNonAc = _monthlyNonAc;
+//     final oldMonthlyAc = _monthlyAc;
+//     final oldDailyNonAc = _dailyNonAc;
+//     final oldDailyAc = _dailyAc;
+
+//     // Create new controllers with current share keys
+//     _monthlyNonAc = _buildControllers([], isAc: false, isMonthly: true);
+//     _monthlyAc = _buildControllers([], isAc: true, isMonthly: true);
+//     _dailyNonAc = _buildControllers([], isAc: false, isMonthly: false);
+//     _dailyAc = _buildControllers([], isAc: true, isMonthly: false);
+
+//     // Initialize room number controllers for each sharing option
+//     for (var key in _shareKeys) {
+//       for (var isAc in [true, false]) {
+//         final roomKey = _getRoomKey(key, isAc);
+//         _roomNumberControllers[roomKey] = TextEditingController();
+//         _selectedPrefixes[roomKey] = '';
+//         if (!_roomNumbersMap.containsKey(roomKey)) {
+//           _roomNumbersMap[roomKey] = [];
+//         }
+//       }
+//     }
+
+//     // Dispose old controllers
+//     for (var c in [
+//       ...oldMonthlyNonAc.values,
+//       ...oldMonthlyAc.values,
+//       ...oldDailyNonAc.values,
+//       ...oldDailyAc.values,
+//     ]) {
+//       c.dispose();
+//     }
+
+//     // If editing existing hostel, load prices and room numbers
+//     final h = widget.existingHostel;
+//     if (h != null && h.sharings.isNotEmpty && _selectedCategory != null) {
+//       // Clear existing room numbers
+//       _roomNumbersMap.clear();
+
+//       for (var key in _shareKeys) {
+//         // Find AC sharing for this key
+//         SharingOption? acSharing;
+//         try {
+//           acSharing = h.sharings.firstWhere(
+//             (s) =>
+//                 s.shareType.toLowerCase() == key.toLowerCase() &&
+//                 s.type?.toUpperCase() == 'AC',
+//           );
+//         } catch (_) {}
+
+//         // Find Non-AC sharing for this key
+//         SharingOption? nonAcSharing;
+//         try {
+//           nonAcSharing = h.sharings.firstWhere(
+//             (s) =>
+//                 s.shareType.toLowerCase() == key.toLowerCase() &&
+//                 s.type?.toUpperCase() == 'NON-AC',
+//           );
+//         } catch (_) {}
+
+//         // Load room numbers from AC sharing
+//         if (acSharing != null && acSharing.roomNumbers.isNotEmpty) {
+//           _roomNumbersMap[_getRoomKey(key, true)] = List.from(
+//             acSharing.roomNumbers,
+//           );
+//         } else {
+//           _roomNumbersMap[_getRoomKey(key, true)] = [];
+//         }
+
+//         // Load room numbers from Non-AC sharing
+//         if (nonAcSharing != null && nonAcSharing.roomNumbers.isNotEmpty) {
+//           _roomNumbersMap[_getRoomKey(key, false)] = List.from(
+//             nonAcSharing.roomNumbers,
+//           );
+//         } else {
+//           _roomNumbersMap[_getRoomKey(key, false)] = [];
+//         }
+
+//         // Set AC prices if found
+//         if (acSharing != null) {
+//           final acMonthly = acSharing.monthlyPrice ?? 0;
+//           final acDaily = acSharing.dailyPrice ?? 0;
+//           _monthlyAc[key]?.text = acMonthly > 0
+//               ? acMonthly.toStringAsFixed(0)
+//               : '0';
+//           _dailyAc[key]?.text = acDaily > 0 ? acDaily.toStringAsFixed(0) : '0';
+//         }
+
+//         // Set Non-AC prices if found
+//         if (nonAcSharing != null) {
+//           final nonAcMonthly = nonAcSharing.monthlyPrice ?? 0;
+//           final nonAcDaily = nonAcSharing.dailyPrice ?? 0;
+//           _monthlyNonAc[key]?.text = nonAcMonthly > 0
+//               ? nonAcMonthly.toStringAsFixed(0)
+//               : '0';
+//           _dailyNonAc[key]?.text = nonAcDaily > 0
+//               ? nonAcDaily.toStringAsFixed(0)
+//               : '0';
+//         }
+//       }
+//     }
+//   }
+
+//   // Update _saveAndGoBack to save room numbers per sharing option
+//   void _saveAndGoBack() {
+//     if (_selectedCategory == null) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         const SnackBar(
+//           content: Text('Please select a category'),
+//           backgroundColor: Colors.red,
+//         ),
+//       );
+//       return;
+//     }
+
+//     // Build sharings based on category type
+//     final List<SharingOption> sharings = [];
+
+//     for (var key in _shareKeys) {
+//       final acMonthly = _parsePrice(_monthlyAc[key]);
+//       final acDaily = _parsePrice(_dailyAc[key]);
+//       final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
+//       final nonAcDaily = _parsePrice(_dailyNonAc[key]);
+
+//       // Get room numbers for this specific sharing option
+//       final acRoomNumbers = _roomNumbersMap[_getRoomKey(key, true)] ?? [];
+//       final nonAcRoomNumbers = _roomNumbersMap[_getRoomKey(key, false)] ?? [];
+
+//       // Add AC sharing if any AC price is set OR has room numbers
+//       if (acMonthly > 0 || acDaily > 0 || acRoomNumbers.isNotEmpty) {
+//         sharings.add(
+//           SharingOption(
+//             shareType: key,
+//             type: 'AC',
+//             acMonthlyPrice: acMonthly,
+//             acDailyPrice: acDaily,
+//             nonAcMonthlyPrice: 0,
+//             nonAcDailyPrice: 0,
+//             monthlyPrice: acMonthly,
+//             dailyPrice: acDaily,
+//             roomNumbers: acRoomNumbers,
+//           ),
+//         );
+//       }
+
+//       // Add Non-AC sharing if any Non-AC price is set OR has room numbers
+//       if (nonAcMonthly > 0 || nonAcDaily > 0 || nonAcRoomNumbers.isNotEmpty) {
+//         sharings.add(
+//           SharingOption(
+//             shareType: key,
+//             type: 'Non-AC',
+//             acMonthlyPrice: 0,
+//             acDailyPrice: 0,
+//             nonAcMonthlyPrice: nonAcMonthly,
+//             nonAcDailyPrice: nonAcDaily,
+//             monthlyPrice: nonAcMonthly,
+//             dailyPrice: nonAcDaily,
+//             roomNumbers: nonAcRoomNumbers,
+//           ),
+//         );
+//       }
+//     }
+
+//     final imagePaths = _hostelImages.map((x) => x.path).toList();
+//     final request = HostelRequest(
+//       categoryId: _selectedCategory!.id,
+//       vendorId: '',
+//       name: _titleController.text.trim(),
+//       rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
+//       address: _addressController.text.trim(),
+//       monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
+//       latitude: double.tryParse(_latController.text.trim()) ?? 0,
+//       longitude: double.tryParse(_lngController.text.trim()) ?? 0,
+//       isAc: false,
+//       sharings: sharings,
+//       imagePaths: imagePaths,
+//       features: _shouldShowFurnishingAndFeatures ? _features : [],
+//       furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
+//     );
+
+//     widget.onSave(request);
+//     Navigator.pop(context);
+//   }
+
+//   void _showSnackBar(String message) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(message),
+//         duration: const Duration(seconds: 2),
+//         backgroundColor: message.contains('Added') ? Colors.green : Colors.red,
+//       ),
+//     );
+//   }
+
+//   // Future<void> _loadCategories() async {
+//   //   setState(() => _isLoadingCategories = true);
+//   //   final categoryProvider = Provider.of<CategoryProvider>(
+//   //     context,
+//   //     listen: false,
+//   //   );
+//   //   await categoryProvider.fetchCategories();
+
+//   //   if (widget.existingHostel != null && mounted) {
+//   //     final category = categoryProvider.categories.firstWhere(
+//   //       (cat) => cat.id == widget.existingHostel!.categoryId,
+//   //       orElse: () => categoryProvider.categories.isNotEmpty
+//   //           ? categoryProvider.categories.first
+//   //           : throw Exception('No categories'),
+//   //     );
+//   //     setState(() {
+//   //       _selectedCategory = category;
+//   //       _rebuildPriceControllers();
+//   //     });
+
+//   //     // Load features and furnishing AFTER category is set - use actual API values
+//   //     if (_shouldShowFurnishingAndFeatures) {
+//   //       setState(() {
+//   //         // Load existing features from API
+//   //         if (widget.existingHostel!.features.isNotEmpty) {
+//   //           _features.clear();
+//   //           _features.addAll(widget.existingHostel!.features);
+//   //         } else {
+//   //           _features.clear();
+//   //         }
+
+//   //         // Load existing furnishing from API (not default)
+//   //         if (widget.existingHostel!.furnishing.isNotEmpty) {
+//   //           _selectedFurnishing = widget.existingHostel!.furnishing;
+//   //         } else {
+//   //           _selectedFurnishing = ''; // Empty, will show nothing selected
+//   //         }
+//   //       });
+//   //     }
+//   //   }
+
+//   //   if (mounted) setState(() => _isLoadingCategories = false);
+//   // }
+
+//   // Future<void> _loadCategories() async {
+//   //   setState(() => _isLoadingCategories = true);
+//   //   final categoryProvider = Provider.of<CategoryProvider>(
+//   //     context,
+//   //     listen: false,
+//   //   );
+//   //   await categoryProvider.fetchCategories();
+
+//   //   if (widget.existingHostel != null && mounted) {
+//   //     final category = categoryProvider.categories.firstWhere(
+//   //       (cat) => cat.id == widget.existingHostel!.categoryId,
+//   //       orElse: () => categoryProvider.categories.isNotEmpty
+//   //           ? categoryProvider.categories.first
+//   //           : throw Exception('No categories'),
+//   //     );
+//   //     setState(() {
+//   //       _selectedCategory = category;
+//   //       _rebuildPriceControllers();
+//   //     });
+
+//   //     // Load room numbers from existing hostel
+//   //     if (widget.existingHostel!.roomNumbers != null &&
+//   //         widget.existingHostel!.roomNumbers.isNotEmpty) {
+//   //       setState(() {
+//   //         _roomNumbers.clear();
+//   //         _roomNumbers.addAll(widget.existingHostel!.roomNumbers);
+//   //       });
+//   //     }
+
+//   //     // Load features and furnishing AFTER category is set - use actual API values
+//   //     if (_shouldShowFurnishingAndFeatures) {
+//   //       setState(() {
+//   //         // Load existing features from API
+//   //         if (widget.existingHostel!.features.isNotEmpty) {
+//   //           _features.clear();
+//   //           _features.addAll(widget.existingHostel!.features);
+//   //         } else {
+//   //           _features.clear();
+//   //         }
+
+//   //         // Load existing furnishing from API (not default)
+//   //         if (widget.existingHostel!.furnishing.isNotEmpty) {
+//   //           _selectedFurnishing = widget.existingHostel!.furnishing;
+//   //         } else {
+//   //           _selectedFurnishing = ''; // Empty, will show nothing selected
+//   //         }
+//   //       });
+//   //     }
+//   //   }
+
+//   //   if (mounted) setState(() => _isLoadingCategories = false);
+//   // }
+
+//   Future<void> _loadCategories() async {
+//     setState(() => _isLoadingCategories = true);
+//     final categoryProvider = Provider.of<CategoryProvider>(
+//       context,
+//       listen: false,
+//     );
+//     await categoryProvider.fetchCategories();
+
+//     if (widget.existingHostel != null && mounted) {
+//       final category = categoryProvider.categories.firstWhere(
+//         (cat) => cat.id == widget.existingHostel!.categoryId,
+//         orElse: () => categoryProvider.categories.isNotEmpty
+//             ? categoryProvider.categories.first
+//             : throw Exception('No categories'),
+//       );
+//       setState(() {
+//         _selectedCategory = category;
+//         _rebuildPriceControllers();
+//       });
+
+//       // REMOVE THIS BLOCK - roomNumbers are now in sharing options
+//       // if (widget.existingHostel!.roomNumbers != null &&
+//       //     widget.existingHostel!.roomNumbers.isNotEmpty) {
+//       //   setState(() {
+//       //     _roomNumbers.clear();
+//       //     _roomNumbers.addAll(widget.existingHostel!.roomNumbers);
+//       //   });
+//       // }
+
+//       // Load features and furnishing AFTER category is set - use actual API values
+//       if (_shouldShowFurnishingAndFeatures) {
+//         setState(() {
+//           // Load existing features from API
+//           if (widget.existingHostel!.features.isNotEmpty) {
+//             _features.clear();
+//             _features.addAll(widget.existingHostel!.features);
+//           } else {
+//             _features.clear();
+//           }
+
+//           // Load existing furnishing from API (not default)
+//           if (widget.existingHostel!.furnishing.isNotEmpty) {
+//             _selectedFurnishing = widget.existingHostel!.furnishing;
+//           } else {
+//             _selectedFurnishing = ''; // Empty, will show nothing selected
+//           }
+//         });
+//       }
+//     }
+
+//     if (mounted) setState(() => _isLoadingCategories = false);
+//   }
+
+//   // Future<void> _loadCategories() async {
+//   //   setState(() => _isLoadingCategories = true);
+//   //   final categoryProvider = Provider.of<CategoryProvider>(
+//   //     context,
+//   //     listen: false,
+//   //   );
+//   //   await categoryProvider.fetchCategories();
+
+//   //   if (widget.existingHostel != null && mounted) {
+//   //     final category = categoryProvider.categories.firstWhere(
+//   //       (cat) => cat.id == widget.existingHostel!.categoryId,
+//   //       orElse: () => categoryProvider.categories.isNotEmpty
+//   //           ? categoryProvider.categories.first
+//   //           : throw Exception('No categories'),
+//   //     );
+//   //     setState(() {
+//   //       _selectedCategory = category;
+//   //       _rebuildPriceControllers();
+//   //     });
+//   //   }
+
+//   //   if (mounted) setState(() => _isLoadingCategories = false);
+//   // }
+
+//   Map<String, TextEditingController> _buildControllers(
+//     List<SharingOption> sharings, {
+//     required bool isAc,
+//     required bool isMonthly,
+//   }) {
+//     final controllers = <String, TextEditingController>{};
+//     for (var key in _shareKeys) {
+//       String initialValue = '0';
+//       if (sharings.isNotEmpty) {
+//         initialValue = _findPrice(
+//           sharings,
+//           key,
+//           isAc: isAc,
+//           isMonthly: isMonthly,
+//         );
+//       }
+//       controllers[key] = TextEditingController(text: initialValue);
+//     }
+//     return controllers;
+//   }
+
+//   String _findPrice(
+//     List<SharingOption> sharings,
+//     String shareKey, {
+//     required bool isAc,
+//     required bool isMonthly,
+//   }) {
+//     if (sharings.isEmpty) return '0';
+
+//     SharingOption? match;
+//     try {
+//       match = sharings.firstWhere(
+//         (s) => s.shareType.toLowerCase() == shareKey.toLowerCase(),
+//       );
+//     } catch (_) {}
+
+//     if (match == null) return '0';
+
+//     double? price;
+//     if (isAc) {
+//       // For AC, first try acMonthlyPrice/acDailyPrice
+//       price = isMonthly ? match.acMonthlyPrice : match.acDailyPrice;
+//       // If no AC-specific price, try the generic monthlyPrice/dailyPrice
+//       if ((price == null || price == 0) && match.type?.toUpperCase() == 'AC') {
+//         price = isMonthly ? match.monthlyPrice : match.dailyPrice;
+//       }
+//     } else {
+//       // For Non-AC, first try nonAcMonthlyPrice/nonAcDailyPrice
+//       price = isMonthly ? match.nonAcMonthlyPrice : match.nonAcDailyPrice;
+//       // If no Non-AC specific price, try the generic monthlyPrice/dailyPrice
+//       if ((price == null || price == 0) &&
+//           match.type?.toUpperCase() == 'NON-AC') {
+//         price = isMonthly ? match.monthlyPrice : match.dailyPrice;
+//       }
+//     }
+
+//     if (price == null || price.isNaN || price.isInfinite || price <= 0) {
+//       return '0';
+//     }
+//     return price.toStringAsFixed(0);
+//   }
+
+//   @override
+//   void dispose() {
+//     _tabController.dispose();
+//     _titleController.dispose();
+//     _addressController.dispose();
+//     _advanceController.dispose();
+//     _ratingController.dispose();
+//     _latController.dispose();
+//     _lngController.dispose();
+//     _featureController.dispose();
+
+//     for (var c in [
+//       ..._monthlyNonAc.values,
+//       ..._monthlyAc.values,
+//       ..._dailyNonAc.values,
+//       ..._dailyAc.values,
+//     ])
+//       c.dispose();
+//     super.dispose();
+//   }
+
+//   Future<void> _pickHostelImage() async {
+//     showModalBottomSheet(
+//       context: context,
+//       shape: const RoundedRectangleBorder(
+//         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+//       ),
+//       builder: (context) => SafeArea(
+//         child: Column(
+//           mainAxisSize: MainAxisSize.min,
+//           children: [
+//             const SizedBox(height: 12),
+//             Container(
+//               width: 40,
+//               height: 4,
+//               decoration: BoxDecoration(
+//                 color: Colors.grey[300],
+//                 borderRadius: BorderRadius.circular(2),
+//               ),
+//             ),
+//             const SizedBox(height: 20),
+//             const Text(
+//               'Choose Image Source',
+//               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+//             ),
+//             const SizedBox(height: 20),
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+//               children: [
+//                 _buildImageSourceOption(
+//                   icon: Icons.camera_alt,
+//                   label: 'Camera',
+//                   onTap: () async {
+//                     Navigator.pop(context);
+//                     final image = await _picker.pickImage(
+//                       source: ImageSource.camera,
+//                     );
+//                     if (image != null && mounted) {
+//                       setState(() => _hostelImages.add(image));
+//                     }
+//                   },
+//                 ),
+//                 _buildImageSourceOption(
+//                   icon: Icons.photo_library,
+//                   label: 'Gallery',
+//                   onTap: () async {
+//                     Navigator.pop(context);
+//                     final image = await _picker.pickImage(
+//                       source: ImageSource.gallery,
+//                     );
+//                     if (image != null && mounted) {
+//                       setState(() => _hostelImages.add(image));
+//                     }
+//                   },
+//                 ),
+//               ],
+//             ),
+//             const SizedBox(height: 20),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildImageSourceOption({
+//     required IconData icon,
+//     required String label,
+//     required VoidCallback onTap,
+//   }) {
+//     return GestureDetector(
+//       onTap: onTap,
+//       child: Column(
+//         children: [
+//           Container(
+//             width: 60,
+//             height: 60,
+//             decoration: BoxDecoration(
+//               color: const Color(0xFFFFEBEE),
+//               borderRadius: BorderRadius.circular(30),
+//             ),
+//             child: Icon(icon, color: const Color(0xFFE53935), size: 28),
+//           ),
+//           const SizedBox(height: 8),
+//           Text(
+//             label,
+//             style: const TextStyle(
+//               fontSize: 14,
+//               fontWeight: FontWeight.w500,
+//               color: Color(0xFF1A1A1A),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   double _parsePrice(TextEditingController? c) {
+//     if (c == null) return 0;
+//     final parsed = double.tryParse(c.text.trim());
+//     return (parsed == null || parsed.isNaN || parsed.isInfinite) ? 0 : parsed;
+//   }
+
+//   void _addFeature() {
+//     final feature = _featureController.text.trim();
+//     if (feature.isNotEmpty && !_features.contains(feature)) {
+//       setState(() {
+//         _features.add(feature);
+//         _featureController.clear();
+//       });
+//     }
+//   }
+
+//   void _removeFeature(String feature) {
+//     setState(() {
+//       _features.remove(feature);
+//     });
+//   }
+
+//   Widget _buildRoomNumbersForSharing(
+//     String shareKey,
+//     bool isAc,
+//     Color themeColor,
+//   ) {
+//     final roomKey = _getRoomKey(shareKey, isAc);
+//     final rooms = _roomNumbersMap[roomKey] ?? [];
+//     final controller =
+//         _roomNumberControllers[roomKey] ?? TextEditingController();
+//     final prefix = _selectedPrefixes[roomKey] ?? '';
+
+//     // Don't show if no price is set for this sharing option
+//     final hasPrice = isAc
+//         ? (_parsePrice(_monthlyAc[shareKey]) > 0 ||
+//               _parsePrice(_dailyAc[shareKey]) > 0)
+//         : (_parsePrice(_monthlyNonAc[shareKey]) > 0 ||
+//               _parsePrice(_dailyNonAc[shareKey]) > 0);
+
+//     if (!hasPrice && rooms.isEmpty) return const SizedBox.shrink();
+
+//     return Container(
+//       margin: const EdgeInsets.only(bottom: 12, top: 8),
+//       decoration: BoxDecoration(
+//         border: Border.all(color: Colors.grey.shade200),
+//         borderRadius: BorderRadius.circular(8),
+//         color: Colors.white,
+//       ),
+//       child: ExpansionTile(
+//         initiallyExpanded: rooms.isNotEmpty,
+//         title: Row(
+//           children: [
+//             Container(
+//               width: 8,
+//               height: 8,
+//               decoration: BoxDecoration(
+//                 color: themeColor,
+//                 shape: BoxShape.circle,
+//               ),
+//             ),
+//             const SizedBox(width: 8),
+//             Text(
+//               '$shareKey - ${isAc ? 'AC' : 'Non-AC'} Rooms',
+//               style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+//             ),
+//             const Spacer(),
+//             Container(
+//               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+//               decoration: BoxDecoration(
+//                 color: themeColor.withOpacity(0.1),
+//                 borderRadius: BorderRadius.circular(12),
+//               ),
+//               child: Text(
+//                 '${rooms.length} rooms',
+//                 style: TextStyle(
+//                   fontSize: 11,
+//                   color: themeColor,
+//                   fontWeight: FontWeight.w500,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         ),
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.all(12),
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 // Prefix dropdown for this specific room type
+//                 Container(
+//                   margin: const EdgeInsets.only(bottom: 8),
+//                   padding: const EdgeInsets.symmetric(horizontal: 8),
+//                   decoration: BoxDecoration(
+//                     border: Border.all(color: Colors.grey.shade300),
+//                     borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   child: DropdownButtonHideUnderline(
+//                     child: DropdownButton<String>(
+//                       isExpanded: true,
+//                       value: prefix.isEmpty ? null : prefix,
+//                       hint: const Text(
+//                         'Optional: Select alphabet prefix (A, B, C...)',
+//                       ),
+//                       items: _alphabetOptions.map((p) {
+//                         return DropdownMenuItem<String>(
+//                           value: p.isEmpty ? null : p,
+//                           child: Text(p.isEmpty ? 'None' : p),
+//                         );
+//                       }).toList(),
+//                       onChanged: (String? value) {
+//                         setState(() {
+//                           _selectedPrefixes[roomKey] = value ?? '';
+//                         });
+//                       },
+//                     ),
+//                   ),
+//                 ),
+
+//                 // Input row for adding room numbers
+//                 Row(
+//                   children: [
+//                     Expanded(
+//                       child: TextField(
+//                         controller: controller,
+//                         decoration: InputDecoration(
+//                           hintText: prefix.isNotEmpty
+//                               ? 'e.g., ${prefix}101, 101-118'
+//                               : 'e.g., 101, 101-118',
+//                           hintStyle: const TextStyle(fontSize: 12),
+//                           contentPadding: const EdgeInsets.symmetric(
+//                             horizontal: 12,
+//                             vertical: 12,
+//                           ),
+//                           enabledBorder: OutlineInputBorder(
+//                             borderRadius: BorderRadius.circular(8),
+//                             borderSide: BorderSide(color: Colors.grey.shade300),
+//                           ),
+//                           focusedBorder: OutlineInputBorder(
+//                             borderRadius: BorderRadius.circular(8),
+//                             borderSide: const BorderSide(
+//                               color: Color(0xFFE53935),
+//                             ),
+//                           ),
+//                         ),
+//                         onSubmitted: (_) =>
+//                             _addRoomNumberForSharing(shareKey, isAc),
+//                       ),
+//                     ),
+//                     const SizedBox(width: 8),
+//                     GestureDetector(
+//                       onTap: () => _addRoomNumberForSharing(shareKey, isAc),
+//                       child: Container(
+//                         padding: const EdgeInsets.all(12),
+//                         decoration: BoxDecoration(
+//                           color: themeColor,
+//                           borderRadius: BorderRadius.circular(8),
+//                         ),
+//                         child: const Icon(
+//                           Icons.add,
+//                           color: Colors.white,
+//                           size: 20,
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+
+//                 const SizedBox(height: 12),
+
+//                 // Display room chips
+//                 if (rooms.isNotEmpty)
+//                   Wrap(
+//                     spacing: 8,
+//                     runSpacing: 8,
+//                     children: rooms.map((room) {
+//                       return Container(
+//                         padding: const EdgeInsets.symmetric(
+//                           horizontal: 10,
+//                           vertical: 5,
+//                         ),
+//                         decoration: BoxDecoration(
+//                           color: themeColor.withOpacity(0.1),
+//                           borderRadius: BorderRadius.circular(16),
+//                           border: Border.all(
+//                             color: themeColor.withOpacity(0.3),
+//                           ),
+//                         ),
+//                         child: Row(
+//                           mainAxisSize: MainAxisSize.min,
+//                           children: [
+//                             Icon(
+//                               Icons.meeting_room,
+//                               size: 14,
+//                               color: themeColor,
+//                             ),
+//                             const SizedBox(width: 6),
+//                             Text(
+//                               room,
+//                               style: TextStyle(fontSize: 12, color: themeColor),
+//                             ),
+//                             const SizedBox(width: 6),
+//                             GestureDetector(
+//                               onTap: () => _removeRoomNumberForSharing(
+//                                 shareKey,
+//                                 isAc,
+//                                 room,
+//                               ),
+//                               child: const Icon(
+//                                 Icons.close,
+//                                 size: 14,
+//                                 color: Colors.grey,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       );
+//                     }).toList(),
+//                   ),
+
+//                 if (rooms.isEmpty)
+//                   Padding(
+//                     padding: const EdgeInsets.all(8),
+//                     child: Text(
+//                       'No rooms added for $shareKey ${isAc ? 'AC' : 'Non-AC'}',
+//                       style: TextStyle(
+//                         fontSize: 12,
+//                         color: Colors.grey.shade500,
+//                         fontStyle: FontStyle.italic,
+//                       ),
+//                     ),
+//                   ),
+
+//                 // Tip for range input
+//                 Padding(
+//                   padding: const EdgeInsets.only(top: 8),
+//                   child: Text(
+//                     '💡 Tip: Use range like 101-118 to add multiple rooms at once',
+//                     style: TextStyle(
+//                       fontSize: 10,
+//                       color: Colors.grey.shade500,
+//                       fontStyle: FontStyle.italic,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     final isEdit = widget.existingHostel != null;
+//     print("llllllllllllllllllllllllllll${widget.existingHostel?.furnishing}");
+//     return Scaffold(
+//       resizeToAvoidBottomInset: true,
+//       backgroundColor: Colors.white,
+//       appBar: AppBar(
+//         backgroundColor: Colors.white,
+//         elevation: 0,
+//         leading: IconButton(
+//           icon: const Icon(Icons.arrow_back, color: Colors.black),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//         title: RichText(
+//           text: TextSpan(
+//             children: [
+//               TextSpan(
+//                 text: isEdit ? 'Edit ' : 'Hifi ',
+//                 style: const TextStyle(
+//                   color: Color(0xFFE53935),
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 18,
+//                 ),
+//               ),
+//               TextSpan(
+//                 text: isEdit ? 'Hostel' : 'Details',
+//                 style: const TextStyle(
+//                   color: Colors.black,
+//                   fontWeight: FontWeight.bold,
+//                   fontSize: 18,
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ),
+//       ),
+//       body: SingleChildScrollView(
+//         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             // ── Category dropdown ─────────────────────────────────
+//             // Padding(
+//             //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//             //   child: Column(
+//             //     crossAxisAlignment: CrossAxisAlignment.start,
+//             //     children: [
+//             //       const Text(
+//             //         'Category *',
+//             //         style: TextStyle(
+//             //           fontWeight: FontWeight.bold,
+//             //           fontSize: 14,
+//             //           color: Color(0xFFE53935),
+//             //         ),
+//             //       ),
+//             //       const SizedBox(height: 8),
+//             //       Consumer<CategoryProvider>(
+//             //         builder: (context, categoryProvider, _) {
+//             //           if (categoryProvider.isLoading) {
+//             //             return Container(
+//             //               padding: const EdgeInsets.all(12),
+//             //               decoration: BoxDecoration(
+//             //                 border: Border.all(color: Colors.grey.shade300),
+//             //                 borderRadius: BorderRadius.circular(8),
+//             //               ),
+//             //               child: const Center(
+//             //                 child: SizedBox(
+//             //                   height: 20,
+//             //                   width: 20,
+//             //                   child: CircularProgressIndicator(strokeWidth: 2),
+//             //                 ),
+//             //               ),
+//             //             );
+//             //           }
+//             //           if (categoryProvider.categories.isEmpty) {
+//             //             return Container(
+//             //               padding: const EdgeInsets.all(12),
+//             //               decoration: BoxDecoration(
+//             //                 border: Border.all(color: Colors.grey.shade300),
+//             //                 borderRadius: BorderRadius.circular(8),
+//             //               ),
+//             //               child: const Text(
+//             //                 'No categories available',
+//             //                 style: TextStyle(color: Colors.red),
+//             //               ),
+//             //             );
+//             //           }
+//             //           return Container(
+//             //             padding: const EdgeInsets.symmetric(horizontal: 12),
+//             //             decoration: BoxDecoration(
+//             //               border: Border.all(color: Colors.grey.shade300),
+//             //               borderRadius: BorderRadius.circular(8),
+//             //             ),
+//             //             child: DropdownButtonHideUnderline(
+//             //               child: DropdownButton<Category>(
+//             //                 isExpanded: true,
+//             //                 hint: const Text('Select Category'),
+//             //                 value: _selectedCategory,
+//             //                 items: categoryProvider.categories.map((category) {
+//             //                   return DropdownMenuItem<Category>(
+//             //                     value: category,
+//             //                     child: Text(category.name),
+//             //                   );
+//             //                 }).toList(),
+//             //                 onChanged: (Category? newValue) {
+//             //                   setState(() {
+//             //                     _selectedCategory = newValue;
+//             //                     _rebuildPriceControllers();
+//             //                   });
+//             //                 },
+//             //               ),
+//             //             ),
+//             //           );
+//             //         },
+//             //       ),
+//             //     ],
+//             //   ),
+//             // ),
+
+//             // ── Category dropdown ─────────────────────────────────
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const Text(
+//                     'Category *',
+//                     style: TextStyle(
+//                       fontWeight: FontWeight.bold,
+//                       fontSize: 14,
+//                       color: Color(0xFFE53935),
+//                     ),
+//                   ),
+//                   const SizedBox(height: 8),
+//                   Consumer<CategoryProvider>(
+//                     builder: (context, categoryProvider, _) {
+//                       if (categoryProvider.isLoading) {
+//                         return Container(
+//                           padding: const EdgeInsets.all(12),
+//                           decoration: BoxDecoration(
+//                             border: Border.all(color: Colors.grey.shade300),
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           child: const Center(
+//                             child: SizedBox(
+//                               height: 20,
+//                               width: 20,
+//                               child: CircularProgressIndicator(strokeWidth: 2),
+//                             ),
+//                           ),
+//                         );
+//                       }
+//                       if (categoryProvider.categories.isEmpty) {
+//                         return Container(
+//                           padding: const EdgeInsets.all(12),
+//                           decoration: BoxDecoration(
+//                             border: Border.all(color: Colors.grey.shade300),
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           child: const Text(
+//                             'No categories available',
+//                             style: TextStyle(color: Colors.red),
+//                           ),
+//                         );
+//                       }
+
+//                       // In edit mode, show disabled dropdown with selected value
+//                       if (isEdit && _selectedCategory != null) {
+//                         return Container(
+//                           padding: const EdgeInsets.symmetric(
+//                             horizontal: 12,
+//                             vertical: 12,
+//                           ),
+//                           decoration: BoxDecoration(
+//                             color: Colors.grey.shade100,
+//                             border: Border.all(color: Colors.grey.shade300),
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           child: Row(
+//                             children: [
+//                               Expanded(
+//                                 child: Text(
+//                                   _selectedCategory!.name,
+//                                   style: const TextStyle(color: Colors.black87),
+//                                 ),
+//                               ),
+//                               const Icon(
+//                                 Icons.lock,
+//                                 size: 16,
+//                                 color: Colors.grey,
+//                               ),
+//                             ],
+//                           ),
+//                         );
+//                       }
+
+//                       // In create mode, show normal dropdown
+//                       return Container(
+//                         padding: const EdgeInsets.symmetric(horizontal: 12),
+//                         decoration: BoxDecoration(
+//                           border: Border.all(color: Colors.grey.shade300),
+//                           borderRadius: BorderRadius.circular(8),
+//                         ),
+//                         child: DropdownButtonHideUnderline(
+//                           child: DropdownButton<Category>(
+//                             isExpanded: true,
+//                             hint: const Text('Select Category'),
+//                             value: _selectedCategory,
+//                             items: categoryProvider.categories.map((category) {
+//                               return DropdownMenuItem<Category>(
+//                                 value: category,
+//                                 child: Text(category.name),
+//                               );
+//                             }).toList(),
+//                             onChanged: (Category? newValue) {
+//                               setState(() {
+//                                 _selectedCategory = newValue;
+//                                 _rebuildPriceControllers();
+//                               });
+//                             },
+//                           ),
+//                         ),
+//                       );
+//                     },
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             const Divider(height: 24, thickness: 1),
+
+//             // ── Furnishing & Features (ONLY for BHK/RK categories and in Edit mode if data exists) ──
+//             // ── Furnishing & Features (ONLY for BHK/RK categories) ──
+//             // ── Furnishing & Features (ONLY for BHK/RK categories and ONLY show in edit mode if data exists, or in create mode for BHK/RK) ──
+//             // In create mode: show for BHK/RK categories (even if no data yet)
+//             // In edit mode: show for BHK/RK categories ONLY if furnishing or features exist in API
+//             if (_shouldShowFurnishingAndFeatures &&
+//                 (!isEdit ||
+//                     (isEdit &&
+//                         (widget.existingHostel?.furnishing != '' ||
+//                             widget.existingHostel?.features.length != 0)))) ...[
+//               // Furnishing Selection
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(
+//                   horizontal: 16,
+//                   vertical: 8,
+//                 ),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text(
+//                       'Furnishing',
+//                       style: TextStyle(
+//                         fontWeight: FontWeight.bold,
+//                         fontSize: 14,
+//                         color: Color(0xFFE53935),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Wrap(
+//                       spacing: 8,
+//                       children: _furnishingOptions.map((type) {
+//                         final isSelected = _selectedFurnishing == type;
+//                         return GestureDetector(
+//                           onTap: () {
+//                             setState(() {
+//                               _selectedFurnishing = type;
+//                             });
+//                           },
+//                           child: Container(
+//                             padding: const EdgeInsets.symmetric(
+//                               horizontal: 12,
+//                               vertical: 6,
+//                             ),
+//                             decoration: BoxDecoration(
+//                               color: isSelected
+//                                   ? const Color(0xFFE53935)
+//                                   : Colors.grey.shade200,
+//                               borderRadius: BorderRadius.circular(20),
+//                             ),
+//                             child: Text(
+//                               type,
+//                               style: TextStyle(
+//                                 color: isSelected
+//                                     ? Colors.white
+//                                     : Colors.black87,
+//                                 fontSize: 12,
+//                                 fontWeight: FontWeight.w500,
+//                               ),
+//                             ),
+//                           ),
+//                         );
+//                       }).toList(),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//               const Divider(height: 16, thickness: 1),
+
+//               // Features Input (shows API values in edit mode)
+//               Padding(
+//                 padding: const EdgeInsets.symmetric(
+//                   horizontal: 16,
+//                   vertical: 8,
+//                 ),
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     const Text(
+//                       'Features / Amenities',
+//                       style: TextStyle(
+//                         fontWeight: FontWeight.bold,
+//                         fontSize: 14,
+//                         color: Color(0xFFE53935),
+//                       ),
+//                     ),
+//                     const SizedBox(height: 8),
+//                     Row(
+//                       children: [
+//                         Expanded(
+//                           child: TextField(
+//                             controller: _featureController,
+//                             decoration: InputDecoration(
+//                               hintText: 'e.g., WiFi, Parking, AC, Geyser',
+//                               hintStyle: const TextStyle(fontSize: 13),
+//                               contentPadding: const EdgeInsets.symmetric(
+//                                 horizontal: 12,
+//                                 vertical: 12,
+//                               ),
+//                               enabledBorder: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(8),
+//                                 borderSide: BorderSide(
+//                                   color: Colors.grey.shade300,
+//                                 ),
+//                               ),
+//                               focusedBorder: OutlineInputBorder(
+//                                 borderRadius: BorderRadius.circular(8),
+//                                 borderSide: const BorderSide(
+//                                   color: Color(0xFFE53935),
+//                                 ),
+//                               ),
+//                             ),
+//                             onSubmitted: (_) => _addFeature(),
+//                           ),
+//                         ),
+//                         const SizedBox(width: 8),
+//                         GestureDetector(
+//                           onTap: _addFeature,
+//                           child: Container(
+//                             padding: const EdgeInsets.all(12),
+//                             decoration: BoxDecoration(
+//                               color: const Color(0xFFE53935),
+//                               borderRadius: BorderRadius.circular(8),
+//                             ),
+//                             child: const Icon(
+//                               Icons.add,
+//                               color: Colors.white,
+//                               size: 24,
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                     const SizedBox(height: 12),
+//                     if (_features.isNotEmpty)
+//                       Wrap(
+//                         spacing: 8,
+//                         runSpacing: 8,
+//                         children: _features.map((feature) {
+//                           return Container(
+//                             padding: const EdgeInsets.symmetric(
+//                               horizontal: 10,
+//                               vertical: 5,
+//                             ),
+//                             decoration: BoxDecoration(
+//                               color: const Color(0xFFFFF0F0),
+//                               borderRadius: BorderRadius.circular(16),
+//                               border: Border.all(
+//                                 color: const Color(0xFFFFCDD2),
+//                               ),
+//                             ),
+//                             child: Row(
+//                               mainAxisSize: MainAxisSize.min,
+//                               children: [
+//                                 const Icon(
+//                                   Icons.check_circle,
+//                                   size: 14,
+//                                   color: Color(0xFFE53935),
+//                                 ),
+//                                 const SizedBox(width: 6),
+//                                 Text(
+//                                   feature,
+//                                   style: const TextStyle(
+//                                     fontSize: 12,
+//                                     color: Color(0xFFE53935),
+//                                   ),
+//                                 ),
+//                                 const SizedBox(width: 6),
+//                                 GestureDetector(
+//                                   onTap: () => _removeFeature(feature),
+//                                   child: const Icon(
+//                                     Icons.close,
+//                                     size: 14,
+//                                     color: Colors.grey,
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           );
+//                         }).toList(),
+//                       ),
+//                     // Add a hint when no features
+//                     if (_features.isEmpty)
+//                       Padding(
+//                         padding: const EdgeInsets.only(top: 8),
+//                         child: Text(
+//                           isEdit
+//                               ? 'No features added yet. Add features above.'
+//                               : 'Add features using the + button above.',
+//                           style: TextStyle(
+//                             fontSize: 12,
+//                             color: Colors.grey.shade500,
+//                             fontStyle: FontStyle.italic,
+//                           ),
+//                         ),
+//                       ),
+//                   ],
+//                 ),
+//               ),
+//               const Divider(height: 16, thickness: 1),
+//             ],
+
+//             // ── Monthly / Daily tab bar ───────────────────────────
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+//               child: Container(
+//                 decoration: BoxDecoration(
+//                   color: Colors.grey.shade100,
+//                   borderRadius: BorderRadius.circular(8),
+//                 ),
+//                 child: TabBar(
+//                   controller: _tabController,
+//                   indicator: BoxDecoration(
+//                     color: const Color(0xFFE53935),
+//                     borderRadius: BorderRadius.circular(8),
+//                   ),
+//                   indicatorSize: TabBarIndicatorSize.tab,
+//                   labelColor: Colors.white,
+//                   unselectedLabelColor: Colors.black54,
+//                   tabs: const [
+//                     Tab(text: 'Monthly'),
+//                     Tab(text: 'Daily'),
+//                   ],
+//                 ),
+//               ),
+//             ),
+
+//             // ── Basic fields ──────────────────────────────────────
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+//               child: Column(
+//                 children: [
+//                   _buildField(_titleController, 'Hostel Name'),
+//                   const SizedBox(height: 8),
+//                   _buildField(_addressController, 'Address'),
+//                   const SizedBox(height: 8),
+//                   Row(
+//                     children: [
+//                       Expanded(
+//                         child: _buildField(
+//                           _advanceController,
+//                           'Monthly Advance',
+//                         ),
+//                       ),
+//                       const SizedBox(width: 8),
+//                       Expanded(child: _buildField(_ratingController, 'Rating')),
+//                     ],
+//                   ),
+//                   const SizedBox(height: 8),
+//                   Row(
+//                     children: [
+//                       Expanded(child: _buildField(_latController, 'Latitude')),
+//                       const SizedBox(width: 8),
+//                       Expanded(child: _buildField(_lngController, 'Longitude')),
+//                       const SizedBox(width: 8),
+//                       Consumer<HostelProvider>(
+//                         builder: (context, provider, _) => GestureDetector(
+//                           onTap: provider.isFetchingLocation
+//                               ? null
+//                               : () async {
+//                                   final success = await provider
+//                                       .fetchCurrentLocation();
+//                                   if (success && mounted) {
+//                                     setState(() {
+//                                       _latController.text =
+//                                           provider.currentLatitude
+//                                               ?.toStringAsFixed(6) ??
+//                                           '';
+//                                       _lngController.text =
+//                                           provider.currentLongitude
+//                                               ?.toStringAsFixed(6) ??
+//                                           '';
+//                                     });
+//                                   } else if (!success && mounted) {
+//                                     ScaffoldMessenger.of(context).showSnackBar(
+//                                       SnackBar(
+//                                         content: Text(
+//                                           provider.errorMessage ??
+//                                               'Could not fetch location',
+//                                         ),
+//                                         backgroundColor: Colors.red,
+//                                       ),
+//                                     );
+//                                   }
+//                                 },
+//                           child: Container(
+//                             height: 48,
+//                             width: 48,
+//                             decoration: BoxDecoration(
+//                               color: provider.isFetchingLocation
+//                                   ? Colors.grey.shade300
+//                                   : const Color(0xFFE53935),
+//                               borderRadius: BorderRadius.circular(8),
+//                             ),
+//                             child: provider.isFetchingLocation
+//                                 ? const Padding(
+//                                     padding: EdgeInsets.all(12),
+//                                     child: CircularProgressIndicator(
+//                                       color: Colors.white,
+//                                       strokeWidth: 2,
+//                                     ),
+//                                   )
+//                                 : const Icon(
+//                                     Icons.my_location,
+//                                     color: Colors.white,
+//                                     size: 22,
+//                                   ),
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+
+//             // // ── Image picker ──────────────────────────────────────
+//             // Padding(
+//             //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+//             //   child: SizedBox(
+//             //     height: 80,
+//             //     child: ListView(
+//             //       scrollDirection: Axis.horizontal,
+//             //       children: [
+//             //         ..._hostelImages.map(
+//             //           (img) => Stack(
+//             //             children: [
+//             //               Padding(
+//             //                 padding: const EdgeInsets.only(right: 8),
+//             //                 child: ClipRRect(
+//             //                   borderRadius: BorderRadius.circular(8),
+//             //                   child: Image.file(
+//             //                     File(img.path),
+//             //                     width: 80,
+//             //                     height: 80,
+//             //                     fit: BoxFit.cover,
+//             //                   ),
+//             //                 ),
+//             //               ),
+//             //               Positioned(
+//             //                 right: 10,
+//             //                 top: 2,
+//             //                 child: GestureDetector(
+//             //                   onTap: () =>
+//             //                       setState(() => _hostelImages.remove(img)),
+//             //                   child: Container(
+//             //                     decoration: const BoxDecoration(
+//             //                       color: Colors.red,
+//             //                       shape: BoxShape.circle,
+//             //                     ),
+//             //                     child: const Icon(
+//             //                       Icons.close,
+//             //                       color: Colors.white,
+//             //                       size: 14,
+//             //                     ),
+//             //                   ),
+//             //                 ),
+//             //               ),
+//             //             ],
+//             //           ),
+//             //         ),
+//             //         if (widget.existingHostel != null)
+//             //           ...widget.existingHostel!.images.map(
+//             //             (url) => Padding(
+//             //               padding: const EdgeInsets.only(right: 8),
+//             //               child: ClipRRect(
+//             //                 borderRadius: BorderRadius.circular(8),
+//             //                 child: Image.network(
+//             //                   url,
+//             //                   width: 80,
+//             //                   height: 80,
+//             //                   fit: BoxFit.cover,
+//             //                   errorBuilder: (_, __, ___) => Container(
+//             //                     width: 80,
+//             //                     height: 80,
+//             //                     color: Colors.grey.shade200,
+//             //                     child: const Icon(
+//             //                       Icons.broken_image,
+//             //                       color: Colors.grey,
+//             //                     ),
+//             //                   ),
+//             //                 ),
+//             //               ),
+//             //             ),
+//             //           ),
+
+//             //         // ── Room Numbers section ──────────────────────────────────────
+//             //         Padding(
+//             //           padding: const EdgeInsets.symmetric(
+//             //             horizontal: 16,
+//             //             vertical: 8,
+//             //           ),
+//             //           child: Column(
+//             //             crossAxisAlignment: CrossAxisAlignment.start,
+//             //             children: [
+//             //               const Text(
+//             //                 'Room Numbers',
+//             //                 style: TextStyle(
+//             //                   fontWeight: FontWeight.bold,
+//             //                   fontSize: 14,
+//             //                   color: Color(0xFFE53935),
+//             //                 ),
+//             //               ),
+//             //               const SizedBox(height: 8),
+//             //               Row(
+//             //                 children: [
+//             //                   Expanded(
+//             //                     child: TextField(
+//             //                       controller: _roomNumberController,
+//             //                       decoration: InputDecoration(
+//             //                         hintText: 'e.g., 101, 102, G1, 202',
+//             //                         hintStyle: const TextStyle(fontSize: 13),
+//             //                         contentPadding: const EdgeInsets.symmetric(
+//             //                           horizontal: 12,
+//             //                           vertical: 12,
+//             //                         ),
+//             //                         enabledBorder: OutlineInputBorder(
+//             //                           borderRadius: BorderRadius.circular(8),
+//             //                           borderSide: BorderSide(
+//             //                             color: Colors.grey.shade300,
+//             //                           ),
+//             //                         ),
+//             //                         focusedBorder: OutlineInputBorder(
+//             //                           borderRadius: BorderRadius.circular(8),
+//             //                           borderSide: const BorderSide(
+//             //                             color: Color(0xFFE53935),
+//             //                           ),
+//             //                         ),
+//             //                       ),
+//             //                       onSubmitted: (_) => _addRoomNumber(),
+//             //                     ),
+//             //                   ),
+//             //                   const SizedBox(width: 8),
+//             //                   GestureDetector(
+//             //                     onTap: _addRoomNumber,
+//             //                     child: Container(
+//             //                       padding: const EdgeInsets.all(12),
+//             //                       decoration: BoxDecoration(
+//             //                         color: const Color(0xFFE53935),
+//             //                         borderRadius: BorderRadius.circular(8),
+//             //                       ),
+//             //                       child: const Icon(
+//             //                         Icons.add,
+//             //                         color: Colors.white,
+//             //                         size: 24,
+//             //                       ),
+//             //                     ),
+//             //                   ),
+//             //                 ],
+//             //               ),
+//             //               const SizedBox(height: 12),
+//             //               if (_roomNumbers.isNotEmpty)
+//             //                 Wrap(
+//             //                   spacing: 8,
+//             //                   runSpacing: 8,
+//             //                   children: _roomNumbers.map((roomNumber) {
+//             //                     return Container(
+//             //                       padding: const EdgeInsets.symmetric(
+//             //                         horizontal: 10,
+//             //                         vertical: 5,
+//             //                       ),
+//             //                       decoration: BoxDecoration(
+//             //                         color: const Color(0xFFFFF0F0),
+//             //                         borderRadius: BorderRadius.circular(16),
+//             //                         border: Border.all(
+//             //                           color: const Color(0xFFFFCDD2),
+//             //                         ),
+//             //                       ),
+//             //                       child: Row(
+//             //                         mainAxisSize: MainAxisSize.min,
+//             //                         children: [
+//             //                           const Icon(
+//             //                             Icons.meeting_room,
+//             //                             size: 14,
+//             //                             color: Color(0xFFE53935),
+//             //                           ),
+//             //                           const SizedBox(width: 6),
+//             //                           Text(
+//             //                             roomNumber,
+//             //                             style: const TextStyle(
+//             //                               fontSize: 12,
+//             //                               color: Color(0xFFE53935),
+//             //                             ),
+//             //                           ),
+//             //                           const SizedBox(width: 6),
+//             //                           GestureDetector(
+//             //                             onTap: () =>
+//             //                                 _removeRoomNumber(roomNumber),
+//             //                             child: const Icon(
+//             //                               Icons.close,
+//             //                               size: 14,
+//             //                               color: Colors.grey,
+//             //                             ),
+//             //                           ),
+//             //                         ],
+//             //                       ),
+//             //                     );
+//             //                   }).toList(),
+//             //                 ),
+//             //               // Add a hint when no room numbers
+//             //               if (_roomNumbers.isEmpty)
+//             //                 Padding(
+//             //                   padding: const EdgeInsets.only(top: 8),
+//             //                   child: Text(
+//             //                     widget.existingHostel != null &&
+//             //                             _roomNumbers.isEmpty
+//             //                         ? 'No room numbers added yet. Add room numbers above.'
+//             //                         : 'Add room numbers using the + button above.',
+//             //                     style: TextStyle(
+//             //                       fontSize: 12,
+//             //                       color: Colors.grey.shade500,
+//             //                       fontStyle: FontStyle.italic,
+//             //                     ),
+//             //                   ),
+//             //                 ),
+//             //             ],
+//             //           ),
+//             //         ),
+//             //         const Divider(height: 16, thickness: 1),
+//             //         GestureDetector(
+//             //           onTap: _pickHostelImage,
+//             //           child: Container(
+//             //             width: 80,
+//             //             height: 80,
+//             //             decoration: BoxDecoration(
+//             //               color: Colors.grey.shade100,
+//             //               borderRadius: BorderRadius.circular(8),
+//             //               border: Border.all(color: Colors.grey.shade300),
+//             //             ),
+//             //             child: const Column(
+//             //               mainAxisAlignment: MainAxisAlignment.center,
+//             //               children: [
+//             //                 Icon(
+//             //                   Icons.add_a_photo,
+//             //                   size: 24,
+//             //                   color: Colors.black54,
+//             //                 ),
+//             //                 SizedBox(height: 4),
+//             //                 Text(
+//             //                   'Add Image',
+//             //                   style: TextStyle(
+//             //                     fontSize: 10,
+//             //                     color: Colors.black54,
+//             //                   ),
+//             //                 ),
+//             //               ],
+//             //             ),
+//             //           ),
+//             //         ),
+//             //       ],
+//             //     ),
+//             //   ),
+//             // ),
+
+//             // ── Image picker section ──────────────────────────────────────
+//             Padding(
+//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+//               child: SizedBox(
+//                 height: 80,
+//                 child: ListView(
+//                   scrollDirection: Axis.horizontal,
+//                   children: [
+//                     ..._hostelImages.map(
+//                       (img) => Stack(
+//                         children: [
+//                           Padding(
+//                             padding: const EdgeInsets.only(right: 8),
+//                             child: ClipRRect(
+//                               borderRadius: BorderRadius.circular(8),
+//                               child: Image.file(
+//                                 File(img.path),
+//                                 width: 80,
+//                                 height: 80,
+//                                 fit: BoxFit.cover,
+//                               ),
+//                             ),
+//                           ),
+//                           Positioned(
+//                             right: 10,
+//                             top: 2,
+//                             child: GestureDetector(
+//                               onTap: () =>
+//                                   setState(() => _hostelImages.remove(img)),
+//                               child: Container(
+//                                 decoration: const BoxDecoration(
+//                                   color: Colors.red,
+//                                   shape: BoxShape.circle,
+//                                 ),
+//                                 child: const Icon(
+//                                   Icons.close,
+//                                   color: Colors.white,
+//                                   size: 14,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ],
+//                       ),
+//                     ),
+//                     if (widget.existingHostel != null)
+//                       ...widget.existingHostel!.images.map(
+//                         (url) => Padding(
+//                           padding: const EdgeInsets.only(right: 8),
+//                           child: ClipRRect(
+//                             borderRadius: BorderRadius.circular(8),
+//                             child: Image.network(
+//                               url,
+//                               width: 80,
+//                               height: 80,
+//                               fit: BoxFit.cover,
+//                               errorBuilder: (_, __, ___) => Container(
+//                                 width: 80,
+//                                 height: 80,
+//                                 color: Colors.grey.shade200,
+//                                 child: const Icon(
+//                                   Icons.broken_image,
+//                                   color: Colors.grey,
+//                                 ),
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                       ),
+//                     GestureDetector(
+//                       onTap: _pickHostelImage,
+//                       child: Container(
+//                         width: 80,
+//                         height: 80,
+//                         decoration: BoxDecoration(
+//                           color: Colors.grey.shade100,
+//                           borderRadius: BorderRadius.circular(8),
+//                           border: Border.all(color: Colors.grey.shade300),
+//                         ),
+//                         child: const Column(
+//                           mainAxisAlignment: MainAxisAlignment.center,
+//                           children: [
+//                             Icon(
+//                               Icons.add_a_photo,
+//                               size: 24,
+//                               color: Colors.black54,
+//                             ),
+//                             SizedBox(height: 4),
+//                             Text(
+//                               'Add Image',
+//                               style: TextStyle(
+//                                 fontSize: 10,
+//                                 color: Colors.black54,
+//                               ),
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ),
+
+//             const SizedBox(height: 8),
+
+//             // ── Price sections ───────────────────────────────────
+//             // ── Price sections ───────────────────────────────────
+//             AnimatedBuilder(
+//               animation: _tabController,
+//               builder: (_, __) {
+//                 final isMonthly = _tabController.index == 0;
+//                 final label = isMonthly ? 'Monthly' : 'Daily';
+
+//                 // Get price maps
+//                 final nonAcPrices = isMonthly ? _monthlyNonAc : _dailyNonAc;
+//                 final acPrices = isMonthly ? _monthlyAc : _dailyAc;
+
+//                 // Check if there are any non-zero prices in Non-AC section
+//                 final hasNonAcPrices = nonAcPrices.values.any((controller) {
+//                   final price = double.tryParse(controller.text.trim()) ?? 0;
+//                   return price > 0;
+//                 });
+
+//                 // Check if there are any non-zero prices in AC section
+//                 final hasAcPrices = acPrices.values.any((controller) {
+//                   final price = double.tryParse(controller.text.trim()) ?? 0;
+//                   return price > 0;
+//                 });
+
+//                 // For edit mode, also check if the original hostel had AC/Non-AC prices
+//                 final h = widget.existingHostel;
+//                 bool originalHasAcPrices = false;
+//                 bool originalHasNonAcPrices = false;
+
+//                 if (h != null && _selectedCategory != null) {
+//                   for (var key in _shareKeys) {
+//                     // Check if there was any AC price in original data
+//                     try {
+//                       final acSharing = h.sharings.firstWhere(
+//                         (s) =>
+//                             s.shareType.toLowerCase() == key.toLowerCase() &&
+//                             s.type?.toUpperCase() == 'AC',
+//                       );
+//                       if ((acSharing.monthlyPrice ?? 0) > 0) {
+//                         originalHasAcPrices = true;
+//                       }
+//                     } catch (_) {}
+
+//                     // Check if there was any Non-AC price in original data
+//                     try {
+//                       final nonAcSharing = h.sharings.firstWhere(
+//                         (s) =>
+//                             s.shareType.toLowerCase() == key.toLowerCase() &&
+//                             s.type?.toUpperCase() == 'NON-AC',
+//                       );
+//                       if ((nonAcSharing.monthlyPrice ?? 0) > 0) {
+//                         originalHasNonAcPrices = true;
+//                       }
+//                     } catch (_) {}
+//                   }
+//                 }
+
+//                 // In edit mode, show sections that originally had prices, even if current controllers show 0
+//                 // For create mode (no existing hostel), show BOTH sections when a category is selected
+//                 // so vendors can enter prices for AC and Non-AC
+//                 final isCreateMode = widget.existingHostel == null;
+
+//                 final showNonAc = isCreateMode
+//                     ? (_selectedCategory !=
+//                           null) // In create mode, show if category is selected
+//                     : (hasNonAcPrices ||
+//                           originalHasNonAcPrices); // In edit mode, show if had prices
+
+//                 final showAc = isCreateMode
+//                     ? (_selectedCategory !=
+//                           null) // In create mode, show if category is selected
+//                     : (hasAcPrices ||
+//                           originalHasAcPrices); // In edit mode, show if had prices
+
+//                 return Padding(
+//                   padding: const EdgeInsets.symmetric(horizontal: 16),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       // ── Non-AC section ──
+//                       if (showNonAc)
+//                         Column(
+//                           children: [
+//                             _SectionHeader(
+//                               label: '$label Prices — Non-AC',
+//                               color: const Color(0xFFE53935),
+//                               icon: Icons.ac_unit_outlined,
+//                               iconColor: Colors.orange,
+//                             ),
+//                             const SizedBox(height: 8),
+//                             _buildGrid(nonAcPrices, const Color(0xFFE53935)),
+//                             // After the price sections, add room numbers sections for each share type that has prices
+//                             const SizedBox(height: 16),
+//                             const Text(
+//                               'Room Numbers by Sharing Type',
+//                               style: TextStyle(
+//                                 fontWeight: FontWeight.bold,
+//                                 fontSize: 14,
+//                                 color: Color(0xFFE53935),
+//                               ),
+//                             ),
+//                             const SizedBox(height: 8),
+
+//                             // Show room numbers for each sharing option that has prices
+//                             if (_selectedCategory != null) ...[
+//                               // Show AC room sections
+//                               for (var key in _shareKeys) ...[
+//                                 _buildRoomNumbersForSharing(
+//                                   key,
+//                                   true,
+//                                   Colors.blue.shade600,
+//                                 ),
+//                               ],
+//                               // Show Non-AC room sections
+//                               for (var key in _shareKeys) ...[
+//                                 _buildRoomNumbersForSharing(
+//                                   key,
+//                                   false,
+//                                   const Color(0xFFE53935),
+//                                 ),
+//                               ],
+//                             ],
+//                           ],
+//                         ),
+
+//                       // ── AC section ──
+//                       if (showAc)
+//                         Column(
+//                           children: [
+//                             _SectionHeader(
+//                               label: '$label Prices — AC',
+//                               color: Colors.blue.shade700,
+//                               icon: Icons.ac_unit,
+//                               iconColor: Colors.blue,
+//                             ),
+//                             const SizedBox(height: 8),
+//                             _buildGrid(acPrices, Colors.blue.shade700),
+//                             const SizedBox(height: 10),
+//                           ],
+//                         ),
+
+//                       // If both sections have no prices
+//                       if (!showNonAc && !showAc)
+//                         Container(
+//                           padding: const EdgeInsets.all(16),
+//                           decoration: BoxDecoration(
+//                             color: Colors.grey.shade100,
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                           child: const Center(
+//                             child: Text(
+//                               'No prices added yet. Enter prices above.',
+//                               style: TextStyle(
+//                                 fontSize: 12,
+//                                 color: Colors.grey,
+//                               ),
+//                             ),
+//                           ),
+//                         ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
+
+//             // ── Date picker ───────────────────────────────────────
+//             // Padding(
+//             //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+//             //   child: Column(
+//             //     crossAxisAlignment: CrossAxisAlignment.start,
+//             //     children: [
+//             //       const Text(
+//             //         'Select Date To Book a Hostel',
+//             //         style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+//             //       ),
+//             //       const SizedBox(height: 8),
+//             //       SizedBox(
+//             //         height: 62,
+//             //         child: ListView.builder(
+//             //           scrollDirection: Axis.horizontal,
+//             //           itemCount: _dates.length,
+//             //           itemBuilder: (_, i) {
+//             //             final d = _dates[i];
+//             //             final fullDate = d['fullDate'] as DateTime;
+//             //             final isSel =
+//             //                 fullDate.year == _selectedDate.year &&
+//             //                 fullDate.month == _selectedDate.month &&
+//             //                 fullDate.day == _selectedDate.day;
+//             //             return GestureDetector(
+//             //               onTap: () => setState(() => _selectedDate = fullDate),
+//             //               child: AnimatedContainer(
+//             //                 duration: const Duration(milliseconds: 200),
+//             //                 margin: const EdgeInsets.only(right: 8),
+//             //                 width: 50,
+//             //                 decoration: BoxDecoration(
+//             //                   color: isSel
+//             //                       ? const Color(0xFFE53935)
+//             //                       : Colors.grey.shade100,
+//             //                   borderRadius: BorderRadius.circular(10),
+//             //                 ),
+//             //                 child: Column(
+//             //                   mainAxisAlignment: MainAxisAlignment.center,
+//             //                   children: [
+//             //                     Text(
+//             //                       d['day'] as String,
+//             //                       style: TextStyle(
+//             //                         fontSize: 10,
+//             //                         color: isSel
+//             //                             ? Colors.white
+//             //                             : Colors.black54,
+//             //                       ),
+//             //                     ),
+//             //                     Text(
+//             //                       '${d['date']}',
+//             //                       style: TextStyle(
+//             //                         fontSize: 17,
+//             //                         fontWeight: FontWeight.bold,
+//             //                         color: isSel ? Colors.white : Colors.black,
+//             //                       ),
+//             //                     ),
+//             //                   ],
+//             //                 ),
+//             //               ),
+//             //             );
+//             //           },
+//             //         ),
+//             //       ),
+//             //     ],
+//             //   ),
+//             // ),
+
+//             // ── Save/Create button ────────────────────────────────
+//             Padding(
+//               padding: const EdgeInsets.fromLTRB(16, 4, 16, 20),
+//               child: SizedBox(
+//                 width: double.infinity,
+//                 child: Consumer<HostelProvider>(
+//                   builder: (context, provider, _) => ElevatedButton(
+//                     style: ElevatedButton.styleFrom(
+//                       backgroundColor: const Color(0xFFE53935),
+//                       foregroundColor: Colors.white,
+//                       padding: const EdgeInsets.symmetric(vertical: 14),
+//                       shape: RoundedRectangleBorder(
+//                         borderRadius: BorderRadius.circular(10),
+//                       ),
+//                     ),
+//                     onPressed: provider.isLoading ? null : _saveAndGoBack,
+//                     child: provider.isLoading
+//                         ? const SizedBox(
+//                             height: 20,
+//                             width: 20,
+//                             child: CircularProgressIndicator(
+//                               color: Colors.white,
+//                               strokeWidth: 2,
+//                             ),
+//                           )
+//                         : Text(
+//                             isEdit ? 'Update' : 'Create Hostel',
+//                             style: const TextStyle(fontSize: 16),
+//                           ),
+//                   ),
+//                 ),
+//               ),
+//             ),
+//             SizedBox(
+//               height: MediaQuery.of(context).viewInsets.bottom > 0 ? 16 : 0,
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildGrid(Map<String, TextEditingController> prices, Color color) {
+//     final entries = prices.entries.toList();
+
+//     if (entries.isEmpty) {
+//       return Container(
+//         padding: const EdgeInsets.all(16),
+//         decoration: BoxDecoration(
+//           color: color.withOpacity(0.1),
+//           borderRadius: BorderRadius.circular(8),
+//         ),
+//         child: const Center(
+//           child: Text(
+//             'No prices configured',
+//             style: TextStyle(fontSize: 12, color: Colors.grey),
+//           ),
+//         ),
+//       );
+//     }
+
+//     // Filter out entries with zero or empty price? No, keep them but show with opacity
+//     // For BHK/RK categories, use single row per entry
+//     // For normal categories, use grid layout
+//     final isSpecialCategory = _isBHKCategory || _isRKCategory;
+
+//     if (isSpecialCategory) {
+//       return Column(
+//         children: entries.map((entry) {
+//           final priceText = entry.value.text.trim();
+//           final hasPrice =
+//               priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
+
+//           return Container(
+//             margin: const EdgeInsets.only(bottom: 8),
+//             decoration: BoxDecoration(
+//               color: hasPrice ? color : color.withOpacity(0.45),
+//               borderRadius: BorderRadius.circular(8),
+//             ),
+//             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+//             child: Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Text(
+//                   entry.key,
+//                   style: TextStyle(
+//                     color: hasPrice
+//                         ? const Color.fromARGB(255, 0, 0, 0)
+//                         : Colors.white70,
+//                     fontSize: 14,
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//                 SizedBox(
+//                   width: 100,
+//                   child: TextField(
+//                     controller: entry.value,
+//                     textAlign: TextAlign.center,
+//                     style: TextStyle(
+//                       color: hasPrice ? Colors.white : Colors.white60,
+//                       fontSize: 14,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                     decoration: InputDecoration(
+//                       isDense: true,
+//                       contentPadding: EdgeInsets.zero,
+//                       border: InputBorder.none,
+//                       hintText: 'Enter price',
+//                       hintStyle: const TextStyle(
+//                         color: Colors.white54,
+//                         fontSize: 12,
+//                       ),
+//                     ),
+//                     keyboardType: TextInputType.number,
+//                     onChanged: (_) => setState(() {}),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           );
+//         }).toList(),
+//       );
+//     }
+
+//     // For normal categories, use grid layout (3 columns)
+//     return GridView.builder(
+//       shrinkWrap: true,
+//       physics: const NeverScrollableScrollPhysics(),
+//       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//         crossAxisCount: 3,
+//         mainAxisSpacing: 8,
+//         crossAxisSpacing: 8,
+//         childAspectRatio: 1.4,
+//       ),
+//       itemCount: entries.length,
+//       itemBuilder: (_, i) {
+//         final entry = entries[i];
+//         final priceText = entry.value.text.trim();
+//         final hasPrice =
+//             priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
+
+//         return Container(
+//           decoration: BoxDecoration(
+//             color: hasPrice ? color : color.withOpacity(0.45),
+//             borderRadius: BorderRadius.circular(8),
+//           ),
+//           padding: const EdgeInsets.all(6),
+//           child: Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Text(
+//                 entry.key,
+//                 textAlign: TextAlign.center,
+//                 style: TextStyle(
+//                   color: hasPrice
+//                       ? const Color.fromARGB(255, 0, 0, 0)
+//                       : const Color.fromARGB(179, 0, 0, 0),
+//                   fontSize: 14,
+//                   fontWeight: hasPrice ? FontWeight.bold : FontWeight.bold,
+//                 ),
+//               ),
+//               const SizedBox(height: 4),
+//               SizedBox(
+//                 height: 22,
+//                 child: TextField(
+//                   controller: entry.value,
+//                   textAlign: TextAlign.center,
+//                   style: TextStyle(
+//                     color: hasPrice
+//                         ? const Color.fromARGB(255, 0, 0, 0)
+//                         : const Color.fromARGB(153, 0, 0, 0),
+//                     fontSize: 18,
+//                     fontWeight: hasPrice ? FontWeight.bold : FontWeight.bold,
+//                   ),
+//                   decoration: InputDecoration(
+//                     isDense: true,
+//                     contentPadding: EdgeInsets.zero,
+//                     border: InputBorder.none,
+//                     hintText: '0',
+//                     hintStyle: const TextStyle(
+//                       color: Colors.white54,
+//                       fontSize: 11,
+//                     ),
+//                   ),
+//                   keyboardType: TextInputType.number,
+//                   onChanged: (_) => setState(() {}),
+//                 ),
+//               ),
+//             ],
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+//   Widget _buildField(
+//     TextEditingController c,
+//     String hint, {
+//     int maxLines = 1,
+//   }) => TextField(
+//     controller: c,
+//     maxLines: maxLines,
+//     keyboardType: maxLines == 1 ? TextInputType.text : TextInputType.multiline,
+//     decoration: InputDecoration(
+//       hintText: hint,
+//       hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+//       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+//       enabledBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: BorderSide(color: Colors.grey.shade300),
+//       ),
+//       focusedBorder: OutlineInputBorder(
+//         borderRadius: BorderRadius.circular(8),
+//         borderSide: const BorderSide(color: Color(0xFFE53935)),
+//       ),
+//     ),
+//   );
+
+//   // Widget _buildGrid(Map<String, TextEditingController> prices, Color color) {
+//   //   final entries = prices.entries.toList();
+
+//   //   if (entries.isEmpty) {
+//   //     return Container(
+//   //       padding: const EdgeInsets.all(16),
+//   //       decoration: BoxDecoration(
+//   //         color: color.withOpacity(0.1),
+//   //         borderRadius: BorderRadius.circular(8),
+//   //       ),
+//   //       child: const Center(
+//   //         child: Text(
+//   //           'Select a category first',
+//   //           style: TextStyle(fontSize: 12, color: Colors.grey),
+//   //         ),
+//   //       ),
+//   //     );
+//   //   }
+
+//   //   // For BHK/RK categories, use single row per entry (like the UI shown)
+//   //   // For normal categories, use grid layout
+//   //   final isSpecialCategory = _isBHKCategory || _isRKCategory;
+
+//   //   if (isSpecialCategory) {
+//   //     return Column(
+//   //       children: entries.map((entry) {
+//   //         final priceText = entry.value.text.trim();
+//   //         final hasPrice =
+//   //             priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
+
+//   //         return Container(
+//   //           margin: const EdgeInsets.only(bottom: 8),
+//   //           decoration: BoxDecoration(
+//   //             color: hasPrice ? color : color.withOpacity(0.45),
+//   //             borderRadius: BorderRadius.circular(8),
+//   //           ),
+//   //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+//   //           child: Row(
+//   //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//   //             children: [
+//   //               Text(
+//   //                 entry.key,
+//   //                 style: TextStyle(
+//   //                   color: hasPrice ? Colors.white : Colors.white70,
+//   //                   fontSize: 14,
+//   //                   fontWeight: FontWeight.w600,
+//   //                 ),
+//   //               ),
+//   //               SizedBox(
+//   //                 width: 100,
+//   //                 child: TextField(
+//   //                   controller: entry.value,
+//   //                   textAlign: TextAlign.center,
+//   //                   style: TextStyle(
+//   //                     color: hasPrice ? Colors.white : Colors.white60,
+//   //                     fontSize: 14,
+//   //                     fontWeight: FontWeight.bold,
+//   //                   ),
+//   //                   decoration: InputDecoration(
+//   //                     isDense: true,
+//   //                     contentPadding: EdgeInsets.zero,
+//   //                     border: InputBorder.none,
+//   //                     hintText: 'Enter price',
+//   //                     hintStyle: const TextStyle(
+//   //                       color: Colors.white54,
+//   //                       fontSize: 12,
+//   //                     ),
+//   //                   ),
+//   //                   keyboardType: TextInputType.number,
+//   //                   onChanged: (_) => setState(() {}),
+//   //                 ),
+//   //               ),
+//   //             ],
+//   //           ),
+//   //         );
+//   //       }).toList(),
+//   //     );
+//   //   }
+
+//   //   // For normal categories, use grid layout (3 columns)
+//   //   return GridView.builder(
+//   //     shrinkWrap: true,
+//   //     physics: const NeverScrollableScrollPhysics(),
+//   //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//   //       crossAxisCount: 3,
+//   //       mainAxisSpacing: 8,
+//   //       crossAxisSpacing: 8,
+//   //       childAspectRatio: 1.4,
+//   //     ),
+//   //     itemCount: entries.length,
+//   //     itemBuilder: (_, i) {
+//   //       final entry = entries[i];
+//   //       final priceText = entry.value.text.trim();
+//   //       final hasPrice =
+//   //           priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
+
+//   //       return Container(
+//   //         decoration: BoxDecoration(
+//   //           color: hasPrice ? color : color.withOpacity(0.45),
+//   //           borderRadius: BorderRadius.circular(8),
+//   //         ),
+//   //         padding: const EdgeInsets.all(6),
+//   //         child: Column(
+//   //           mainAxisAlignment: MainAxisAlignment.center,
+//   //           children: [
+//   //             Text(
+//   //               entry.key,
+//   //               textAlign: TextAlign.center,
+//   //               style: TextStyle(
+//   //                 color: hasPrice ? Colors.white : Colors.white70,
+//   //                 fontSize: 9,
+//   //                 fontWeight: hasPrice ? FontWeight.w600 : FontWeight.normal,
+//   //               ),
+//   //             ),
+//   //             const SizedBox(height: 4),
+//   //             SizedBox(
+//   //               height: 22,
+//   //               child: TextField(
+//   //                 controller: entry.value,
+//   //                 textAlign: TextAlign.center,
+//   //                 style: TextStyle(
+//   //                   color: hasPrice ? Colors.white : Colors.white60,
+//   //                   fontSize: 11,
+//   //                   fontWeight: hasPrice ? FontWeight.bold : FontWeight.normal,
+//   //                 ),
+//   //                 decoration: InputDecoration(
+//   //                   isDense: true,
+//   //                   contentPadding: EdgeInsets.zero,
+//   //                   border: InputBorder.none,
+//   //                   hintText: '0',
+//   //                   hintStyle: const TextStyle(
+//   //                     color: Colors.white54,
+//   //                     fontSize: 11,
+//   //                   ),
+//   //                 ),
+//   //                 keyboardType: TextInputType.number,
+//   //                 onChanged: (_) => setState(() {}),
+//   //               ),
+//   //             ),
+//   //           ],
+//   //         ),
+//   //       );
+//   //     },
+//   //   );
+//   // }
+// }
+
 class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -5678,9 +8373,14 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
   final List<XFile> _hostelImages = [];
   final ImagePicker _picker = ImagePicker();
 
-  final List<String> _roomNumbers = [];
-  final TextEditingController _roomNumberController = TextEditingController();
-  String _selectedPrefix = ''; // For alphabet prefix like 'A', 'B', 'C'
+  // Room numbers data - now per share type
+  late Map<String, List<String>> _roomNumbersMap;
+  final TextEditingController _roomNumberInputController =
+      TextEditingController();
+  String _selectedRoomShareType = ''; // Which share type we're adding rooms for
+  String _selectedRoomAcType = ''; // 'AC' or 'NON-AC'
+  String _selectedRoomPrefix = ''; // For alphabet prefix
+
   final List<String> _alphabetOptions = [
     '',
     'A',
@@ -5796,57 +8496,15 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     return _isBHKCategory || _isRKCategory;
   }
 
-  // @override
-  // void initState() {
-  //   super.initState();
-  //   _tabController = TabController(length: 2, vsync: this);
-  //   _dates = _buildDates();
-  //   _selectedDate = _dates.first['fullDate'] as DateTime;
-
-  //   final h = widget.existingHostel;
-
-  //   _titleController = TextEditingController(text: h?.name ?? '');
-  //   _addressController = TextEditingController(text: h?.address ?? '');
-  //   _advanceController = TextEditingController(
-  //     text: h != null ? h.monthlyAdvance.toStringAsFixed(0) : '',
-  //   );
-  //   _ratingController = TextEditingController(
-  //     text: h != null ? h.rating.toString() : '4.5',
-  //   );
-  //   _latController = TextEditingController(
-  //     text: h != null ? h.latitude.toString() : '',
-  //   );
-  //   _lngController = TextEditingController(
-  //     text: h != null ? h.longitude.toString() : '',
-  //   );
-
-  //   // Only load features and furnishing if we have data AND it's BHK/RK category
-  //   if (widget.existingHostel != null) {
-  //     // Load existing features
-  //     if (h?.features != null && h!.features.isNotEmpty) {
-  //       _features.addAll(h.features);
-  //     }
-  //     // Load existing furnishing
-  //     if (h?.furnishing != null && h!.furnishing.isNotEmpty) {
-  //       _selectedFurnishing = h.furnishing;
-  //     }
-  //   }
-
-  //   // Initialize empty price controllers
-  //   _monthlyNonAc = {};
-  //   _monthlyAc = {};
-  //   _dailyNonAc = {};
-  //   _dailyAc = {};
-
-  //   _loadCategories();
-  // }
-
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _dates = _buildDates();
     _selectedDate = _dates.first['fullDate'] as DateTime;
+
+    // Initialize room numbers map
+    _roomNumbersMap = {};
 
     final h = widget.existingHostel;
 
@@ -5874,30 +8532,78 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     _loadCategories();
   }
 
+  // Helper method to get the key for room numbers map
+  String _getRoomKey(String shareType, bool isAc) {
+    return "${shareType}_${isAc ? 'AC' : 'NON-AC'}";
+  }
+
+  // Get available share types that have prices
+  List<String> _getAvailableShareTypesForRooms() {
+    final List<String> available = [];
+
+    for (var key in _shareKeys) {
+      final hasAcPrice =
+          (_parsePrice(_monthlyAc[key]) > 0 || _parsePrice(_dailyAc[key]) > 0);
+      final hasNonAcPrice =
+          (_parsePrice(_monthlyNonAc[key]) > 0 ||
+          _parsePrice(_dailyNonAc[key]) > 0);
+
+      if (hasAcPrice) {
+        available.add('$key - AC');
+      }
+      if (hasNonAcPrice) {
+        available.add('$key - Non-AC');
+      }
+    }
+
+    return available;
+  }
+
+  // Add room number for selected share type
   void _addRoomNumber() {
-    final input = _roomNumberController.text.trim();
+    if (_selectedRoomShareType.isEmpty) {
+      _showSnackBar('Please select a share type first');
+      return;
+    }
+
+    final input = _roomNumberInputController.text.trim();
     if (input.isEmpty) return;
+
+    // Parse the selected share type (e.g., "1 Share - AC")
+    final parts = _selectedRoomShareType.split(' - ');
+    final shareKey = parts[0];
+    final isAc = parts[1] == 'AC';
+    final roomKey = _getRoomKey(shareKey, isAc);
+
+    List<String> currentRooms = _roomNumbersMap[roomKey] ?? [];
 
     // Check if it's a range (contains '-')
     if (input.contains('-')) {
-      _addRoomRange(input);
+      _addRoomRange(shareKey, isAc, input, currentRooms);
     } else {
       // Single room number
-      final roomNumber = _selectedPrefix.isNotEmpty
-          ? '${_selectedPrefix}$input'
+      final roomNumber = _selectedRoomPrefix.isNotEmpty
+          ? '${_selectedRoomPrefix}$input'
           : input;
-      if (!_roomNumbers.contains(roomNumber)) {
+      if (!currentRooms.contains(roomNumber)) {
         setState(() {
-          _roomNumbers.add(roomNumber);
-          _roomNumberController.clear();
+          currentRooms.add(roomNumber);
+          _roomNumbersMap[roomKey] = currentRooms;
+          _roomNumberInputController.clear();
         });
+        _showSnackBar('Added room $roomNumber');
       } else {
         _showSnackBar('Room number already exists');
       }
     }
   }
 
-  void _addRoomRange(String range) {
+  void _addRoomRange(
+    String shareKey,
+    bool isAc,
+    String range,
+    List<String> currentRooms,
+  ) {
     final parts = range.split('-');
     if (parts.length != 2) {
       _showSnackBar('Invalid range format. Use format: 101-118');
@@ -5907,12 +8613,10 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     final startStr = parts[0].trim();
     final endStr = parts[1].trim();
 
-    // Try to parse as numbers
     final startNum = int.tryParse(startStr);
     final endNum = int.tryParse(endStr);
 
     if (startNum != null && endNum != null) {
-      // Numeric range
       if (startNum >= endNum) {
         _showSnackBar('Start number must be less than end number');
         return;
@@ -5925,10 +8629,10 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
       final newRooms = <String>[];
       for (int i = startNum; i <= endNum; i++) {
-        final roomNumber = _selectedPrefix.isNotEmpty
-            ? '${_selectedPrefix}$i'
+        final roomNumber = _selectedRoomPrefix.isNotEmpty
+            ? '${_selectedRoomPrefix}$i'
             : i.toString();
-        if (!_roomNumbers.contains(roomNumber) &&
+        if (!currentRooms.contains(roomNumber) &&
             !newRooms.contains(roomNumber)) {
           newRooms.add(roomNumber);
         }
@@ -5936,124 +8640,198 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
       if (newRooms.isNotEmpty) {
         setState(() {
-          _roomNumbers.addAll(newRooms);
-          _roomNumberController.clear();
+          currentRooms.addAll(newRooms);
+          _roomNumbersMap[_getRoomKey(shareKey, isAc)] = currentRooms;
+          _roomNumberInputController.clear();
         });
         _showSnackBar('Added ${newRooms.length} rooms');
+      }
+    }
+  }
+
+  void _removeRoomNumber(String shareKey, bool isAc, String roomNumber) {
+    setState(() {
+      final roomKey = _getRoomKey(shareKey, isAc);
+      final rooms = _roomNumbersMap[roomKey] ?? [];
+      rooms.remove(roomNumber);
+      if (rooms.isEmpty) {
+        _roomNumbersMap.remove(roomKey);
       } else {
-        _showSnackBar('No new rooms added (all already exist)');
+        _roomNumbersMap[roomKey] = rooms;
       }
-    } else {
-      // Handle alphanumeric or alphabet range (e.g., A1-A10 or G1-G20)
-      _addAlphaNumericRange(startStr, endStr);
+    });
+    _showSnackBar('Removed room $roomNumber');
+  }
+
+  // Update _rebuildPriceControllers to load room numbers from existing sharing options
+  void _rebuildPriceControllers() {
+    // Save old values if they exist
+    final oldMonthlyNonAc = _monthlyNonAc;
+    final oldMonthlyAc = _monthlyAc;
+    final oldDailyNonAc = _dailyNonAc;
+    final oldDailyAc = _dailyAc;
+
+    // Create new controllers with current share keys
+    _monthlyNonAc = _buildControllers([], isAc: false, isMonthly: true);
+    _monthlyAc = _buildControllers([], isAc: true, isMonthly: true);
+    _dailyNonAc = _buildControllers([], isAc: false, isMonthly: false);
+    _dailyAc = _buildControllers([], isAc: true, isMonthly: false);
+
+    // Dispose old controllers
+    for (var c in [
+      ...oldMonthlyNonAc.values,
+      ...oldMonthlyAc.values,
+      ...oldDailyNonAc.values,
+      ...oldDailyAc.values,
+    ]) {
+      c.dispose();
+    }
+
+    // If editing existing hostel, load prices and room numbers
+    final h = widget.existingHostel;
+    if (h != null && h.sharings.isNotEmpty && _selectedCategory != null) {
+      // Clear existing room numbers
+      _roomNumbersMap.clear();
+
+      for (var key in _shareKeys) {
+        // Find AC sharing for this key
+        SharingOption? acSharing;
+        try {
+          acSharing = h.sharings.firstWhere(
+            (s) =>
+                s.shareType.toLowerCase() == key.toLowerCase() &&
+                s.type?.toUpperCase() == 'AC',
+          );
+        } catch (_) {}
+
+        // Find Non-AC sharing for this key
+        SharingOption? nonAcSharing;
+        try {
+          nonAcSharing = h.sharings.firstWhere(
+            (s) =>
+                s.shareType.toLowerCase() == key.toLowerCase() &&
+                s.type?.toUpperCase() == 'NON-AC',
+          );
+        } catch (_) {}
+
+        // Load room numbers from AC sharing
+        if (acSharing != null && acSharing.roomNumbers.isNotEmpty) {
+          _roomNumbersMap[_getRoomKey(key, true)] = List.from(
+            acSharing.roomNumbers,
+          );
+        }
+
+        // Load room numbers from Non-AC sharing
+        if (nonAcSharing != null && nonAcSharing.roomNumbers.isNotEmpty) {
+          _roomNumbersMap[_getRoomKey(key, false)] = List.from(
+            nonAcSharing.roomNumbers,
+          );
+        }
+
+        // Set AC prices if found
+        if (acSharing != null) {
+          final acMonthly = acSharing.monthlyPrice ?? 0;
+          final acDaily = acSharing.dailyPrice ?? 0;
+          _monthlyAc[key]?.text = acMonthly > 0
+              ? acMonthly.toStringAsFixed(0)
+              : '0';
+          _dailyAc[key]?.text = acDaily > 0 ? acDaily.toStringAsFixed(0) : '0';
+        }
+
+        // Set Non-AC prices if found
+        if (nonAcSharing != null) {
+          final nonAcMonthly = nonAcSharing.monthlyPrice ?? 0;
+          final nonAcDaily = nonAcSharing.dailyPrice ?? 0;
+          _monthlyNonAc[key]?.text = nonAcMonthly > 0
+              ? nonAcMonthly.toStringAsFixed(0)
+              : '0';
+          _dailyNonAc[key]?.text = nonAcDaily > 0
+              ? nonAcDaily.toStringAsFixed(0)
+              : '0';
+        }
+      }
     }
   }
 
-  void _addAlphaNumericRange(String start, String end) {
-    // Extract prefix and number from start and end
-    final startMatch = RegExp(r'([A-Za-z]*)(\d+)').firstMatch(start);
-    final endMatch = RegExp(r'([A-Za-z]*)(\d+)').firstMatch(end);
-
-    if (startMatch == null || endMatch == null) {
-      _showSnackBar('Invalid range format. Use format: 101-118 or A1-A10');
-      return;
-    }
-
-    final startPrefix = startMatch.group(1) ?? '';
-    final startNum = int.tryParse(startMatch.group(2)!);
-    final endPrefix = endMatch.group(1) ?? '';
-    final endNum = int.tryParse(endMatch.group(2)!);
-
-    if (startNum == null || endNum == null) {
-      _showSnackBar('Invalid number format in range');
-      return;
-    }
-
-    if (startPrefix != endPrefix) {
-      _showSnackBar('Prefixes must match in range (e.g., A1-A10)');
-      return;
-    }
-
-    if (startNum >= endNum) {
-      _showSnackBar('Start number must be less than end number');
-      return;
-    }
-
-    if (endNum - startNum > 100) {
-      _showSnackBar('Cannot add more than 100 rooms at once');
-      return;
-    }
-
-    final newRooms = <String>[];
-    for (int i = startNum; i <= endNum; i++) {
-      final roomNumber = '$startPrefix$i';
-      if (!_roomNumbers.contains(roomNumber) &&
-          !newRooms.contains(roomNumber)) {
-        newRooms.add(roomNumber);
-      }
-    }
-
-    if (newRooms.isNotEmpty) {
-      setState(() {
-        _roomNumbers.addAll(newRooms);
-        _roomNumberController.clear();
-      });
-      _showSnackBar('Added ${newRooms.length} rooms');
-    } else {
-      _showSnackBar('No new rooms added (all already exist)');
-    }
-  }
-
-  void _addBatchRoomNumbers() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Add Multiple Rooms'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Enter room numbers separated by commas:'),
-            const SizedBox(height: 8),
-            TextField(
-              controller: TextEditingController(),
-              decoration: const InputDecoration(
-                hintText: 'e.g., 101, 102, 103, 201, 202',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: (value) {
-                final rooms = value
-                    .split(',')
-                    .map((e) => e.trim())
-                    .where((e) => e.isNotEmpty)
-                    .toList();
-                final newRooms = <String>[];
-                for (var room in rooms) {
-                  final finalRoom = _selectedPrefix.isNotEmpty
-                      ? '${_selectedPrefix}$room'
-                      : room;
-                  if (!_roomNumbers.contains(finalRoom)) {
-                    newRooms.add(finalRoom);
-                  }
-                }
-                if (newRooms.isNotEmpty) {
-                  setState(() {
-                    _roomNumbers.addAll(newRooms);
-                  });
-                  _showSnackBar('Added ${newRooms.length} rooms');
-                }
-                Navigator.pop(ctx);
-              },
-            ),
-          ],
+  // Update _saveAndGoBack to save room numbers per sharing option
+  void _saveAndGoBack() {
+    if (_selectedCategory == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select a category'),
+          backgroundColor: Colors.red,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+      );
+      return;
+    }
+
+    // Build sharings based on category type
+    final List<SharingOption> sharings = [];
+
+    for (var key in _shareKeys) {
+      final acMonthly = _parsePrice(_monthlyAc[key]);
+      final acDaily = _parsePrice(_dailyAc[key]);
+      final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
+      final nonAcDaily = _parsePrice(_dailyNonAc[key]);
+
+      // Get room numbers for this specific sharing option
+      final acRoomNumbers = _roomNumbersMap[_getRoomKey(key, true)] ?? [];
+      final nonAcRoomNumbers = _roomNumbersMap[_getRoomKey(key, false)] ?? [];
+
+      // Add AC sharing if any AC price is set OR has room numbers
+      if (acMonthly > 0 || acDaily > 0 || acRoomNumbers.isNotEmpty) {
+        sharings.add(
+          SharingOption(
+            shareType: key,
+            type: 'AC',
+            acMonthlyPrice: acMonthly,
+            acDailyPrice: acDaily,
+            nonAcMonthlyPrice: 0,
+            nonAcDailyPrice: 0,
+            monthlyPrice: acMonthly,
+            dailyPrice: acDaily,
+            roomNumbers: acRoomNumbers,
           ),
-        ],
-      ),
+        );
+      }
+
+      // Add Non-AC sharing if any Non-AC price is set OR has room numbers
+      if (nonAcMonthly > 0 || nonAcDaily > 0 || nonAcRoomNumbers.isNotEmpty) {
+        sharings.add(
+          SharingOption(
+            shareType: key,
+            type: 'Non-AC',
+            acMonthlyPrice: 0,
+            acDailyPrice: 0,
+            nonAcMonthlyPrice: nonAcMonthly,
+            nonAcDailyPrice: nonAcDaily,
+            monthlyPrice: nonAcMonthly,
+            dailyPrice: nonAcDaily,
+            roomNumbers: nonAcRoomNumbers,
+          ),
+        );
+      }
+    }
+
+    final imagePaths = _hostelImages.map((x) => x.path).toList();
+    final request = HostelRequest(
+      categoryId: _selectedCategory!.id,
+      vendorId: '',
+      name: _titleController.text.trim(),
+      rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
+      address: _addressController.text.trim(),
+      monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
+      latitude: double.tryParse(_latController.text.trim()) ?? 0,
+      longitude: double.tryParse(_lngController.text.trim()) ?? 0,
+      isAc: false,
+      sharings: sharings,
+      imagePaths: imagePaths,
+      features: _shouldShowFurnishingAndFeatures ? _features : [],
+      furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
     );
+
+    widget.onSave(request);
+    Navigator.pop(context);
   }
 
   void _showSnackBar(String message) {
@@ -6061,60 +8839,13 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       SnackBar(
         content: Text(message),
         duration: const Duration(seconds: 2),
-        backgroundColor: message.contains('Added') ? Colors.green : Colors.red,
+        backgroundColor:
+            message.contains('Added') || message.contains('Removed')
+            ? Colors.green
+            : Colors.red,
       ),
     );
   }
-
-  void _removeRoomNumber(String roomNumber) {
-    setState(() {
-      _roomNumbers.remove(roomNumber);
-    });
-  }
-
-  // Future<void> _loadCategories() async {
-  //   setState(() => _isLoadingCategories = true);
-  //   final categoryProvider = Provider.of<CategoryProvider>(
-  //     context,
-  //     listen: false,
-  //   );
-  //   await categoryProvider.fetchCategories();
-
-  //   if (widget.existingHostel != null && mounted) {
-  //     final category = categoryProvider.categories.firstWhere(
-  //       (cat) => cat.id == widget.existingHostel!.categoryId,
-  //       orElse: () => categoryProvider.categories.isNotEmpty
-  //           ? categoryProvider.categories.first
-  //           : throw Exception('No categories'),
-  //     );
-  //     setState(() {
-  //       _selectedCategory = category;
-  //       _rebuildPriceControllers();
-  //     });
-
-  //     // Load features and furnishing AFTER category is set - use actual API values
-  //     if (_shouldShowFurnishingAndFeatures) {
-  //       setState(() {
-  //         // Load existing features from API
-  //         if (widget.existingHostel!.features.isNotEmpty) {
-  //           _features.clear();
-  //           _features.addAll(widget.existingHostel!.features);
-  //         } else {
-  //           _features.clear();
-  //         }
-
-  //         // Load existing furnishing from API (not default)
-  //         if (widget.existingHostel!.furnishing.isNotEmpty) {
-  //           _selectedFurnishing = widget.existingHostel!.furnishing;
-  //         } else {
-  //           _selectedFurnishing = ''; // Empty, will show nothing selected
-  //         }
-  //       });
-  //     }
-  //   }
-
-  //   if (mounted) setState(() => _isLoadingCategories = false);
-  // }
 
   Future<void> _loadCategories() async {
     setState(() => _isLoadingCategories = true);
@@ -6136,31 +8867,17 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         _rebuildPriceControllers();
       });
 
-      // Load room numbers from existing hostel
-      if (widget.existingHostel!.roomNumbers != null &&
-          widget.existingHostel!.roomNumbers.isNotEmpty) {
-        setState(() {
-          _roomNumbers.clear();
-          _roomNumbers.addAll(widget.existingHostel!.roomNumbers);
-        });
-      }
-
-      // Load features and furnishing AFTER category is set - use actual API values
+      // Load features and furnishing
       if (_shouldShowFurnishingAndFeatures) {
         setState(() {
-          // Load existing features from API
           if (widget.existingHostel!.features.isNotEmpty) {
             _features.clear();
             _features.addAll(widget.existingHostel!.features);
-          } else {
-            _features.clear();
           }
-
-          // Load existing furnishing from API (not default)
           if (widget.existingHostel!.furnishing.isNotEmpty) {
             _selectedFurnishing = widget.existingHostel!.furnishing;
           } else {
-            _selectedFurnishing = ''; // Empty, will show nothing selected
+            _selectedFurnishing = '';
           }
         });
       }
@@ -6168,30 +8885,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
     if (mounted) setState(() => _isLoadingCategories = false);
   }
-
-  // Future<void> _loadCategories() async {
-  //   setState(() => _isLoadingCategories = true);
-  //   final categoryProvider = Provider.of<CategoryProvider>(
-  //     context,
-  //     listen: false,
-  //   );
-  //   await categoryProvider.fetchCategories();
-
-  //   if (widget.existingHostel != null && mounted) {
-  //     final category = categoryProvider.categories.firstWhere(
-  //       (cat) => cat.id == widget.existingHostel!.categoryId,
-  //       orElse: () => categoryProvider.categories.isNotEmpty
-  //           ? categoryProvider.categories.first
-  //           : throw Exception('No categories'),
-  //     );
-  //     setState(() {
-  //       _selectedCategory = category;
-  //       _rebuildPriceControllers();
-  //     });
-  //   }
-
-  //   if (mounted) setState(() => _isLoadingCategories = false);
-  // }
 
   Map<String, TextEditingController> _buildControllers(
     List<SharingOption> sharings, {
@@ -6233,16 +8926,12 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
     double? price;
     if (isAc) {
-      // For AC, first try acMonthlyPrice/acDailyPrice
       price = isMonthly ? match.acMonthlyPrice : match.acDailyPrice;
-      // If no AC-specific price, try the generic monthlyPrice/dailyPrice
       if ((price == null || price == 0) && match.type?.toUpperCase() == 'AC') {
         price = isMonthly ? match.monthlyPrice : match.dailyPrice;
       }
     } else {
-      // For Non-AC, first try nonAcMonthlyPrice/nonAcDailyPrice
       price = isMonthly ? match.nonAcMonthlyPrice : match.nonAcDailyPrice;
-      // If no Non-AC specific price, try the generic monthlyPrice/dailyPrice
       if ((price == null || price == 0) &&
           match.type?.toUpperCase() == 'NON-AC') {
         price = isMonthly ? match.monthlyPrice : match.dailyPrice;
@@ -6265,7 +8954,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     _latController.dispose();
     _lngController.dispose();
     _featureController.dispose();
-    _roomNumberController.dispose(); // Add this line
+    _roomNumberInputController.dispose();
 
     for (var c in [
       ..._monthlyNonAc.values,
@@ -6278,8 +8967,99 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
   }
 
   Future<void> _pickHostelImage() async {
-    final image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) setState(() => _hostelImages.add(image));
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Choose Image Source',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildImageSourceOption(
+                  icon: Icons.camera_alt,
+                  label: 'Camera',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final image = await _picker.pickImage(
+                      source: ImageSource.camera,
+                    );
+                    if (image != null && mounted) {
+                      setState(() => _hostelImages.add(image));
+                    }
+                  },
+                ),
+                _buildImageSourceOption(
+                  icon: Icons.photo_library,
+                  label: 'Gallery',
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final image = await _picker.pickImage(
+                      source: ImageSource.gallery,
+                    );
+                    if (image != null && mounted) {
+                      setState(() => _hostelImages.add(image));
+                    }
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper widget for image source options
+  Widget _buildImageSourceOption({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFEBEE),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Icon(icon, color: const Color(0xFFE53935), size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF1A1A1A),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   double _parsePrice(TextEditingController? c) {
@@ -6304,239 +9084,94 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
     });
   }
 
-  // void _saveAndGoBack() {
-  //   if (_selectedCategory == null) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Please select a category'),
-  //         backgroundColor: Colors.red,
-  //       ),
-  //     );
-  //     return;
-  //   }
+  // Widget to display rooms for a specific share type
+  Widget _buildRoomsDisplay(String shareKey, bool isAc, Color themeColor) {
+    final roomKey = _getRoomKey(shareKey, isAc);
+    final rooms = _roomNumbersMap[roomKey] ?? [];
 
-  //   // Build sharings based on category type
-  //   final List<SharingOption> sharings = [];
+    if (rooms.isEmpty) return const SizedBox.shrink();
 
-  //   for (var key in _shareKeys) {
-  //     final acMonthly = _parsePrice(_monthlyAc[key]);
-  //     final acDaily = _parsePrice(_dailyAc[key]);
-  //     final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
-  //     final nonAcDaily = _parsePrice(_dailyNonAc[key]);
-
-  //     // Add AC sharing if any AC price is set
-  //     if (acMonthly > 0 || acDaily > 0) {
-  //       sharings.add(
-  //         SharingOption(
-  //           shareType: key,
-  //           type: 'AC',
-  //           acMonthlyPrice: acMonthly,
-  //           acDailyPrice: acDaily,
-  //           nonAcMonthlyPrice: 0,
-  //           nonAcDailyPrice: 0,
-  //           monthlyPrice: acMonthly,
-  //           dailyPrice: acDaily,
-  //         ),
-  //       );
-  //     }
-
-  //     // Add Non-AC sharing if any Non-AC price is set
-  //     if (nonAcMonthly > 0 || nonAcDaily > 0) {
-  //       sharings.add(
-  //         SharingOption(
-  //           shareType: key,
-  //           type: 'Non-AC',
-  //           acMonthlyPrice: 0,
-  //           acDailyPrice: 0,
-  //           nonAcMonthlyPrice: nonAcMonthly,
-  //           nonAcDailyPrice: nonAcDaily,
-  //           monthlyPrice: nonAcMonthly,
-  //           dailyPrice: nonAcDaily,
-  //         ),
-  //       );
-  //     }
-  //   }
-
-  //   final imagePaths = _hostelImages.map((x) => x.path).toList();
-  //   final request = HostelRequest(
-  //     categoryId: _selectedCategory!.id,
-  //     vendorId: '',
-  //     name: _titleController.text.trim(),
-  //     rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
-  //     address: _addressController.text.trim(),
-  //     monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
-  //     latitude: double.tryParse(_latController.text.trim()) ?? 0,
-  //     longitude: double.tryParse(_lngController.text.trim()) ?? 0,
-  //     isAc: false,
-  //     sharings: sharings,
-  //     imagePaths: imagePaths,
-  //     features: _shouldShowFurnishingAndFeatures ? _features : [],
-  //     furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
-  //   );
-
-  //   widget.onSave(request);
-  //   Navigator.pop(context);
-  // }
-
-  void _saveAndGoBack() {
-    if (_selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please select a category'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    // Build sharings based on category type
-    final List<SharingOption> sharings = [];
-
-    for (var key in _shareKeys) {
-      final acMonthly = _parsePrice(_monthlyAc[key]);
-      final acDaily = _parsePrice(_dailyAc[key]);
-      final nonAcMonthly = _parsePrice(_monthlyNonAc[key]);
-      final nonAcDaily = _parsePrice(_dailyNonAc[key]);
-
-      // Add AC sharing if any AC price is set
-      if (acMonthly > 0 || acDaily > 0) {
-        sharings.add(
-          SharingOption(
-            shareType: key,
-            type: 'AC',
-            acMonthlyPrice: acMonthly,
-            acDailyPrice: acDaily,
-            nonAcMonthlyPrice: 0,
-            nonAcDailyPrice: 0,
-            monthlyPrice: acMonthly,
-            dailyPrice: acDaily,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: themeColor.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: themeColor.withOpacity(0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: themeColor,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '$shareKey ${isAc ? 'AC' : 'Non-AC'} Rooms',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: themeColor,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '${rooms.length} rooms',
+                style: TextStyle(fontSize: 10, color: themeColor),
+              ),
+            ],
           ),
-        );
-      }
-
-      // Add Non-AC sharing if any Non-AC price is set
-      if (nonAcMonthly > 0 || nonAcDaily > 0) {
-        sharings.add(
-          SharingOption(
-            shareType: key,
-            type: 'Non-AC',
-            acMonthlyPrice: 0,
-            acDailyPrice: 0,
-            nonAcMonthlyPrice: nonAcMonthly,
-            nonAcDailyPrice: nonAcDaily,
-            monthlyPrice: nonAcMonthly,
-            dailyPrice: nonAcDaily,
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: rooms.map((room) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: themeColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.meeting_room, size: 12, color: themeColor),
+                    const SizedBox(width: 4),
+                    Text(
+                      room,
+                      style: TextStyle(fontSize: 11, color: themeColor),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => _removeRoomNumber(shareKey, isAc, room),
+                      child: Icon(
+                        Icons.close,
+                        size: 12,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
-        );
-      }
-    }
-
-    final imagePaths = _hostelImages.map((x) => x.path).toList();
-    final request = HostelRequest(
-      categoryId: _selectedCategory!.id,
-      vendorId: '',
-      name: _titleController.text.trim(),
-      rating: double.tryParse(_ratingController.text.trim()) ?? 4.5,
-      address: _addressController.text.trim(),
-      monthlyAdvance: double.tryParse(_advanceController.text.trim()) ?? 0,
-      latitude: double.tryParse(_latController.text.trim()) ?? 0,
-      longitude: double.tryParse(_lngController.text.trim()) ?? 0,
-      isAc: false,
-      sharings: sharings,
-      imagePaths: imagePaths,
-      features: _shouldShowFurnishingAndFeatures ? _features : [],
-      furnishing: _shouldShowFurnishingAndFeatures ? _selectedFurnishing : '',
-      roomNumbers: _roomNumbers, // Add this line
+        ],
+      ),
     );
-
-    widget.onSave(request);
-    Navigator.pop(context);
-  }
-
-  void _rebuildPriceControllers() {
-    // Save old values if they exist
-    final oldMonthlyNonAc = _monthlyNonAc;
-    final oldMonthlyAc = _monthlyAc;
-    final oldDailyNonAc = _dailyNonAc;
-    final oldDailyAc = _dailyAc;
-
-    // Create new controllers with current share keys
-    _monthlyNonAc = _buildControllers([], isAc: false, isMonthly: true);
-    _monthlyAc = _buildControllers([], isAc: true, isMonthly: true);
-    _dailyNonAc = _buildControllers([], isAc: false, isMonthly: false);
-    _dailyAc = _buildControllers([], isAc: true, isMonthly: false);
-
-    // Dispose old controllers
-    for (var c in [
-      ...oldMonthlyNonAc.values,
-      ...oldMonthlyAc.values,
-      ...oldDailyNonAc.values,
-      ...oldDailyAc.values,
-    ]) {
-      c.dispose();
-    }
-
-    // If editing existing hostel, load prices
-    final h = widget.existingHostel;
-    if (h != null && h.sharings.isNotEmpty && _selectedCategory != null) {
-      for (var key in _shareKeys) {
-        // Find AC sharing for this key
-        SharingOption? acSharing;
-        try {
-          acSharing = h.sharings.firstWhere(
-            (s) =>
-                s.shareType.toLowerCase() == key.toLowerCase() &&
-                s.type?.toUpperCase() == 'AC',
-          );
-        } catch (_) {}
-
-        // Find Non-AC sharing for this key
-        SharingOption? nonAcSharing;
-        try {
-          nonAcSharing = h.sharings.firstWhere(
-            (s) =>
-                s.shareType.toLowerCase() == key.toLowerCase() &&
-                s.type?.toUpperCase() == 'NON-AC',
-          );
-        } catch (_) {}
-
-        // Set AC prices if found
-        if (acSharing != null) {
-          final acMonthly = acSharing.monthlyPrice ?? 0;
-          final acDaily = acSharing.dailyPrice ?? 0;
-          _monthlyAc[key]?.text = acMonthly > 0
-              ? acMonthly.toStringAsFixed(0)
-              : '0';
-          _dailyAc[key]?.text = acDaily > 0 ? acDaily.toStringAsFixed(0) : '0';
-
-          print(
-            'Set AC prices for key "$key": Monthly=$acMonthly, Daily=$acDaily',
-          );
-        }
-
-        // Set Non-AC prices if found
-        if (nonAcSharing != null) {
-          final nonAcMonthly = nonAcSharing.monthlyPrice ?? 0;
-          final nonAcDaily = nonAcSharing.dailyPrice ?? 0;
-          _monthlyNonAc[key]?.text = nonAcMonthly > 0
-              ? nonAcMonthly.toStringAsFixed(0)
-              : '0';
-          _dailyNonAc[key]?.text = nonAcDaily > 0
-              ? nonAcDaily.toStringAsFixed(0)
-              : '0';
-
-          print(
-            'Set Non-AC prices for key "$key": Monthly=$nonAcMonthly, Daily=$nonAcDaily',
-          );
-        }
-      }
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existingHostel != null;
-    print("llllllllllllllllllllllllllll${widget.existingHostel?.furnishing}");
+    final availableShareTypes = _getAvailableShareTypesForRooms();
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       backgroundColor: Colors.white,
@@ -6575,84 +9210,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Category dropdown ─────────────────────────────────
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            //   child: Column(
-            //     crossAxisAlignment: CrossAxisAlignment.start,
-            //     children: [
-            //       const Text(
-            //         'Category *',
-            //         style: TextStyle(
-            //           fontWeight: FontWeight.bold,
-            //           fontSize: 14,
-            //           color: Color(0xFFE53935),
-            //         ),
-            //       ),
-            //       const SizedBox(height: 8),
-            //       Consumer<CategoryProvider>(
-            //         builder: (context, categoryProvider, _) {
-            //           if (categoryProvider.isLoading) {
-            //             return Container(
-            //               padding: const EdgeInsets.all(12),
-            //               decoration: BoxDecoration(
-            //                 border: Border.all(color: Colors.grey.shade300),
-            //                 borderRadius: BorderRadius.circular(8),
-            //               ),
-            //               child: const Center(
-            //                 child: SizedBox(
-            //                   height: 20,
-            //                   width: 20,
-            //                   child: CircularProgressIndicator(strokeWidth: 2),
-            //                 ),
-            //               ),
-            //             );
-            //           }
-            //           if (categoryProvider.categories.isEmpty) {
-            //             return Container(
-            //               padding: const EdgeInsets.all(12),
-            //               decoration: BoxDecoration(
-            //                 border: Border.all(color: Colors.grey.shade300),
-            //                 borderRadius: BorderRadius.circular(8),
-            //               ),
-            //               child: const Text(
-            //                 'No categories available',
-            //                 style: TextStyle(color: Colors.red),
-            //               ),
-            //             );
-            //           }
-            //           return Container(
-            //             padding: const EdgeInsets.symmetric(horizontal: 12),
-            //             decoration: BoxDecoration(
-            //               border: Border.all(color: Colors.grey.shade300),
-            //               borderRadius: BorderRadius.circular(8),
-            //             ),
-            //             child: DropdownButtonHideUnderline(
-            //               child: DropdownButton<Category>(
-            //                 isExpanded: true,
-            //                 hint: const Text('Select Category'),
-            //                 value: _selectedCategory,
-            //                 items: categoryProvider.categories.map((category) {
-            //                   return DropdownMenuItem<Category>(
-            //                     value: category,
-            //                     child: Text(category.name),
-            //                   );
-            //                 }).toList(),
-            //                 onChanged: (Category? newValue) {
-            //                   setState(() {
-            //                     _selectedCategory = newValue;
-            //                     _rebuildPriceControllers();
-            //                   });
-            //                 },
-            //               ),
-            //             ),
-            //           );
-            //         },
-            //       ),
-            //     ],
-            //   ),
-            // ),
-
             // ── Category dropdown ─────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -6700,7 +9257,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                         );
                       }
 
-                      // In edit mode, show disabled dropdown with selected value
                       if (isEdit && _selectedCategory != null) {
                         return Container(
                           padding: const EdgeInsets.symmetric(
@@ -6730,7 +9286,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                         );
                       }
 
-                      // In create mode, show normal dropdown
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         decoration: BoxDecoration(
@@ -6764,17 +9319,12 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
             ),
             const Divider(height: 24, thickness: 1),
 
-            // ── Furnishing & Features (ONLY for BHK/RK categories and in Edit mode if data exists) ──
             // ── Furnishing & Features (ONLY for BHK/RK categories) ──
-            // ── Furnishing & Features (ONLY for BHK/RK categories and ONLY show in edit mode if data exists, or in create mode for BHK/RK) ──
-            // In create mode: show for BHK/RK categories (even if no data yet)
-            // In edit mode: show for BHK/RK categories ONLY if furnishing or features exist in API
             if (_shouldShowFurnishingAndFeatures &&
                 (!isEdit ||
                     (isEdit &&
                         (widget.existingHostel?.furnishing != '' ||
                             widget.existingHostel?.features.length != 0)))) ...[
-              // Furnishing Selection
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -6832,7 +9382,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
               ),
               const Divider(height: 16, thickness: 1),
 
-              // Features Input (shows API values in edit mode)
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -6944,51 +9493,11 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                           );
                         }).toList(),
                       ),
-                    // Add a hint when no features
-                    if (_features.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8),
-                        child: Text(
-                          isEdit
-                              ? 'No features added yet. Add features above.'
-                              : 'Add features using the + button above.',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade500,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ),
                   ],
                 ),
               ),
               const Divider(height: 16, thickness: 1),
             ],
-
-            // ── Monthly / Daily tab bar ───────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: const Color(0xFFE53935),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelColor: Colors.white,
-                  unselectedLabelColor: Colors.black54,
-                  tabs: const [
-                    Tab(text: 'Monthly'),
-                    Tab(text: 'Daily'),
-                  ],
-                ),
-              ),
-            ),
 
             // ── Basic fields ──────────────────────────────────────
             Padding(
@@ -7036,16 +9545,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                                               ?.toStringAsFixed(6) ??
                                           '';
                                     });
-                                  } else if (!success && mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          provider.errorMessage ??
-                                              'Could not fetch location',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
                                   }
                                 },
                           child: Container(
@@ -7078,478 +9577,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                 ],
               ),
             ),
-
-            // // ── Image picker ──────────────────────────────────────
-            // Padding(
-            //   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            //   child: SizedBox(
-            //     height: 80,
-            //     child: ListView(
-            //       scrollDirection: Axis.horizontal,
-            //       children: [
-            //         ..._hostelImages.map(
-            //           (img) => Stack(
-            //             children: [
-            //               Padding(
-            //                 padding: const EdgeInsets.only(right: 8),
-            //                 child: ClipRRect(
-            //                   borderRadius: BorderRadius.circular(8),
-            //                   child: Image.file(
-            //                     File(img.path),
-            //                     width: 80,
-            //                     height: 80,
-            //                     fit: BoxFit.cover,
-            //                   ),
-            //                 ),
-            //               ),
-            //               Positioned(
-            //                 right: 10,
-            //                 top: 2,
-            //                 child: GestureDetector(
-            //                   onTap: () =>
-            //                       setState(() => _hostelImages.remove(img)),
-            //                   child: Container(
-            //                     decoration: const BoxDecoration(
-            //                       color: Colors.red,
-            //                       shape: BoxShape.circle,
-            //                     ),
-            //                     child: const Icon(
-            //                       Icons.close,
-            //                       color: Colors.white,
-            //                       size: 14,
-            //                     ),
-            //                   ),
-            //                 ),
-            //               ),
-            //             ],
-            //           ),
-            //         ),
-            //         if (widget.existingHostel != null)
-            //           ...widget.existingHostel!.images.map(
-            //             (url) => Padding(
-            //               padding: const EdgeInsets.only(right: 8),
-            //               child: ClipRRect(
-            //                 borderRadius: BorderRadius.circular(8),
-            //                 child: Image.network(
-            //                   url,
-            //                   width: 80,
-            //                   height: 80,
-            //                   fit: BoxFit.cover,
-            //                   errorBuilder: (_, __, ___) => Container(
-            //                     width: 80,
-            //                     height: 80,
-            //                     color: Colors.grey.shade200,
-            //                     child: const Icon(
-            //                       Icons.broken_image,
-            //                       color: Colors.grey,
-            //                     ),
-            //                   ),
-            //                 ),
-            //               ),
-            //             ),
-            //           ),
-
-            //         // ── Room Numbers section ──────────────────────────────────────
-            //         Padding(
-            //           padding: const EdgeInsets.symmetric(
-            //             horizontal: 16,
-            //             vertical: 8,
-            //           ),
-            //           child: Column(
-            //             crossAxisAlignment: CrossAxisAlignment.start,
-            //             children: [
-            //               const Text(
-            //                 'Room Numbers',
-            //                 style: TextStyle(
-            //                   fontWeight: FontWeight.bold,
-            //                   fontSize: 14,
-            //                   color: Color(0xFFE53935),
-            //                 ),
-            //               ),
-            //               const SizedBox(height: 8),
-            //               Row(
-            //                 children: [
-            //                   Expanded(
-            //                     child: TextField(
-            //                       controller: _roomNumberController,
-            //                       decoration: InputDecoration(
-            //                         hintText: 'e.g., 101, 102, G1, 202',
-            //                         hintStyle: const TextStyle(fontSize: 13),
-            //                         contentPadding: const EdgeInsets.symmetric(
-            //                           horizontal: 12,
-            //                           vertical: 12,
-            //                         ),
-            //                         enabledBorder: OutlineInputBorder(
-            //                           borderRadius: BorderRadius.circular(8),
-            //                           borderSide: BorderSide(
-            //                             color: Colors.grey.shade300,
-            //                           ),
-            //                         ),
-            //                         focusedBorder: OutlineInputBorder(
-            //                           borderRadius: BorderRadius.circular(8),
-            //                           borderSide: const BorderSide(
-            //                             color: Color(0xFFE53935),
-            //                           ),
-            //                         ),
-            //                       ),
-            //                       onSubmitted: (_) => _addRoomNumber(),
-            //                     ),
-            //                   ),
-            //                   const SizedBox(width: 8),
-            //                   GestureDetector(
-            //                     onTap: _addRoomNumber,
-            //                     child: Container(
-            //                       padding: const EdgeInsets.all(12),
-            //                       decoration: BoxDecoration(
-            //                         color: const Color(0xFFE53935),
-            //                         borderRadius: BorderRadius.circular(8),
-            //                       ),
-            //                       child: const Icon(
-            //                         Icons.add,
-            //                         color: Colors.white,
-            //                         size: 24,
-            //                       ),
-            //                     ),
-            //                   ),
-            //                 ],
-            //               ),
-            //               const SizedBox(height: 12),
-            //               if (_roomNumbers.isNotEmpty)
-            //                 Wrap(
-            //                   spacing: 8,
-            //                   runSpacing: 8,
-            //                   children: _roomNumbers.map((roomNumber) {
-            //                     return Container(
-            //                       padding: const EdgeInsets.symmetric(
-            //                         horizontal: 10,
-            //                         vertical: 5,
-            //                       ),
-            //                       decoration: BoxDecoration(
-            //                         color: const Color(0xFFFFF0F0),
-            //                         borderRadius: BorderRadius.circular(16),
-            //                         border: Border.all(
-            //                           color: const Color(0xFFFFCDD2),
-            //                         ),
-            //                       ),
-            //                       child: Row(
-            //                         mainAxisSize: MainAxisSize.min,
-            //                         children: [
-            //                           const Icon(
-            //                             Icons.meeting_room,
-            //                             size: 14,
-            //                             color: Color(0xFFE53935),
-            //                           ),
-            //                           const SizedBox(width: 6),
-            //                           Text(
-            //                             roomNumber,
-            //                             style: const TextStyle(
-            //                               fontSize: 12,
-            //                               color: Color(0xFFE53935),
-            //                             ),
-            //                           ),
-            //                           const SizedBox(width: 6),
-            //                           GestureDetector(
-            //                             onTap: () =>
-            //                                 _removeRoomNumber(roomNumber),
-            //                             child: const Icon(
-            //                               Icons.close,
-            //                               size: 14,
-            //                               color: Colors.grey,
-            //                             ),
-            //                           ),
-            //                         ],
-            //                       ),
-            //                     );
-            //                   }).toList(),
-            //                 ),
-            //               // Add a hint when no room numbers
-            //               if (_roomNumbers.isEmpty)
-            //                 Padding(
-            //                   padding: const EdgeInsets.only(top: 8),
-            //                   child: Text(
-            //                     widget.existingHostel != null &&
-            //                             _roomNumbers.isEmpty
-            //                         ? 'No room numbers added yet. Add room numbers above.'
-            //                         : 'Add room numbers using the + button above.',
-            //                     style: TextStyle(
-            //                       fontSize: 12,
-            //                       color: Colors.grey.shade500,
-            //                       fontStyle: FontStyle.italic,
-            //                     ),
-            //                   ),
-            //                 ),
-            //             ],
-            //           ),
-            //         ),
-            //         const Divider(height: 16, thickness: 1),
-            //         GestureDetector(
-            //           onTap: _pickHostelImage,
-            //           child: Container(
-            //             width: 80,
-            //             height: 80,
-            //             decoration: BoxDecoration(
-            //               color: Colors.grey.shade100,
-            //               borderRadius: BorderRadius.circular(8),
-            //               border: Border.all(color: Colors.grey.shade300),
-            //             ),
-            //             child: const Column(
-            //               mainAxisAlignment: MainAxisAlignment.center,
-            //               children: [
-            //                 Icon(
-            //                   Icons.add_a_photo,
-            //                   size: 24,
-            //                   color: Colors.black54,
-            //                 ),
-            //                 SizedBox(height: 4),
-            //                 Text(
-            //                   'Add Image',
-            //                   style: TextStyle(
-            //                     fontSize: 10,
-            //                     color: Colors.black54,
-            //                   ),
-            //                 ),
-            //               ],
-            //             ),
-            //           ),
-            //         ),
-            //       ],
-            //     ),
-            //   ),
-            // ),
-
-            // ── Room Numbers section (Enhanced) ──────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Room Numbers',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          color: Color(0xFFE53935),
-                        ),
-                      ),
-                      // Batch add button
-                      GestureDetector(
-                        onTap: _addBatchRoomNumbers,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.queue,
-                                size: 14,
-                                color: Colors.blue.shade700,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Batch Add',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Colors.blue.shade700,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Alphabet prefix dropdown (optional)
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        isExpanded: true,
-                        value: _selectedPrefix.isEmpty ? null : _selectedPrefix,
-                        hint: const Text(
-                          'Optional: Select alphabet prefix (A, B, C...)',
-                        ),
-                        items: _alphabetOptions.map((prefix) {
-                          return DropdownMenuItem<String>(
-                            value: prefix.isEmpty ? null : prefix,
-                            child: Text(prefix.isEmpty ? 'None' : prefix),
-                          );
-                        }).toList(),
-                        onChanged: (String? value) {
-                          setState(() {
-                            _selectedPrefix = value ?? '';
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 4),
-
-                  // Input field with hint text showing examples
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            TextField(
-                              controller: _roomNumberController,
-                              decoration: InputDecoration(
-                                hintText: _selectedPrefix.isNotEmpty
-                                    ? 'e.g., ${_selectedPrefix}101, 101-118, or A1-A10'
-                                    : 'e.g., 101, 101-118, or A1-A10',
-                                hintStyle: const TextStyle(fontSize: 12),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 12,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: BorderSide(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFFE53935),
-                                  ),
-                                ),
-                              ),
-                              onSubmitted: (_) => _addRoomNumber(),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '💡 Tip: Use range like 101-118 to add multiple rooms',
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey.shade500,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: _addRoomNumber,
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE53935),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.add,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Display room numbers as chips
-                  if (_roomNumbers.isNotEmpty)
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: _roomNumbers.map((roomNumber) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 5,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF0F0),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFFFCDD2)),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(
-                                Icons.meeting_room,
-                                size: 14,
-                                color: Color(0xFFE53935),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                roomNumber,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: Color(0xFFE53935),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: () => _removeRoomNumber(roomNumber),
-                                child: const Icon(
-                                  Icons.close,
-                                  size: 14,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      }).toList(),
-                    ),
-
-                  // Counter for total rooms
-                  if (_roomNumbers.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        'Total rooms: ${_roomNumbers.length}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                    ),
-
-                  // Add a hint when no room numbers
-                  if (_roomNumbers.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        widget.existingHostel != null && _roomNumbers.isEmpty
-                            ? 'No room numbers added yet. Add room numbers above.'
-                            : 'Add room numbers using the + button above.\nSupports: Single (101), Range (101-118), Batch (comma-separated)',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey.shade500,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const Divider(height: 16, thickness: 1),
 
             // ── Image picker section ──────────────────────────────────────
             Padding(
@@ -7657,6 +9684,33 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
 
             const SizedBox(height: 8),
 
+            // ── Monthly / Daily tab bar ───────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  indicator: BoxDecoration(
+                    color: const Color(0xFFE53935),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  indicatorSize: TabBarIndicatorSize.tab,
+                  labelColor: Colors.white,
+                  unselectedLabelColor: Colors.black54,
+                  tabs: const [
+                    Tab(text: 'Monthly'),
+                    Tab(text: 'Daily'),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
             // ── Price sections ───────────────────────────────────
             // ── Price sections ───────────────────────────────────
             AnimatedBuilder(
@@ -7665,71 +9719,67 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                 final isMonthly = _tabController.index == 0;
                 final label = isMonthly ? 'Monthly' : 'Daily';
 
-                // Get price maps
                 final nonAcPrices = isMonthly ? _monthlyNonAc : _dailyNonAc;
                 final acPrices = isMonthly ? _monthlyAc : _dailyAc;
 
-                // Check if there are any non-zero prices in Non-AC section
-                final hasNonAcPrices = nonAcPrices.values.any((controller) {
+                // Check current prices
+                final hasNonAcPricesNow = nonAcPrices.values.any((controller) {
                   final price = double.tryParse(controller.text.trim()) ?? 0;
                   return price > 0;
                 });
 
-                // Check if there are any non-zero prices in AC section
-                final hasAcPrices = acPrices.values.any((controller) {
+                final hasAcPricesNow = acPrices.values.any((controller) {
                   final price = double.tryParse(controller.text.trim()) ?? 0;
                   return price > 0;
                 });
 
-                // For edit mode, also check if the original hostel had AC/Non-AC prices
+                // Check original prices from existing hostel
                 final h = widget.existingHostel;
                 bool originalHasAcPrices = false;
                 bool originalHasNonAcPrices = false;
 
                 if (h != null && _selectedCategory != null) {
                   for (var key in _shareKeys) {
-                    // Check if there was any AC price in original data
                     try {
                       final acSharing = h.sharings.firstWhere(
                         (s) =>
                             s.shareType.toLowerCase() == key.toLowerCase() &&
                             s.type?.toUpperCase() == 'AC',
                       );
-                      if ((acSharing.monthlyPrice ?? 0) > 0) {
+                      if ((acSharing.monthlyPrice ?? 0) > 0)
                         originalHasAcPrices = true;
-                      }
                     } catch (_) {}
-
-                    // Check if there was any Non-AC price in original data
                     try {
                       final nonAcSharing = h.sharings.firstWhere(
                         (s) =>
                             s.shareType.toLowerCase() == key.toLowerCase() &&
                             s.type?.toUpperCase() == 'NON-AC',
                       );
-                      if ((nonAcSharing.monthlyPrice ?? 0) > 0) {
+                      if ((nonAcSharing.monthlyPrice ?? 0) > 0)
                         originalHasNonAcPrices = true;
-                      }
                     } catch (_) {}
                   }
                 }
 
-                // In edit mode, show sections that originally had prices, even if current controllers show 0
-                // For create mode (no existing hostel), show BOTH sections when a category is selected
-                // so vendors can enter prices for AC and Non-AC
                 final isCreateMode = widget.existingHostel == null;
 
+                // In CREATE mode: show sections when category selected
+                // In EDIT mode: ALWAYS show BOTH sections (to allow adding new types)
                 final showNonAc = isCreateMode
-                    ? (_selectedCategory !=
-                          null) // In create mode, show if category is selected
-                    : (hasNonAcPrices ||
-                          originalHasNonAcPrices); // In edit mode, show if had prices
+                    ? (_selectedCategory != null)
+                    : true; // Always show Non-AC section in edit mode
 
                 final showAc = isCreateMode
-                    ? (_selectedCategory !=
-                          null) // In create mode, show if category is selected
-                    : (hasAcPrices ||
-                          originalHasAcPrices); // In edit mode, show if had prices
+                    ? (_selectedCategory != null)
+                    : true; // Always show AC section in edit mode
+
+                // Determine if this section had original data (for visual indication)
+                final hadNonAcOriginally = originalHasNonAcPrices;
+                final hadAcOriginally = originalHasAcPrices;
+
+                // Determine if this section has any data now
+                final hasNonAcData = hasNonAcPricesNow || hadNonAcOriginally;
+                final hasAcData = hasAcPricesNow || hadAcOriginally;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -7740,15 +9790,53 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                       if (showNonAc)
                         Column(
                           children: [
-                            _SectionHeader(
-                              label: '$label Prices — Non-AC',
-                              color: const Color(0xFFE53935),
-                              icon: Icons.ac_unit_outlined,
-                              iconColor: Colors.orange,
+                            Row(
+                              children: [
+                                _SectionHeader(
+                                  label: '$label Prices — Non-AC',
+                                  color: const Color(0xFFE53935),
+                                  icon: Icons.ac_unit_outlined,
+                                  iconColor: Colors.orange,
+                                ),
+                                if (!isCreateMode && !hadNonAcOriginally)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'NEW',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 8),
-                            _buildGrid(nonAcPrices, const Color(0xFFE53935)),
+                            _buildGrid(
+                              nonAcPrices,
+                              const Color.fromARGB(255, 157, 238, 168),
+                            ),
                             const SizedBox(height: 16),
+                            // Display rooms for Non-AC share types
+                            for (var key in _shareKeys)
+                              if ((_parsePrice(nonAcPrices[key]) > 0) ||
+                                  (_roomNumbersMap[_getRoomKey(key, false)]
+                                          ?.isNotEmpty ??
+                                      false))
+                                _buildRoomsDisplay(
+                                  key,
+                                  false,
+                                  const Color(0xFFE53935),
+                                ),
                           ],
                         ),
 
@@ -7756,19 +9844,53 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                       if (showAc)
                         Column(
                           children: [
-                            _SectionHeader(
-                              label: '$label Prices — AC',
-                              color: Colors.blue.shade700,
-                              icon: Icons.ac_unit,
-                              iconColor: Colors.blue,
+                            Row(
+                              children: [
+                                _SectionHeader(
+                                  label: '$label Prices — AC',
+                                  color: Colors.blue.shade700,
+                                  icon: Icons.ac_unit,
+                                  iconColor: Colors.blue,
+                                ),
+                                if (!isCreateMode && !hadAcOriginally)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 6,
+                                      vertical: 2,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.green,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: const Text(
+                                      'NEW',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 8,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                              ],
                             ),
                             const SizedBox(height: 8),
                             _buildGrid(acPrices, Colors.blue.shade700),
-                            const SizedBox(height: 10),
+                            const SizedBox(height: 16),
+                            // Display rooms for AC share types
+                            for (var key in _shareKeys)
+                              if ((_parsePrice(acPrices[key]) > 0) ||
+                                  (_roomNumbersMap[_getRoomKey(key, true)]
+                                          ?.isNotEmpty ??
+                                      false))
+                                _buildRoomsDisplay(
+                                  key,
+                                  true,
+                                  Colors.blue.shade600,
+                                ),
                           ],
                         ),
 
-                      // If both sections have no prices
                       if (!showNonAc && !showAc)
                         Container(
                           padding: const EdgeInsets.all(16),
@@ -7778,7 +9900,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                           ),
                           child: const Center(
                             child: Text(
-                              'No prices added yet. Enter prices above.',
+                              'Select a category to add prices',
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -7792,71 +9914,154 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
               },
             ),
 
-            // ── Date picker ───────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Select Date To Book a Hostel',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: 62,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _dates.length,
-                      itemBuilder: (_, i) {
-                        final d = _dates[i];
-                        final fullDate = d['fullDate'] as DateTime;
-                        final isSel =
-                            fullDate.year == _selectedDate.year &&
-                            fullDate.month == _selectedDate.month &&
-                            fullDate.day == _selectedDate.day;
-                        return GestureDetector(
-                          onTap: () => setState(() => _selectedDate = fullDate),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            margin: const EdgeInsets.only(right: 8),
-                            width: 50,
-                            decoration: BoxDecoration(
-                              color: isSel
-                                  ? const Color(0xFFE53935)
-                                  : Colors.grey.shade100,
-                              borderRadius: BorderRadius.circular(10),
+            // ── Add Rooms Section (only show if there are share types with prices) ──
+            if (_getAvailableShareTypesForRooms().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Add Rooms to Share Types',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Color(0xFFE53935),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Dropdown to select share type
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          hint: const Text('Select Share Type'),
+                          value: _selectedRoomShareType.isEmpty
+                              ? null
+                              : _selectedRoomShareType,
+                          items: _getAvailableShareTypesForRooms().map((type) {
+                            return DropdownMenuItem<String>(
+                              value: type,
+                              child: Text(type),
+                            );
+                          }).toList(),
+                          onChanged: (String? value) {
+                            setState(() {
+                              _selectedRoomShareType = value ?? '';
+                              _selectedRoomPrefix = '';
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Alphabet prefix dropdown
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey.shade300),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          isExpanded: true,
+                          value: _selectedRoomPrefix.isEmpty
+                              ? null
+                              : _selectedRoomPrefix,
+                          hint: const Text(
+                            'Optional: Select alphabet prefix (A, B, C...)',
+                          ),
+                          items: _alphabetOptions.map((prefix) {
+                            return DropdownMenuItem<String>(
+                              value: prefix.isEmpty ? null : prefix,
+                              child: Text(prefix.isEmpty ? 'None' : prefix),
+                            );
+                          }).toList(),
+                          onChanged: (String? value) {
+                            setState(() {
+                              _selectedRoomPrefix = value ?? '';
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    // Room number input
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _roomNumberInputController,
+                            decoration: InputDecoration(
+                              hintText: _selectedRoomPrefix.isNotEmpty
+                                  ? 'e.g., ${_selectedRoomPrefix}101, 101-118'
+                                  : 'e.g., 101, 101-118',
+                              hintStyle: const TextStyle(fontSize: 12),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(
+                                  color: Colors.grey.shade300,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE53935),
+                                ),
+                              ),
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  d['day'] as String,
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    color: isSel
-                                        ? Colors.white
-                                        : Colors.black54,
-                                  ),
-                                ),
-                                Text(
-                                  '${d['date']}',
-                                  style: TextStyle(
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold,
-                                    color: isSel ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                              ],
+                            onSubmitted: (_) => _addRoomNumber(),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: _addRoomNumber,
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFE53935),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 24,
                             ),
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+
+                    const SizedBox(height: 8),
+                    Text(
+                      '💡 Tip: Use range like 101-118 to add multiple rooms at once',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
+
+            const SizedBox(height: 16),
 
             // ── Save/Create button ────────────────────────────────
             Padding(
@@ -7919,9 +10124,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       );
     }
 
-    // Filter out entries with zero or empty price? No, keep them but show with opacity
-    // For BHK/RK categories, use single row per entry
-    // For normal categories, use grid layout
     final isSpecialCategory = _isBHKCategory || _isRKCategory;
 
     if (isSpecialCategory) {
@@ -7944,7 +10146,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                 Text(
                   entry.key,
                   style: TextStyle(
-                    color: hasPrice ? Colors.white : Colors.white70,
+                    color: Colors.black,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -7955,7 +10157,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                     controller: entry.value,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: hasPrice ? Colors.white : Colors.white60,
+                      color: Colors.black,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -7980,7 +10182,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       );
     }
 
-    // For normal categories, use grid layout (3 columns)
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -8010,9 +10211,9 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                 entry.key,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: hasPrice ? Colors.white : Colors.white70,
-                  fontSize: 9,
-                  fontWeight: hasPrice ? FontWeight.w600 : FontWeight.normal,
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 4),
@@ -8022,9 +10223,9 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                   controller: entry.value,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    color: hasPrice ? Colors.white : Colors.white60,
-                    fontSize: 11,
-                    fontWeight: hasPrice ? FontWeight.bold : FontWeight.normal,
+                    color: Colors.black,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
                   decoration: InputDecoration(
                     isDense: true,
@@ -8069,152 +10270,6 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
       ),
     ),
   );
-
-  // Widget _buildGrid(Map<String, TextEditingController> prices, Color color) {
-  //   final entries = prices.entries.toList();
-
-  //   if (entries.isEmpty) {
-  //     return Container(
-  //       padding: const EdgeInsets.all(16),
-  //       decoration: BoxDecoration(
-  //         color: color.withOpacity(0.1),
-  //         borderRadius: BorderRadius.circular(8),
-  //       ),
-  //       child: const Center(
-  //         child: Text(
-  //           'Select a category first',
-  //           style: TextStyle(fontSize: 12, color: Colors.grey),
-  //         ),
-  //       ),
-  //     );
-  //   }
-
-  //   // For BHK/RK categories, use single row per entry (like the UI shown)
-  //   // For normal categories, use grid layout
-  //   final isSpecialCategory = _isBHKCategory || _isRKCategory;
-
-  //   if (isSpecialCategory) {
-  //     return Column(
-  //       children: entries.map((entry) {
-  //         final priceText = entry.value.text.trim();
-  //         final hasPrice =
-  //             priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
-
-  //         return Container(
-  //           margin: const EdgeInsets.only(bottom: 8),
-  //           decoration: BoxDecoration(
-  //             color: hasPrice ? color : color.withOpacity(0.45),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //             children: [
-  //               Text(
-  //                 entry.key,
-  //                 style: TextStyle(
-  //                   color: hasPrice ? Colors.white : Colors.white70,
-  //                   fontSize: 14,
-  //                   fontWeight: FontWeight.w600,
-  //                 ),
-  //               ),
-  //               SizedBox(
-  //                 width: 100,
-  //                 child: TextField(
-  //                   controller: entry.value,
-  //                   textAlign: TextAlign.center,
-  //                   style: TextStyle(
-  //                     color: hasPrice ? Colors.white : Colors.white60,
-  //                     fontSize: 14,
-  //                     fontWeight: FontWeight.bold,
-  //                   ),
-  //                   decoration: InputDecoration(
-  //                     isDense: true,
-  //                     contentPadding: EdgeInsets.zero,
-  //                     border: InputBorder.none,
-  //                     hintText: 'Enter price',
-  //                     hintStyle: const TextStyle(
-  //                       color: Colors.white54,
-  //                       fontSize: 12,
-  //                     ),
-  //                   ),
-  //                   keyboardType: TextInputType.number,
-  //                   onChanged: (_) => setState(() {}),
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         );
-  //       }).toList(),
-  //     );
-  //   }
-
-  //   // For normal categories, use grid layout (3 columns)
-  //   return GridView.builder(
-  //     shrinkWrap: true,
-  //     physics: const NeverScrollableScrollPhysics(),
-  //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-  //       crossAxisCount: 3,
-  //       mainAxisSpacing: 8,
-  //       crossAxisSpacing: 8,
-  //       childAspectRatio: 1.4,
-  //     ),
-  //     itemCount: entries.length,
-  //     itemBuilder: (_, i) {
-  //       final entry = entries[i];
-  //       final priceText = entry.value.text.trim();
-  //       final hasPrice =
-  //           priceText.isNotEmpty && (double.tryParse(priceText) ?? 0) > 0;
-
-  //       return Container(
-  //         decoration: BoxDecoration(
-  //           color: hasPrice ? color : color.withOpacity(0.45),
-  //           borderRadius: BorderRadius.circular(8),
-  //         ),
-  //         padding: const EdgeInsets.all(6),
-  //         child: Column(
-  //           mainAxisAlignment: MainAxisAlignment.center,
-  //           children: [
-  //             Text(
-  //               entry.key,
-  //               textAlign: TextAlign.center,
-  //               style: TextStyle(
-  //                 color: hasPrice ? Colors.white : Colors.white70,
-  //                 fontSize: 9,
-  //                 fontWeight: hasPrice ? FontWeight.w600 : FontWeight.normal,
-  //               ),
-  //             ),
-  //             const SizedBox(height: 4),
-  //             SizedBox(
-  //               height: 22,
-  //               child: TextField(
-  //                 controller: entry.value,
-  //                 textAlign: TextAlign.center,
-  //                 style: TextStyle(
-  //                   color: hasPrice ? Colors.white : Colors.white60,
-  //                   fontSize: 11,
-  //                   fontWeight: hasPrice ? FontWeight.bold : FontWeight.normal,
-  //                 ),
-  //                 decoration: InputDecoration(
-  //                   isDense: true,
-  //                   contentPadding: EdgeInsets.zero,
-  //                   border: InputBorder.none,
-  //                   hintText: '0',
-  //                   hintStyle: const TextStyle(
-  //                     color: Colors.white54,
-  //                     fontSize: 11,
-  //                   ),
-  //                 ),
-  //                 keyboardType: TextInputType.number,
-  //                 onChanged: (_) => setState(() {}),
-  //               ),
-  //             ),
-  //           ],
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
 }
 
 // ─────────────────────────────────────────────

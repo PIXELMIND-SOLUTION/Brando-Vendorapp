@@ -177,6 +177,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.0.6"
+  excel_table_plus:
+    dependency: "direct main"
+    description:
+      name: excel_table_plus
+      sha256: fe2eea5d329dba198321750b0cb710a087445836105de2c7cbd931d96fa3d628
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.4"
   fake_async:
     dependency: transitive
     description:
@@ -278,6 +286,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.31"
+  flutter_spreadsheet_table:
+    dependency: "direct main"
+    description:
+      name: flutter_spreadsheet_table
+      sha256: "38e6ab47d544dca9ed2100b0ce2af08e2b9b0bd258e4977e8eeab23b8ccaec16"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.1"
   flutter_test:
     dependency: "direct dev"
     description: flutter

@@ -1,25 +1,85 @@
 // lib/model/history_model.dart
 
+// class HistoryResponse {
+//   final bool success;
+//   final int totalRooms;
+//   final List<RoomBookingData> data;
+
+//   HistoryResponse({
+//     required this.success,
+//     required this.totalRooms,
+//     required this.data,
+//   });
+
+//   factory HistoryResponse.fromJson(Map<String, dynamic> json) {
+//     return HistoryResponse(
+//       success: json['success'] ?? false,
+//       totalRooms: json['totalRooms'] ?? 0,
+//       data:
+//           (json['data'] as List?)
+//               ?.map((e) => RoomBookingData.fromJson(e))
+//               .toList() ??
+//           [],
+//     );
+//   }
+// }
+
+// Add to your history_model.dart if not already present
+
 class HistoryResponse {
   final bool success;
   final int totalRooms;
   final List<RoomBookingData> data;
+  final List<Booking> joiners;
+  final Summary summary;
 
   HistoryResponse({
     required this.success,
     required this.totalRooms,
     required this.data,
+    required this.joiners,
+    required this.summary,
   });
 
   factory HistoryResponse.fromJson(Map<String, dynamic> json) {
+    var dataList = json['data'] as List? ?? [];
+    var joinersList = json['joiners'] as List? ?? [];
+
     return HistoryResponse(
       success: json['success'] ?? false,
       totalRooms: json['totalRooms'] ?? 0,
-      data:
-          (json['data'] as List?)
-              ?.map((e) => RoomBookingData.fromJson(e))
-              .toList() ??
-          [],
+      data: dataList.map((item) => RoomBookingData.fromJson(item)).toList(),
+      joiners: joinersList.map((item) => Booking.fromJson(item)).toList(),
+      summary: Summary.fromJson(json['summary'] ?? {}),
+    );
+  }
+}
+
+class Summary {
+  final int totalRooms;
+  final int totalMembers;
+  final int totalAvailableBeds;
+  final int occupiedRooms;
+  final int vacantRooms;
+  final int occupancyRate;
+
+  Summary({
+    required this.totalRooms,
+    required this.totalMembers,
+    required this.totalAvailableBeds,
+    required this.occupiedRooms,
+    required this.vacantRooms,
+    required this.occupancyRate,
+  });
+
+  factory Summary.fromJson(Map<String, dynamic> json) {
+    return Summary(
+      totalRooms: json['totalRooms'] ?? 0,
+      totalMembers: json['totalMembers'] ?? 0,
+      totalAvailableBeds: json['totalAvailableBeds'] ?? 0,
+      occupiedRooms: json['occupiedRooms'] ?? 0,
+      vacantRooms: json['vacantRooms'] ?? 0,
+      occupancyRate: json['occupancyRate'] ?? 0,
     );
   }
 }
