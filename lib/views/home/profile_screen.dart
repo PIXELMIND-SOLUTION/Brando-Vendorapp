@@ -631,23 +631,23 @@ class ProfileScreen extends StatelessWidget {
                     "Personal information",
                   ),
                 ),
-                GestureDetector(
-                  onTap: () {
-                    final hostelId =
-                        context.read<HostelProvider>().hostels.isNotEmpty
-                        ? context.read<HostelProvider>().hostels.first.id
-                        : '';
-                    if (hostelId.isEmpty) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => NavbarScreen(initialIndex: 1),
-                      ),
-                    );
-                  },
-                  child: _buildTile(Icons.history, "History"),
-                ),
 
+                // GestureDetector(
+                //   onTap: () {
+                //     final hostelId =
+                //         context.read<HostelProvider>().hostels.isNotEmpty
+                //         ? context.read<HostelProvider>().hostels.first.id
+                //         : '';
+                //     if (hostelId.isEmpty) return;
+                //     Navigator.push(
+                //       context,
+                //       MaterialPageRoute(
+                //         builder: (_) => NavbarScreen(initialIndex: 1),
+                //       ),
+                //     );
+                //   },
+                //   child: _buildTile(Icons.history, "History"),
+                // ),
                 GestureDetector(
                   onTap: () {
                     // Updated: Open contact URL instead of NeedHelpScreen

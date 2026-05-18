@@ -4524,7 +4524,41 @@ class _HifiHostelCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 8),
+
                         // Price chips - show AC and Non-AC separately
+                        // Wrap(
+                        //   spacing: 4,
+                        //   runSpacing: 4,
+                        //   children: hostel.sharings.map((s) {
+                        //     final price = showDailyPrice
+                        //         ? s.dailyPrice
+                        //         : s.monthlyPrice;
+                        //     if (price == null || price <= 0)
+                        //       return SizedBox.shrink();
+
+                        //     final isAc = s.type?.toUpperCase() == 'AC';
+                        //     return Container(
+                        //       padding: const EdgeInsets.symmetric(
+                        //         horizontal: 6,
+                        //         vertical: 3,
+                        //       ),
+                        //       decoration: BoxDecoration(
+                        //         color: isAc
+                        //             ? Colors.blue.shade600
+                        //             : const Color(0xFFE53935),
+                        //         borderRadius: BorderRadius.circular(4),
+                        //       ),
+                        //       child: Text(
+                        //         '${isAc ? 'AC ' : ''}${s.shareType}: ₹${price.toStringAsFixed(0)}/${showDailyPrice ? 'day' : 'mo'}',
+                        //         style: const TextStyle(
+                        //           color: Colors.white,
+                        //           fontSize: 9,
+                        //           fontWeight: FontWeight.bold,
+                        //         ),
+                        //       ),
+                        //     );
+                        //   }).toList(),
+                        // ),
                         Wrap(
                           spacing: 4,
                           runSpacing: 4,
@@ -4532,23 +4566,28 @@ class _HifiHostelCard extends StatelessWidget {
                             final price = showDailyPrice
                                 ? s.dailyPrice
                                 : s.monthlyPrice;
-                            if (price == null || price <= 0)
-                              return SizedBox.shrink();
 
                             final isAc = s.type?.toUpperCase() == 'AC';
+
                             return Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 6,
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: isAc
-                                    ? Colors.blue.shade600
-                                    : const Color(0xFFE53935),
+                                color: (price != null && price > 0)
+                                    ? (isAc
+                                          ? Colors.blue.shade600
+                                          : const Color(0xFFE53935))
+                                    : Colors.grey.shade600,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '${isAc ? 'AC ' : ''}${s.shareType}: ₹${price.toStringAsFixed(0)}/${showDailyPrice ? 'day' : 'mo'}',
+                                (price == null || price <= 0)
+                                    ? (showDailyPrice
+                                          ? 'Daily price not available'
+                                          : 'Monthly price not available')
+                                    : '${isAc ? 'AC ' : ''}${s.shareType}: ₹${price.toStringAsFixed(0)}/${showDailyPrice ? 'day' : 'mo'}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 9,
@@ -9511,10 +9550,7 @@ class _HifiDetailsScreenState extends State<HifiDetailsScreen>
                   Row(
                     children: [
                       Expanded(
-                        child: _buildField(
-                          _advanceController,
-                          'Monthly Advance',
-                        ),
+                        child: _buildField(_advanceController, 'Advance'),
                       ),
                       const SizedBox(width: 8),
                       Expanded(child: _buildField(_ratingController, 'Rating')),
