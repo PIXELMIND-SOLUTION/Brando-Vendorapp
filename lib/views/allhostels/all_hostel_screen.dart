@@ -134,13 +134,27 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // Order ID
-                          Text(
-                            order['id'],
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFF2C2C2A),
-                            ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  order['id'],
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2C2C2A),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                "OTP:1234",
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2C2C2A),
+                                ),
+                              ),
+                            ],
                           ),
 
                           const SizedBox(height: 6),
@@ -244,6 +258,16 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    Expanded(
+                      child: Text(
+                        'Pending',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: kGreen,
+                        ),
+                      ),
+                    ),
                     Icon(
                       Icons.remove_red_eye_outlined,
                       size: 16,

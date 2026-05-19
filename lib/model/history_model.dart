@@ -131,8 +131,10 @@ class Booking {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String currentMonthPaymentStatus;
+  final dynamic currentMonthRemainingAmount;
   final String monthlyAdvanceStatus;
   final dynamic remainingMonthlyAdvance;
+  final bool isNew;
 
   Booking({
     required this.id,
@@ -158,6 +160,8 @@ class Booking {
     required this.currentMonthPaymentStatus,
     required this.monthlyAdvanceStatus,
     required this.remainingMonthlyAdvance,
+    required this.isNew,
+    required this.currentMonthRemainingAmount,
   });
 
   factory Booking.fromJson(Map<String, dynamic> json) {
@@ -170,6 +174,7 @@ class Booking {
       personalDetails: json['personalDetails'] != null
           ? PersonalDetails.fromJson(json['personalDetails'])
           : null,
+      isNew: json['isNew'],
 
       roomType: json['roomType'] ?? '',
       shareType: json['shareType'] ?? '',
@@ -184,6 +189,7 @@ class Booking {
       monthlyAdvance: json['monthlyAdvance'] ?? 0,
       status: json['status'] ?? '',
       bookingReference: json['bookingReference'] ?? '',
+      currentMonthRemainingAmount: json['currentMonthRemainingAmount'] ?? 0,
       vendorId: json['vendorId'] ?? '',
       paymentHistory:
           (json['paymentHistory'] as List?)
